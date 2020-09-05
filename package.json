@@ -1,0 +1,23 @@
+{
+  "name": "emapc",
+  "version": "1.0.0",
+  "description": "The EMAPC (EinsatzMonitor-Alarm-PDF-Converter) provides a toolset to convert an incoming alarm PDF into a format that can be read by the EinsatzMonitor.",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter.git"
+  },
+  "keywords": [
+    "einsatzmonitor",
+    "pdf"
+  ],
+  "author": "Matthias Hecht",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/issues"
+  },
+  "homepage": "https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter#readme"
+}
