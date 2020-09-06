@@ -21,7 +21,7 @@
         "no-var-requires": false,
         "max-classes-per-file": false,
         "no-any": false,
-        "semicolon": false
+        "semicolon": true
     },
     "rulesDirectory": []
 }
