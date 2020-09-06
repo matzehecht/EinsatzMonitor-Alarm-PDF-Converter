@@ -1,0 +1,16 @@
+{
+  "sections": [
+    {
+      "key": "Einsatzanlass",
+      "type": "keyValue"
+    },
+    {
+      "key": "Einsatzort",
+      "type": "try"
+    },
+    {
+      "key": "EM",
+      "type": "table"
+    }
+  ]
+}
