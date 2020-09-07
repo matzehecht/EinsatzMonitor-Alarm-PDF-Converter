@@ -94,12 +94,12 @@ function parseArgs(argv: string[]) {
 
   // get optional config
   const configIndex = args.findIndex((a) => ['--config', '-c'].includes(a));
-  const configFile = configIndex > -1 ? args[configIndex + 1] : './emapc.conf.json';
+  const configFile = configIndex > -1 ? args[configIndex + 1] : undefined;
 
   // remove '--config' and the following filepath from the array
   if (configIndex > -1) args.splice(configIndex, 2);
 
-  logInfo(configIndex === -1 ? 'Using standard config' : `using config file ${configFile}`);
+  logInfo(!configFile ? 'Using standard config' : `using config file ${configFile}`);
 
   const inputFileOrDir = args[0];
   if (!inputFileOrDir) throwErr(new Error('No input given!'));
@@ -110,7 +110,7 @@ function parseArgs(argv: string[]) {
   let outputFileOrDir = '';
 
   // check args
-  if (!fs.existsSync(configFile)) throwErr(new Error('config file does not exist'));
+  if (configFile && !fs.existsSync(configFile)) throwErr(new Error('config file does not exist'));
   if (!fs.existsSync(inputFileOrDir)) throwErr(new Error('input file does not exist'));
 
   const isInputDir = fs.statSync(inputFileOrDir).isDirectory();
@@ -118,14 +118,14 @@ function parseArgs(argv: string[]) {
   try {
     if (path.extname(outputArg) === '') {
       if (!fs.existsSync(outputArg)) {
-        throwErr(new Error('output dir does not exist'))
+        throwErr(new Error('output dir does not exist'));
       }
       
       outputFileOrDir = !isInputDir ? `${path.resolve(outputArg)}/${path.basename(inputFileOrDir)}` : path.resolve(outputArg);
       logInfo('OUTPUT', `Using generated file name ${outputFileOrDir}`);
     } else {
       if (!fs.existsSync(path.dirname(outputArg))) {
-        throwErr(new Error('output dir does not exist'))
+        throwErr(new Error('output dir does not exist'));
       }
       
       if (isInputDir) throwErr(new Error('output cannot be a file if input is a directory!'));
