@@ -1,19 +1,17 @@
 import * as fs from 'fs';
-import path = require('path');
+import * as path from 'path';
+const { version } = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
 
 namespace CONST {
   // Make log dir
   if (!fs.existsSync('./logs')) fs.mkdirSync('./logs');
   export const LOG_PATH = `${path.resolve('./logs')}/${new Date().toISOString().replace(/^(.*)T.*/, '$1')}.log`;
 
-  export const INTERNAL_ERROR = `
-An internal error occured!
+  export const INTERNAL_ERROR = `An internal error occured!
 Please check the log file for more information!
-Path: ${LOG_PATH}
-`;
+Path: ${LOG_PATH}`;
 
-  export const HELP_MESSAGE = `
-VERSION ${process.env.npm_package_version || 'dev system'}
+  export const HELP_MESSAGE = `VERSION ${version || 'dev system'}
 Extractor tool of EMAPC (EinsatzMonitor-Alarm-PDF-Converter).
 MIT Licensed.
 Written by Matthias Hecht (https://github.com/matzehecht).
