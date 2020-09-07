@@ -12,5 +12,10 @@
       "key": "EM",
       "type": "table"
     }
-  ]
+  ],
+  "output": {
+    "table": {
+      "columnSeperator": ";"
+    }
+  }
 }

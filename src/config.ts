@@ -32,7 +32,12 @@ const DEFAULT_CONFIG = {
       key: 'EM',
       type: 'table'
     }
-  ]
+  ],
+  output: {
+    table: {
+      columnSeperator: ';'
+    }
+  }
 };
 
 function validateConfig(config: any): [boolean, string] {
@@ -88,12 +93,19 @@ function validateSubConfig(config: any, key: string, val: IConfigAssertionTypes)
 
 export interface Config {
   sections: Section[];
+  output?: Output;
 }
 
 export interface Section {
   key: string;
   type: 'keyValue' | 'table' | 'try';
   tableUseRowHeadings: boolean;
+}
+
+interface Output {
+  table?: {
+    columnSeperator?: string;
+  };
 }
 
 const ConfigAssertion: IConfigAssertion = {
@@ -108,6 +120,22 @@ const ConfigAssertion: IConfigAssertion = {
       type: {
         required: true,
         type: 'string' // is a enum
+      }
+    }
+  },
+  outout: {
+    required: false,
+    type: 'object',
+    properties: {
+      table: {
+        required: false,
+        type: 'object',
+        properties: {
+          columnSeperator: {
+            required: false,
+            type: 'string'
+          }
+        }
       }
     }
   }

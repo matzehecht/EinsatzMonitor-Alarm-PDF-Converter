@@ -15,34 +15,35 @@ const pdftotext = getBinary();
 if (!isInputDir) {
   const fnWithoutExt = path.basename(inputFileOrDir, '.pdf');
   const outputFile = path.extname(outputFileOrDir) === '' ? path.join(outputFileOrDir, `${fnWithoutExt}.txt`) : outputFileOrDir;
-  
+
   if (path.extname(inputFileOrDir) !== '.pdf') {
     logInfo('INPUT', `skipping the file ${path.resolve(inputFileOrDir)} as it is not a pdf file!`);
   } else {
     logInfo('INPUT', `processing ${path.resolve(inputFileOrDir)}!`);
-    
+
     run(config, inputFileOrDir, outputFile);
   }
 } else {
   const files = fs.readdirSync(inputFileOrDir, { withFileTypes: true });
-  
+
   files.forEach((file) => {
     const filename = file.name;
     const fnWithoutExt = path.basename(filename, path.extname(filename));
-    
+
     if (path.extname(filename) !== '.pdf') {
       logInfo('INPUT', `skipping the file ${path.resolve(filename)} as it is not a pdf file!`);
       return;
     } else {
       logInfo('INPUT', `processing ${path.resolve(filename)}!`);
-      
+
       run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`));
     }
   });
 }
 
-function toWriteString(text: string) {
-  return `${text}${os.EOL}`;
+function toWriteString(text: string, replace?: string) {
+  const writeText = !replace ? text: text.replace(replace, (replace !== '-') ? '-' : ';');
+  return `${writeText}${os.EOL}`;
 }
 
 function run(config: Config.Config, inputFile: string, outputFile: string) {
@@ -59,20 +60,18 @@ function run(config: Config.Config, inputFile: string, outputFile: string) {
     writer.write(toWriteString(`|  ${k}  |`));
     writer.write(toWriteString('-'.repeat(k.length + 6)));
     writer.write(toWriteString(''));
-    
-    if (Array.isArray(v)) {
 
+    if (Array.isArray(v)) {
+      const columnSeperator = config?.output?.table?.columnSeperator || ';';
       const [first, ...remaining] = Object.keys(v[0]);
 
-      writer.write(toWriteString(`${first}=${remaining.join(';')}`));
+      writer.write(toWriteString(`${first}=${remaining.join(columnSeperator)}`));
 
       v.forEach((l) => {
-        
         const [lFirst, ...lRemaining] = Object.values(l);
 
-        writer.write(toWriteString(`${lFirst}=${lRemaining.join(';')}`));
+        writer.write(toWriteString(`${lFirst}=${lRemaining.join(columnSeperator)}`, columnSeperator));
       });
-
     } else {
       Object.entries(v).forEach(([ik, iv]) => {
         writer.write(toWriteString(`${ik}=${iv}`));
@@ -120,14 +119,14 @@ function parseArgs(argv: string[]) {
       if (!fs.existsSync(outputArg)) {
         throwErr(new Error('output dir does not exist'));
       }
-      
+
       outputFileOrDir = !isInputDir ? `${path.resolve(outputArg)}/${path.basename(inputFileOrDir)}` : path.resolve(outputArg);
       logInfo('OUTPUT', `Using generated file name ${outputFileOrDir}`);
     } else {
       if (!fs.existsSync(path.dirname(outputArg))) {
         throwErr(new Error('output dir does not exist'));
       }
-      
+
       if (isInputDir) throwErr(new Error('output cannot be a file if input is a directory!'));
       outputFileOrDir = outputArg;
       logInfo('OUTPUT', `Using given file name ${outputFileOrDir}`);
