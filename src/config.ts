@@ -99,7 +99,6 @@ export interface Config {
 export interface Section {
   key: string;
   type: 'keyValue' | 'table' | 'try';
-  tableUseRowHeadings: boolean;
 }
 
 interface Output {
@@ -123,7 +122,7 @@ const ConfigAssertion: IConfigAssertion = {
       }
     }
   },
-  outout: {
+  output: {
     required: false,
     type: 'object',
     properties: {
