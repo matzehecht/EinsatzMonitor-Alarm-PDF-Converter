@@ -49,7 +49,7 @@ function extractTable(rawArray: string[]): ParsedTableSectionRow[] {
   
   const columns = columnIndexes?.map(i => rawArray[0].substring(i).split(/\s\s/)[0]);
 
-  if (!columnIndexes || !columns) throw new Error('No columns found in Tamle');
+  if (!columnIndexes || !columns) throw new Error('No columns found in Table');
 
   if (columnIndexes[0] !== 0) {
     columnIndexes.unshift(0);
