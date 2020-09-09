@@ -84,7 +84,7 @@
             },
             {
               "path": "bin/win/64/emapc.exe",
-              "name": "emapc-win-x32.exe",
+              "name": "emapc-win-x64.exe",
               "label": "Windows-x64 binary"
             },
             {
