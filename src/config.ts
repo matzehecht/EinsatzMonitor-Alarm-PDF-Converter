@@ -35,7 +35,7 @@ const DEFAULT_CONFIG = {
   ],
   output: {
     table: {
-      columnSeperator: ';'
+      columnSeparator: ';'
     }
   }
 };
@@ -103,7 +103,7 @@ export interface Section {
 
 interface Output {
   table?: {
-    columnSeperator?: string;
+    columnSeparator?: string;
   };
 }
 
@@ -130,7 +130,7 @@ const ConfigAssertion: IConfigAssertion = {
         required: false,
         type: 'object',
         properties: {
-          columnSeperator: {
+          columnSeparator: {
             required: false,
             type: 'string'
           }
