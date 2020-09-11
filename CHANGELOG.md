@@ -1,3 +1,15 @@
+# [1.0.0-dev.2](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2020-09-11)
+
+
+### Bug Fixes
+
+* **output:** fixes safe string joins (replacing separators) ([9a321a5](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/9a321a5ace3aa5df0a38d3399be7fa628c65e1bb))
+
+
+### Features
+
+* **output:** optionally output rowHeaders ([215dbb9](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/215dbb950563a6bbf64a045ee2c85c5e974ee89d))
+
 # 1.0.0-dev.1 (2020-09-09)
 
 
