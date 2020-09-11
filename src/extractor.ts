@@ -53,7 +53,7 @@ function extractTable(rawArray: string[]): ParsedTableSectionRow[] {
 
   if (columnIndexes[0] !== 0) {
     columnIndexes.unshift(0);
-    columns.unshift('columns');
+    columns.unshift('');
   }
 
   const rows = rawArray.slice(1).map(r => {
