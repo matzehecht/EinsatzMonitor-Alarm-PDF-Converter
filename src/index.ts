@@ -41,9 +41,12 @@ if (!isInputDir) {
   });
 }
 
-function toWriteString(text: string, replace?: string) {
-  const writeText = !replace ? text: text.replace(replace, (replace !== '-') ? '-' : ';');
-  return `${writeText}${os.EOL}`;
+function toWriteString(text: string) {
+  return `${text}${os.EOL}`;
+}
+
+function joinSafe(array: string[], separator?: string): string {
+  return array.map((cur: string) => !separator ? cur : cur.replace(RegExp(separator, 'gi'), (separator === ';') ? ',' : ';')).join(separator);
 }
 
 function run(config: Config.Config, inputFile: string, outputFile: string) {
@@ -62,15 +65,15 @@ function run(config: Config.Config, inputFile: string, outputFile: string) {
     writer.write(toWriteString(''));
 
     if (Array.isArray(v)) {
-      const columnSeperator = config?.output?.table?.columnSeperator || ';';
+      const columnSeparator = config?.output?.table?.columnSeparator || ';';
       const [first, ...remaining] = Object.keys(v[0]);
 
-      writer.write(toWriteString(`${first}=${remaining.join(columnSeperator)}`));
+      writer.write(toWriteString(`${first}=${joinSafe(remaining, columnSeparator)}`));
 
       v.forEach((l) => {
         const [lFirst, ...lRemaining] = Object.values(l);
 
-        writer.write(toWriteString(`${lFirst}=${lRemaining.join(columnSeperator)}`, columnSeperator));
+        writer.write(toWriteString(`${lFirst}=${joinSafe(lRemaining, columnSeparator)}`));
       });
     } else {
       Object.entries(v).forEach(([ik, iv]) => {
