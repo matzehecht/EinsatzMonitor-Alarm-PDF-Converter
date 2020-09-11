@@ -66,9 +66,11 @@ function run(config: Config.Config, inputFile: string, outputFile: string) {
 
     if (Array.isArray(v)) {
       const columnSeparator = config?.output?.table?.columnSeparator || ';';
-      const [first, ...remaining] = Object.keys(v[0]);
 
-      writer.write(toWriteString(`${first}=${joinSafe(remaining, columnSeparator)}`));
+      writer.write(toWriteString(`columns=${joinSafe(Object.keys(v[0]), columnSeparator)}`));
+
+      const printRowHeaders = config.output?.table?.printRowHeaders;
+      if (printRowHeaders !== undefined && printRowHeaders === true) writer.write(toWriteString(`${Object.keys(v[0])[0] || 'rows'}=${joinSafe(v.map(r => Object.values(r)[0]), columnSeparator)}`));
 
       v.forEach((l) => {
         const [lFirst, ...lRemaining] = Object.values(l);

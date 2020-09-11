@@ -35,7 +35,8 @@ const DEFAULT_CONFIG = {
   ],
   output: {
     table: {
-      columnSeparator: ';'
+      columnSeparator: ';',
+      printRowHeaders: false
     }
   }
 };
@@ -104,6 +105,7 @@ export interface Section {
 interface Output {
   table?: {
     columnSeparator?: string;
+    printRowHeaders?: boolean;
   };
 }
 
@@ -133,6 +135,10 @@ const ConfigAssertion: IConfigAssertion = {
           columnSeparator: {
             required: false,
             type: 'string'
+          },
+          printRowHeaders: {
+            required: false,
+            type: 'boolean'
           }
         }
       }
