@@ -9,5 +9,5 @@
 ### Features
 
 * **config:** makes config optional ([537d382](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/537d3822e29f043ce427d768894125d92241eb01))
-* **output:** replace seperator in table output ([f7afa11](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/f7afa11536e8b7efecf0264f0a8eabb44bab2081))
+* **output:** replace separator in table output ([f7afa11](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/f7afa11536e8b7efecf0264f0a8eabb44bab2081))
 * finishes first iteration MVP :tada: :tada: ([3e67b90](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/3e67b9078e02ddc79bbaa72acef4954c2374612d))

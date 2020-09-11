@@ -79,7 +79,7 @@ Stichwort=- - F TH0 1 Trupp
 ```
 
 If the section is a table like section the output format is a little bit different.  
-For tables emapc will first print a line containing the column headers like in the example below. I've chosen this format because in many cases the first column acts like a row header.You can specify the seperator used between the columns in the [configuration](#configuration) (default: `;`). (Reminder: if the first column has no header emapc will insert `columns` as the header).
+For tables emapc will first print a line containing the column headers like in the example below. I've chosen this format because in many cases the first column acts like a row header.You can specify the separator used between the columns in the [configuration](#configuration) (default: `;`). (Reminder: if the first column has no header emapc will insert `columns` as the header).
 
 ```txt
 header1=header2;header3;...
@@ -104,7 +104,7 @@ The sections part takes an array of single sections. Each section takes a key an
 - The key property is the key word which indicates the start of a new section ([how it works](#How-it-works)).
 - The type property specifies if the section is a key value like format or a table like format or if it should try to detect the type ([how it works](#How-it-works)).
 
-For the ouput part you can only config the output of tables. So the output part takes only the property table. This property is optional. It takes in turn the property columnSeperator. It is of type string and specifies the seperator used to seperate the column values for a row in the output.
+For the ouput part you can only config the output of tables. So the output part takes only the property table. This property is optional. It takes in turn the property columnSeparator. It is of type string and specifies the separator used to seperate the column values for a row in the output.
 
 The default configuration is the following:  
 
@@ -126,7 +126,7 @@ The default configuration is the following:
   ],
   "output": {
     "table": {
-      "columnSeperator": ";"
+      "columnSeparator": ";"
     }
   }
 }
@@ -235,7 +235,7 @@ Der Sektionsteil besteht aus einem Array von einzelnen Sektionen. Jede Sektion n
 - Die Schlüsseleigenschaft ist das Schlüsselwort, das den Beginn einer neuen Sektion angibt ([Wie es funktioniert](#wie-es-funktioniert)).
 - Die Typ-Eigenschaft gibt an, ob es sich bei dem Abschnitt um einen Schlüssel-wert-Format oder ein tabellenartiges Format handelt oder ob versucht werden soll, den Typ zu ermitteln ([Wie es funktioniert](#wie-es-funktioniert)).
 
-Für den Ausgabeteil kann nur die Ausgabe von Tabellen konfiguriert werden. Der Ausgabeteil nimmt also nur die Eigenschaftstabelle entgegen. Diese Eigenschaft ist optional. Sie nimmt wiederum die Eigenschaft columnSeperator an. Diese ist vom Typ String und gibt das Trennzeichen an, das zur Trennung der Spaltenwerte für eine Zeile in der Ausgabe verwendet wird.
+Für den Ausgabeteil kann nur die Ausgabe von Tabellen konfiguriert werden. Der Ausgabeteil nimmt also nur die Eigenschaftstabelle entgegen. Diese Eigenschaft ist optional. Sie nimmt wiederum die Eigenschaft columnSeparator an. Diese ist vom Typ String und gibt das Trennzeichen an, das zur Trennung der Spaltenwerte für eine Zeile in der Ausgabe verwendet wird.
 
 Die Standardkonfiguration lautet wie folgt:  
 
@@ -257,7 +257,7 @@ Die Standardkonfiguration lautet wie folgt:
   ],
   "output": {
     "table": {
-      "columnSeperator": ";"
+      "columnSeparator": ";"
     }
   }
 }
