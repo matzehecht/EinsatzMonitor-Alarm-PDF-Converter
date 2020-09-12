@@ -9,7 +9,7 @@
         "trailing-comma": [false],
         "eofline": true,
         "space-before-function-paren": [false],
-        "no-console": [true],
+        "no-console": [false],
         "arrow-parens": false,
         "object-literal-sort-keys": false,
         "ordered-imports": [false],
@@ -21,7 +21,8 @@
         "no-var-requires": false,
         "max-classes-per-file": false,
         "no-any": false,
-        "semicolon": true
+        "semicolon": true,
+        "no-shadowed-variable": false
     },
     "rulesDirectory": []
 }

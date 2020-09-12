@@ -1,6 +1,6 @@
 import { createValidator } from '@typeonly/validator';
 import * as YAML from 'yamljs';
-import { utils } from '../utils';
+import * as utils from '../utils';
 import { Config, Section } from './config';
 export { Config, Section };
 

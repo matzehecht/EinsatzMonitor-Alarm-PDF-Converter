@@ -4,7 +4,7 @@ import * as child from 'child_process';
 import * as Config from './config';
 import * as path from 'path';
 import * as Extractor from './extractor';
-import { utils } from './utils';
+import * as utils from './utils';
 
 export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, configFile?: string) {
   const config = Config.load(configFile);
@@ -12,27 +12,27 @@ export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileO
   if (!isInputDir) {
     const fnWithoutExt = path.basename(inputFileOrDir, '.pdf');
     const outputFile = path.extname(outputFileOrDir) === '' ? path.join(outputFileOrDir, `${fnWithoutExt}.txt`) : outputFileOrDir;
-  
+
     if (path.extname(inputFileOrDir) !== '.pdf') {
       utils.logInfo('INPUT', `skipping the file ${path.resolve(inputFileOrDir)} as it is not a pdf file!`);
     } else {
       utils.logInfo('INPUT', `processing ${path.resolve(inputFileOrDir)}!`);
-  
+
       run(config, inputFileOrDir, outputFile);
     }
   } else {
     const files = fs.readdirSync(inputFileOrDir, { withFileTypes: true });
-  
+
     files.forEach((file) => {
       const filename = file.name;
       const fnWithoutExt = path.basename(filename, path.extname(filename));
-  
+
       if (path.extname(filename) !== '.pdf') {
         utils.logInfo('INPUT', `skipping the file ${path.resolve(filename)} as it is not a pdf file!`);
         return;
       } else {
         utils.logInfo('INPUT', `processing ${path.resolve(filename)}!`);
-  
+
         run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`));
       }
     });
@@ -44,7 +44,7 @@ function toWriteString(text: string) {
 }
 
 function joinSafe(array: string[], separator?: string): string {
-  return array.map((cur: string) => !separator ? cur : cur.replace(RegExp(separator, 'gi'), (separator === ';') ? ',' : ';')).join(separator);
+  return array.map((cur: string) => (!separator ? cur : cur.replace(RegExp(separator, 'gi'), separator === ';' ? ',' : ';'))).join(separator);
 }
 
 function run(config: Config.Config, inputFile: string, outputFile: string) {
@@ -69,7 +69,15 @@ function run(config: Config.Config, inputFile: string, outputFile: string) {
       writer.write(toWriteString(`columns=${joinSafe(Object.keys(v[0]), columnSeparator)}`));
 
       const printRowHeaders = config.output?.table?.printRowHeaders;
-      if (printRowHeaders !== undefined && printRowHeaders === true) writer.write(toWriteString(`${Object.keys(v[0])[0] || 'rows'}=${joinSafe(v.map(r => Object.values(r)[0]), columnSeparator)}`));
+      if (printRowHeaders !== undefined && printRowHeaders === true)
+        writer.write(
+          toWriteString(
+            `${Object.keys(v[0])[0] || 'rows'}=${joinSafe(
+              v.map((r) => Object.values(r)[0]),
+              columnSeparator
+            )}`
+          )
+        );
 
       v.forEach((l) => {
         const [lFirst, ...lRemaining] = Object.values(l);
