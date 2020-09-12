@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-import { utils } from "./utils";
+import * as utils from './utils';
 import * as fs from 'fs';
 import * as path from 'path';
-import CONST from "./const";
-import { convert } from ".";
+import * as CONST from './const';
+import { convert } from '.';
 
 const { configFile, inputFileOrDir, isInputDir, outputFileOrDir } = parseArgs(process.argv);
 
