@@ -2,16 +2,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 const { version } = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
 
-namespace CONST {
-  // Make log dir
-  if (!fs.existsSync('./logs')) fs.mkdirSync('./logs');
-  export const LOG_PATH = `${path.resolve('./logs')}/${new Date().toISOString().replace(/^(.*)T.*/, '$1')}.log`;
+// Make log dir
+if (!fs.existsSync('./logs')) fs.mkdirSync('./logs');
+export const LOG_PATH = `${path.resolve('./logs')}/${new Date().toISOString().replace(/^(.*)T.*/, '$1')}.log`;
 
-  export const INTERNAL_ERROR = `An internal error occured!
+export const INTERNAL_ERROR = `An internal error occured!
 Please check the log file for more information!
 Path: ${LOG_PATH}`;
 
-  export const HELP_MESSAGE = `VERSION ${version || 'dev system'}
+export const HELP_MESSAGE = `VERSION ${version || 'dev system'}
 EMAPC (EinsatzMonitor-Alarm-PDF-Converter).
 MIT Licensed.
 Written by Matthias Hecht (https://github.com/matzehecht).
@@ -37,6 +36,3 @@ MANDATORY ARGUMENTS:
 OPTIONAL ARGUMENTS:
     --config            This parameter should be followed by a valid path the a custom config file.
                         If not provided emapc will use the default config.`;
-}
-
-export default CONST;
