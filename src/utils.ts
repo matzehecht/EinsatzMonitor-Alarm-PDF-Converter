@@ -6,11 +6,11 @@ export namespace utils {
     appendFile(
       CONST.LOG_PATH,
       `[${new Date().toISOString()}] INFO ${msg.join(' - ')}
-  `,
+`,
       () => {}
     );
   }
-  
+
   export function throwErr(err: Error, internal: boolean = false) {
     if (internal) {
       console.log(CONST.INTERNAL_ERROR);
@@ -20,8 +20,8 @@ export namespace utils {
     appendFileSync(
       CONST.LOG_PATH,
       `[${new Date().toISOString()}] ERROR ${err.name} - ${err.message}
-  ${err.stack || ''}
-  `
+${err.stack || ''}
+`
     );
     process.exit(1);
   }

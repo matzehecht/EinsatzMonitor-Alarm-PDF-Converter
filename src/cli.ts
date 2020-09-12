@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { utils } from "./utils";
 import * as fs from 'fs';
 import * as path from 'path';
