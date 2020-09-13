@@ -33,6 +33,5 @@ MANDATORY ARGUMENTS:
                         This can be the path to a existing directory.
                             In this case emapc will take the file name from the input.
 
-OPTIONAL ARGUMENTS:
     --config            This parameter should be followed by a valid path the a custom config file.
                         If not provided emapc will use the default config.`;

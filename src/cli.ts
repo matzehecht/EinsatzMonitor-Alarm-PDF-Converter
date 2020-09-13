@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import * as utils from './utils';
+import * as CONST from './const';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as CONST from './const';
+import * as utils from './utils';
 import { convert } from '.';
 
 const { configFile, inputFileOrDir, isInputDir, outputFileOrDir } = parseArgs(process.argv);
@@ -18,7 +18,8 @@ function parseArgs(argv: string[]) {
 
   // get optional config
   const configIndex = args.findIndex((a) => ['--config', '-c'].includes(a));
-  const configFile = configIndex > -1 ? args[configIndex + 1] : undefined;
+  if (configIndex === -1) utils.throwErr(new Error('CONFIG - no config provided'));
+  const configFile = args[configIndex + 1];
 
   // remove '--config' and the following filepath from the array
   if (configIndex > -1) args.splice(configIndex, 2);
