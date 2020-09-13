@@ -3,30 +3,48 @@ import * as Config from './config';
 export function extract(raw: string, config: Config.Config): Parsed {
   const rawArray = raw.split(/\r?\n/);
 
-  const sections = config.sections;
+  const exInTextKeys = config.input.inTextKeys.reduce((prev, inTextKey) => {
+    const indexes: number[] = [];
+    const extracted = rawArray.reduce((extractedPrev, line, i) => {
+      if (line.includes(inTextKey)) {
+        indexes.push(i);
+        return [extractedPrev, line.trim()].join(' ');
+      } else {
+        return extractedPrev;
+      }
+    }, '');
+    indexes.forEach(i => rawArray.splice(i, 1));
+    prev[inTextKey] = extracted.trim();
+    return prev;
+  }, {} as ParsedKVSection);
 
-  const extractedSection = {} as Parsed;
-  sections.forEach((s) => (extractedSection[s.key] = extractSection(rawArray, s)));
+  const extractedSection: Parsed = {
+    inText: exInTextKeys
+  };
+
+  const sections = config.input.sections;
+
+  Object.entries(sections).forEach(section => extractedSection[section[0]] = extractSection(rawArray, section));
   return extractedSection;
 }
 
-function extractSection(rawArray: string[], section: Config.Section): ParsedSection {
+function extractSection(rawArray: string[], [sectionKey, sectionType]: [string, Config.SectionType]): ParsedSection {
   // Find first line of section. If a section spans over two pages there can be two first lines.
-  const indexes = rawArray.reduce((prev, r, i) => (r.includes(section.key) ? prev.concat(i) : prev), [] as number[]);
+  const indexes = rawArray.reduce((prev, r, i) => (r.includes(sectionKey) ? prev.concat(i) : prev), [] as number[]);
 
-  const subSections = indexes.map((i) => extractSubSection(rawArray, section, i));
+  const subSections = indexes.map(i => extractSubSection(rawArray, sectionType, i));
 
   return Array.isArray(subSections[0]) ? subSections.flat() : subSections.reduce((p, c) => ({ ...p, ...c }), {});
 }
 
-function extractSubSection(rawArray: string[], section: Config.Section, index: number): ParsedSection {
+function extractSubSection(rawArray: string[], sectionType: Config.SectionType, index: number): ParsedSection {
   const trimmedLeft = rawArray.slice(index);
 
-  const endIndex = trimmedLeft.findIndex((r) => r.trim().length === 0);
+  const endIndex = trimmedLeft.findIndex(line => line.trim().length === 0);
 
   const relevantLines = trimmedLeft.slice(0, endIndex);
 
-  switch (section.type) {
+  switch (sectionType) {
     case 'keyValue':
       return extractKeyVal(relevantLines);
     case 'table':
@@ -44,9 +62,9 @@ function extractSubSection(rawArray: string[], section: Config.Section, index: n
 function extractTable(rawArray: string[]): ParsedTableSectionRow[] {
   const columnIndexes = rawArray[0]
     .match(/(\s\s|^)(\S)/g)
-    ?.reduce((prev, m) => prev.concat(rawArray[0].indexOf(m, prev[prev.length - 1]) + m.search(/\S/)), [] as number[]);
+    ?.reduce((prev, match) => prev.concat(rawArray[0].indexOf(match, prev[prev.length - 1]) + match.search(/\S/)), [] as number[]);
 
-  const columns = columnIndexes?.map((i) => rawArray[0].substring(i).split(/\s\s/)[0]);
+  const columns = columnIndexes?.map(i => rawArray[0].substring(i).split(/\s\s/)[0]);
 
   if (!columnIndexes || !columns) throw new Error('No columns found in Table');
 
@@ -55,14 +73,15 @@ function extractTable(rawArray: string[]): ParsedTableSectionRow[] {
     columns.unshift('');
   }
 
-  const rows = rawArray.slice(1).map((r) => {
+  const rows = rawArray.slice(1).map(line => {
     const row = {} as ParsedTableSectionRow;
 
-    columnIndexes?.forEach((c, i) => {
-      row[columns[i]] = r
-        .slice(minNull(c - 2))
+    columnIndexes?.forEach((columnIndex, i) => {
+      row[columns[i]] = line
+        .slice(minNull(columnIndex - 2))
         .trim()
-        .split(/\s\s/)[0];
+        .split(/\s\s/)[0]
+        .trim();
     });
 
     return row;
@@ -80,20 +99,20 @@ function extractKeyVal(rawArray: string[]): ParsedKVSection {
 
   const extracted = {} as ParsedKVSection;
 
-  linesWithoutHeading.forEach((l, i) => {
-    const key = l.split(/\s\s/)[0];
+  linesWithoutHeading.forEach((line, indexLine) => {
+    const key = line.split(/\s\s/)[0];
 
     const trimmedKey = key.trim();
 
     if (trimmedKey !== '') {
-      const indexVal = l.split('').findIndex((c, i) => i > key.length && !c.match(/\s/));
+      const indexValue = line.slice(key.length).search(/\S/) + key.length;
 
-      const val = l.slice(indexVal).split(/\s\s/)[0];
+      const value = line.slice(indexValue).split(/\s\s/)[0];
 
-      extracted[trimmedKey] = val.trim();
+      extracted[trimmedKey] = value.trim();
 
-      const endIndexVal = indexVal + val.length;
-      const restString = l.slice(endIndexVal).trim();
+      const endIndexValue = indexValue + value.length;
+      const restString = line.slice(endIndexValue).trim();
 
       if (restString.startsWith('Datum:')) extracted.Datum = restString.replace('Datum:', '').split(/\s\s/)[0].trim();
       if (restString.startsWith(trimmedKey))
@@ -105,10 +124,10 @@ function extractKeyVal(rawArray: string[]): ParsedKVSection {
             .split(/\s\s/)[0]
             .trim();
 
-      linesWithoutHeading.every((nl, ni) => {
-        if (ni <= i) return true;
-        if (!nl.startsWith('     ')) return false;
-        extracted[trimmedKey] = extracted[trimmedKey] + ' ' + nl.slice(indexVal).split(/\s\s/)[0];
+      linesWithoutHeading.every((lineBelow, indexBelow) => {
+        if (indexBelow <= indexLine) return true;
+        if (!lineBelow.startsWith('     ')) return false;
+        extracted[trimmedKey] = extracted[trimmedKey] + ' ' + lineBelow.slice(indexValue).split(/\s\s/)[0].trim();
 
         return true;
       });
@@ -126,7 +145,7 @@ export interface ParsedKVSection {
   [key: string]: string;
 }
 
-type ParsedSection = ParsedKVSection | ParsedTableSectionRow[];
+export type ParsedSection = ParsedKVSection | ParsedTableSectionRow[];
 
 export interface Parsed {
   [key: string]: ParsedSection;
