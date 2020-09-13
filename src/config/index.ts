@@ -1,10 +1,10 @@
 import { createValidator } from '@typeonly/validator';
 import * as YAML from 'yamljs';
 import * as utils from '../utils';
-import { Config, Section } from './config';
-export { Config, Section };
+import { BaseKey, Config, Input, Key, KeyValueKey, ListByWordKey, Output, Section, SectionType, TableKey, ValueByWordKey, ValueIndexKey } from './config';
+export { Config, Input, SectionType, Section, Output, Key, BaseKey, KeyValueKey, TableKey, ListByWordKey, ValueByWordKey, ValueIndexKey };
 
-export function load(configPath: string = './default.conf.yml'): Config {
+export function load(configPath: string): Config {
   const config = YAML.load(configPath);
 
   const validator = createValidator({
@@ -14,7 +14,7 @@ export function load(configPath: string = './default.conf.yml'): Config {
   const result = validator.validate('Config', config);
 
   if (!result.valid) {
-    throw new Error(result.error);
+    utils.throwErr(new Error('VALIDATION: ' + result.error));
   } else {
     utils.logInfo('CONFIG', 'validated config successfully!');
   }

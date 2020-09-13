@@ -1,0 +1,55 @@
+input:
+  sections:
+    Einsatzanlass: keyValue
+    Einsatzort: try
+    EM: table
+  inTextKeys:
+    - Sondersignal
+output:
+  keys:
+    Meldebild:
+      inputSection: Einsatzanlass
+      inputKeyWords: 
+        - Meldebild
+    Ort:
+      inputSection: Einsatzort
+      inputKeyWords:
+        - Ort
+      index: 0
+    Ortsteil:
+      inputSection: Einsatzort
+      inputKeyWords:
+        - Ortsteil
+      index: 0
+    Straße:
+      inputSection: Einsatzort
+      inputKeyWords:
+        - Straße
+      index: 0
+    Ortszusatz:
+      inputSection: Einsatzort
+      inputKeyWords:
+        - Ortszusatz
+        - Bemerkung
+      index: 0
+    Sondersignal:
+      inputSection: inText
+      inputKeyWords: 
+        - Sondersignal
+    Bemerkung:
+      inputSection: Einsatzanlass
+      inputKeyWords:
+        - Bemerkung
+    Stichwort 2:
+      inputSection: Einsatzanlass
+      inputKeyWords:
+        - Stichwort 2
+    Stichwort:
+      inputSection: Einsatzanlass
+      inputKeyWords:
+        - Stichwort
+    Einsatzmittel:
+      inputSection: EM
+      type: 'column'
+      inputKeyWord: EM
+      filter: ^.*1(\/|-)00$

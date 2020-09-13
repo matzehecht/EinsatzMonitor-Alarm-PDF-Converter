@@ -1,16 +1,51 @@
 export interface Config {
-  sections: Section[];
-  output?: Output;
+  input: Input;
+  output: Output;
 }
+
+export interface Input {
+  sections: Section;
+  inTextKeys: string[]
+}
+
+export type SectionType = 'keyValue' | 'table' | 'try'
 
 export interface Section {
-  key: string;
-  type: 'keyValue' | 'table' | 'try';
+  [ keyWord: string ]: SectionType;
 }
 
-interface Output {
-  table?: {
-    columnSeparator?: string;
-    printRowHeaders?: boolean;
+export interface Output {
+  keys: {
+    [key: string]: Key;
   };
+  separator?: string;
+  keyValueSeparator?: string;
+}
+
+export type Key = KeyValueKey | TableKey;
+
+export interface BaseKey {
+  inputSection: string | 'inText';
+  filter?: string;
+}
+
+export interface KeyValueKey extends BaseKey {
+  inputKeyWords: string[];
+}
+
+export type TableKey = ListByWordKey | ValueByWordKey | ValueIndexKey;
+
+export interface ListByWordKey extends BaseKey {
+  type: 'column' | 'row';
+  inputKeyWord: string;
+}
+
+export interface ValueByWordKey extends BaseKey {
+  inputKeyWords: string[];
+  index: number;
+}
+
+export interface ValueIndexKey extends BaseKey {
+  rowIndex: number;
+  columnIndex: number;
 }
