@@ -5,6 +5,9 @@
 
 ## Documentation
 
+> ATTENTION!  
+> This documentation is outdated. It will be updated before the next stable release. Please do not consider this as source of truth!
+
 The EMAPC (EinsatzMonitor-Alarm-PDF-Converter) provides a toolset to convert an incoming alarm PDF into a format that can be read by the EinsatzMonitor.
 This tool extracts the relevant information of the alarm pdf into a key-value formated file that can be read by the pattern matching of the EinsatzMonitor.
 
@@ -144,6 +147,9 @@ The default configuration is the following:
 ```
 
 ## Dokumentation
+
+> WICHIG!  
+> Diese Dokumentation ist veraltet! Sie wird vor dem nächsten stabilen Release aktualisiert! Nehmt diese bitte nicht als richtig an!
 
 Der EMAPC (EinsatzMonitor-Alarm-PDF-Converter) bietet ein Toolset zur Konvertierung einer eingehenden Alarm-PDF in ein Format, das vom EinsatzMonitor lesbar ist.
 Dieses Tool extrahiert die relevanten Informationen der Alarm-PDF in eine schlüssel-wert-formatierte Datei, die durch die Mustererkennung des EinsatzMonitors gelesen werden kann.  
