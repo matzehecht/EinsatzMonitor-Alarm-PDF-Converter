@@ -5,8 +5,9 @@ import * as Config from './config';
 import * as path from 'path';
 import * as Extractor from './extractor';
 import * as utils from './utils';
+import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
 
-export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, configFile?: string) {
+export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, configFile: string) {
   const config = Config.load(configFile);
 
   if (!isInputDir) {
@@ -57,40 +58,89 @@ function run(config: Config.Config, inputFile: string, outputFile: string) {
 
   const writer = fs.createWriteStream(outputFile);
 
-  Object.entries(output).forEach(([k, v]) => {
-    writer.write(toWriteString('-'.repeat(k.length + 6)));
-    writer.write(toWriteString(`|  ${k}  |`));
-    writer.write(toWriteString('-'.repeat(k.length + 6)));
-    writer.write(toWriteString(''));
+  const separator = config.output.separator || ';';
+  const keyValueSeparator = config.output.keyValueSeparator || ': ';
+  const outputKeys = config.output.keys;
 
-    if (Array.isArray(v)) {
-      const columnSeparator = config?.output?.table?.columnSeparator || ';';
-
-      writer.write(toWriteString(`columns=${joinSafe(Object.keys(v[0]), columnSeparator)}`));
-
-      const printRowHeaders = config.output?.table?.printRowHeaders;
-      if (printRowHeaders !== undefined && printRowHeaders === true)
-        writer.write(
-          toWriteString(
-            `${Object.keys(v[0])[0] || 'rows'}=${joinSafe(
-              v.map((r) => Object.values(r)[0]),
-              columnSeparator
-            )}`
-          )
-        );
-
-      v.forEach((l) => {
-        const [lFirst, ...lRemaining] = Object.values(l);
-
-        writer.write(toWriteString(`${lFirst}=${joinSafe(lRemaining, columnSeparator)}`));
-      });
-    } else {
-      Object.entries(v).forEach(([ik, iv]) => {
-        writer.write(toWriteString(`${ik}=${iv}`));
-      });
+  Object.entries((outputKeys)).every(([key, keyConfig]: [string, Config.Key]) => {
+    if (!output[keyConfig.inputSection]) {
+      utils.throwErr(new Error(`OUTPUT - section ${keyConfig.inputSection} not configured in input`));
+      return false;
     }
 
-    writer.write(toWriteString(''));
+    const sectionValues = output[keyConfig.inputSection];
+
+    if (Array.isArray(sectionValues)) {
+      // is table section
+      if ('type' in keyConfig) {
+        // is ListByWordKey
+        const thisKeyConfig = keyConfig as ListByWordKey;
+
+        if (thisKeyConfig.type === 'column') {
+          const values = sectionValues
+            .map(row => row[thisKeyConfig.inputKeyWord])
+            .filter(value => {
+              return !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter));
+            });
+
+          writer.write(toWriteString(`${key}${keyValueSeparator}${joinSafe(values, separator)}`));
+          return true;
+        } else {
+          const row = sectionValues.find(row => Object.values(row)[0] === thisKeyConfig.inputKeyWord);
+          const values = row ? Object.values(row) : undefined;
+          const curatedValues = values?.slice(1).filter(value => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter))) || [];
+
+          writer.write(toWriteString(`${key}${keyValueSeparator}${joinSafe(curatedValues, separator)}`));
+          return true;
+        }
+      } else if ('index' in keyConfig) {
+        // is ValueByWordKey
+        const thisKeyConfig = keyConfig as ValueByWordKey;
+        const rows = sectionValues.filter(row => thisKeyConfig.inputKeyWords.includes(Object.values(row)[0]));
+        const values = rows.map(row => Object.values(row)[thisKeyConfig.index + 1])
+          .filter(value => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter)));
+
+        writer.write(toWriteString(`${key}${keyValueSeparator}${values.join(' ')}`));
+        return true;
+      } else if ('rowIndex' in keyConfig) {
+        // is ValueIndexKey
+        const thisKeyConfig = keyConfig as ValueIndexKey;
+
+        const row = sectionValues[thisKeyConfig.rowIndex];
+        const value = Object.values(row)[thisKeyConfig.columnIndex].trim();
+
+        if (thisKeyConfig.filter && value.match(RegExp(thisKeyConfig.filter))) {
+          writer.write(toWriteString(`${key}${keyValueSeparator}`));
+          return true;
+        } else {
+          writer.write(toWriteString(`${key}${keyValueSeparator}${value}`));
+          return true;
+        }
+      } else {
+        utils.throwErr(new Error(`OUTPUT - key ${key} should be configured as Table Key`));
+        return false;
+      }
+    } else if (Object.keys(sectionValues).length !== 0) {
+      // is keyValue section
+      if (!('inputKeyWords' in keyConfig)) {
+        utils.throwErr(new Error(`OUTPUT - key ${key} should has inputKeyWords as it is a key value key`));
+        return false;
+      }
+      const thisKeyConfig = keyConfig as KeyValueKey;
+
+      const value = thisKeyConfig.inputKeyWords.reduce((prev, key) => {
+        const thisValue = sectionValues[key];
+        if (!thisValue) return prev;
+        if (thisKeyConfig.filter && thisValue.match(RegExp(thisKeyConfig.filter))) return prev;
+        return [prev, thisValue].join(' ');
+      }, '').trim();
+
+      writer.write(toWriteString(`${key}${keyValueSeparator}${value}`));
+      return true;
+    } else {
+      utils.logInfo('OUTPUT', 'empty key', key);
+      return true;
+    }
   });
 
   writer.close();
