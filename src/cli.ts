@@ -4,10 +4,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as utils from './utils';
 import { convert } from '.';
+import { load as loadConfig } from './config';
 
 const { configFile, inputFileOrDir, isInputDir, outputFileOrDir } = parseArgs(process.argv);
 
-convert(inputFileOrDir, isInputDir, outputFileOrDir, configFile);
+const config = loadConfig(configFile);
+
+convert(inputFileOrDir, isInputDir, outputFileOrDir, config);
 
 function parseArgs(argv: string[]) {
   if (argv.find((a) => ['--help', '-help', 'help', '--h', '-h', 'h', '--?', '-?', '?'].includes(a))) {
