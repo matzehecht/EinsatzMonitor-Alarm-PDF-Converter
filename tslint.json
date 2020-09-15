@@ -22,7 +22,8 @@
         "max-classes-per-file": false,
         "no-any": false,
         "semicolon": true,
-        "no-shadowed-variable": false
+        "no-shadowed-variable": false,
+        "no-empty": false
     },
     "rulesDirectory": []
 }
