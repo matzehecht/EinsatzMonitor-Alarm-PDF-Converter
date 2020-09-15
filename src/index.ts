@@ -1,14 +1,13 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as child from 'child_process';
-import * as Config from './config';
+import { Config, Key } from './config';
 import * as path from 'path';
 import * as Extractor from './extractor';
 import * as utils from './utils';
 import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
 
-export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, configFile: string) {
-  const config = Config.load(configFile);
+export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config) {
 
   if (!isInputDir) {
     const fnWithoutExt = path.basename(inputFileOrDir, '.pdf');
@@ -48,7 +47,7 @@ function joinSafe(array: string[], separator?: string): string {
   return array.map((cur: string) => (!separator ? cur : cur.replace(RegExp(separator, 'gi'), separator === ';' ? ',' : ';'))).join(separator);
 }
 
-function run(config: Config.Config, inputFile: string, outputFile: string) {
+function run(config: Config, inputFile: string, outputFile: string) {
   const pdftotext = getBinary();
   const pdftotextCMD = `${pdftotext} -simple ${inputFile} -`;
   utils.logInfo('Read pdf', 'command: ' + pdftotextCMD);
@@ -62,7 +61,7 @@ function run(config: Config.Config, inputFile: string, outputFile: string) {
   const keyValueSeparator = config.output.keyValueSeparator || ': ';
   const outputKeys = config.output.keys;
 
-  Object.entries((outputKeys)).every(([key, keyConfig]: [string, Config.Key]) => {
+  Object.entries((outputKeys)).every(([key, keyConfig]: [string, Key]) => {
     if (!output[keyConfig.inputSection]) {
       utils.throwErr(new Error(`OUTPUT - section ${keyConfig.inputSection} not configured in input`));
       return false;
