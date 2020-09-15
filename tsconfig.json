@@ -3,15 +3,14 @@
         "outDir": "./dist",
         "checkJs": false,
         "target": "es5",
-        "sourceMap": true,
+        "sourceMap": false,
         "noImplicitReturns": true,
         "noUnusedLocals": true,
         "skipLibCheck": true,
         "strict": true,
         "lib": ["es2019"],
         "noEmitOnError": false,
-        "resolveJsonModule": true,
-        "declaration": true
+        "resolveJsonModule": true
     },
     "include": [
         "src/**/*"
