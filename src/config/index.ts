@@ -2,8 +2,8 @@ import { createValidator } from '@typeonly/validator';
 import { existsSync, statSync } from 'fs';
 import * as YAML from 'yamljs';
 import * as utils from '../utils';
-import { Config } from './config';
-export * from './config';
+import { Config, Runner, Input, SectionType, Section, Output, Key, BaseKey, KeyValueKey, TableKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
+export { Config, Runner, Input, SectionType, Section, Output, Key, BaseKey, KeyValueKey, TableKey, ListByWordKey, ValueByWordKey, ValueIndexKey };
 
 export function load(configPath: string): Config {
   const config = YAML.load(configPath) as Config;
