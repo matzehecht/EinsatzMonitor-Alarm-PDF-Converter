@@ -1,3 +1,4 @@
+import { Transaction } from './perf';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as child from 'child_process';
@@ -7,9 +8,12 @@ import * as Extractor from './extractor';
 import * as utils from './utils';
 import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
 
-export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config) {
+export async function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config, parentTransaction?: Transaction) {
+  const transaction = parentTransaction?.startChild('convert') || (process.env.NODE_EMAPC_DEBUG === 'true') ? Transaction.startTransaction('convert') : undefined;
+  console.log('convert -> transaction', transaction);
 
   if (!isInputDir) {
+    const fileChild = transaction?.startChild(inputFileOrDir);
     const fnWithoutExt = path.basename(inputFileOrDir, '.pdf');
     const outputFile = path.extname(outputFileOrDir) === '' ? path.join(outputFileOrDir, `${fnWithoutExt}.txt`) : outputFileOrDir;
 
@@ -18,13 +22,15 @@ export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileO
     } else {
       utils.logInfo('INPUT', `processing ${path.resolve(inputFileOrDir)}!`);
 
-      run(config, inputFileOrDir, outputFile);
+      run(config, inputFileOrDir, outputFile, fileChild);
     }
+    fileChild?.end();
   } else {
     const files = fs.readdirSync(inputFileOrDir, { withFileTypes: true });
 
     files.forEach((file) => {
       const filename = file.name;
+      const fileChild = transaction?.startChild(filename);
       const fnWithoutExt = path.basename(filename, path.extname(filename));
 
       if (path.extname(filename) !== '.pdf') {
@@ -33,9 +39,16 @@ export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileO
       } else {
         utils.logInfo('INPUT', `processing ${path.resolve(filename)}!`);
 
-        run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`));
+        run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild);
       }
+      fileChild?.end();
     });
+  }
+
+  const perf = await transaction?.end();
+  console.log('convert -> perf', perf);
+  if (perf) {
+    console.log(perf.toString(Transaction.PRECISION.NS));
   }
 }
 
@@ -47,14 +60,19 @@ function joinSafe(array: string[], separator?: string): string {
   return array.map((cur: string) => (!separator ? cur : cur.replace(RegExp(separator, 'gi'), separator === ';' ? ',' : ';'))).join(separator);
 }
 
-function run(config: Config, inputFile: string, outputFile: string) {
+function run(config: Config, inputFile: string, outputFile: string, transaction?: Transaction) {
   const pdftotext = getBinary();
   const pdftotextCMD = `${pdftotext} -simple ${inputFile} -`;
   utils.logInfo('Read pdf', 'command: ' + pdftotextCMD);
+  const readChild = transaction?.startChild('read');
   const raw = child.execSync(pdftotextCMD, { encoding: 'latin1' });
+  readChild?.end();
 
-  const output = Extractor.extract(raw, config);
+  const extractChild = transaction?.startChild('extract');
+  const output = Extractor.extract(raw, config, extractChild);
+  extractChild?.end();
 
+  const writeChild = transaction?.startChild('write');
   const writer = fs.createWriteStream(outputFile);
 
   const separator = config.output.separator || ';';
@@ -141,6 +159,7 @@ function run(config: Config, inputFile: string, outputFile: string) {
       return true;
     }
   });
+  writeChild?.end();
 
   writer.close();
 }
