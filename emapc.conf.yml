@@ -53,3 +53,8 @@ output:
       type: 'column'
       inputKeyWord: EM
       filter: ^.*1(\/|-)00$
+runner:
+  inputDir: ../Examples
+  # archiveDir: ./archive/
+  outputDir: ./output/
+  interval: 60

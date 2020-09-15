@@ -1,11 +1,12 @@
 import { createValidator } from '@typeonly/validator';
+import { existsSync, statSync } from 'fs';
 import * as YAML from 'yamljs';
 import * as utils from '../utils';
-import { BaseKey, Config, Input, Key, KeyValueKey, ListByWordKey, Output, Section, SectionType, TableKey, ValueByWordKey, ValueIndexKey } from './config';
-export { Config, Input, SectionType, Section, Output, Key, BaseKey, KeyValueKey, TableKey, ListByWordKey, ValueByWordKey, ValueIndexKey };
+import { Config } from './config';
+export * from './config';
 
 export function load(configPath: string): Config {
-  const config = YAML.load(configPath);
+  const config = YAML.load(configPath) as Config;
 
   const validator = createValidator({
     bundle: require('./config-types.to.json')
@@ -18,6 +19,10 @@ export function load(configPath: string): Config {
   } else {
     utils.logInfo('CONFIG', 'validated config successfully!');
   }
+
+  if (config.runner?.inputDir && ( !existsSync(config.runner.inputDir) || !statSync(config.runner.inputDir).isDirectory() )) utils.throwErr(new Error('input dir does not exist'));
+  if (config.runner?.outputDir && ( !existsSync(config.runner.outputDir) || !statSync(config.runner.outputDir).isDirectory() )) utils.throwErr(new Error('output dir does not exist'));
+  if (config.runner?.archiveDir && ( !existsSync(config.runner.archiveDir) || !statSync(config.runner.archiveDir).isDirectory() )) utils.throwErr(new Error('archive dir does not exist'));
 
   return config;
 }
