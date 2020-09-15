@@ -1,6 +1,6 @@
-import * as Config from './config';
+import { Config, SectionType } from './config';
 
-export function extract(raw: string, config: Config.Config): Parsed {
+export function extract(raw: string, config: Config): Parsed {
   const rawArray = raw.split(/\r?\n/);
 
   const exInTextKeys = config.input.inTextKeys.reduce((prev, inTextKey) => {
@@ -28,7 +28,7 @@ export function extract(raw: string, config: Config.Config): Parsed {
   return extractedSection;
 }
 
-function extractSection(rawArray: string[], [sectionKey, sectionType]: [string, Config.SectionType]): ParsedSection {
+function extractSection(rawArray: string[], [sectionKey, sectionType]: [string, SectionType]): ParsedSection {
   // Find first line of section. If a section spans over two pages there can be two first lines.
   const indexes = rawArray.reduce((prev, r, i) => (r.includes(sectionKey) ? prev.concat(i) : prev), [] as number[]);
 
@@ -37,7 +37,7 @@ function extractSection(rawArray: string[], [sectionKey, sectionType]: [string, 
   return Array.isArray(subSections[0]) ? subSections.flat() : subSections.reduce((p, c) => ({ ...p, ...c }), {});
 }
 
-function extractSubSection(rawArray: string[], sectionType: Config.SectionType, index: number): ParsedSection {
+function extractSubSection(rawArray: string[], sectionType: SectionType, index: number): ParsedSection {
   const trimmedLeft = rawArray.slice(index);
 
   const endIndex = trimmedLeft.findIndex(line => line.trim().length === 0);
