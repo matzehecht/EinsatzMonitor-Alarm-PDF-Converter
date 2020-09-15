@@ -1,8 +1,6 @@
-const CHILD_INDENT = '  | ';
-
 export class Transaction {
-  private children: Transaction[] = [];
-  private endCbs: ((result: Transaction.Result) => void)[] = [];
+  private children: Transaction[] | undefined;
+  private endCb: ((result: Transaction.Result) => void) | undefined;
   private name: string;
 
   private result: Transaction.Result | undefined;
@@ -16,6 +14,7 @@ export class Transaction {
 
   public startChild(name: string): Transaction {
     const child = Transaction.startTransaction(name);
+    if (!this.children) this.children = [];
     this.children.push(child);
     return child;
   }
@@ -24,7 +23,7 @@ export class Transaction {
     if (this.result) {
       return cb(this.result);
     }
-    this.endCbs.push(cb);
+    this.endCb = cb;
   }
 
   public getResult(): Transaction.Result | undefined {
@@ -32,29 +31,24 @@ export class Transaction {
   }
 
   public async end(): Promise<Transaction.Result> {
-    const proms = this.children.map((child) => {
+    const proms = this.children?.map((child) => {
       return new Promise<Transaction.Result>((resolve) => {
-        return child.onEnd((result) => {
-          console.log('cb -> result', result.name, result);
-          resolve(result);
-        });
+        child.onEnd(resolve);
       });
     });
 
-    const childrenResults = await Promise.all(proms);
+    const childrenResults = proms && await Promise.all(proms);
     const timing = process.hrtime.bigint() - this.startTime;
 
-    const result = {
+    const result = Transaction.Result.fromObject({
       name: this.name,
       timing,
       children: childrenResults
-    };
+    });
 
     this.result = result;
-    this.endCbs.forEach(cb => cb);
-    console.log('Transaction -> this.endCbs', this.endCbs);
+    this.endCb?.(result);
 
-    console.log('Transaction -> result', this.name, result);
     return result;
   }
 
@@ -65,22 +59,30 @@ export class Transaction {
 
 // tslint:disable-next-line: no-namespace
 export namespace Transaction {
-  export interface Result {
+  export class Result {
     readonly name: string;
     readonly timing: BigInt;
-    readonly children?: Result[];
-  }
+    readonly children?: Result[] | undefined;
 
-  export class Result {
+    private constructor(name: string, timing: BigInt, children?: Result[]) {
+      this.name = name;
+      this.timing = timing;
+      this.children = children;
+    }
+
     public toString(prec: PRECISION): string {
       const output = this.children
         ?.map((child) => {
-          const childResult = `${CHILD_INDENT}${child.toString(prec)}`;
-          return childResult.replace('\n', `\n${CHILD_INDENT}`);
+          const childResult = `| - ${child.toString(prec)}`;
+          return childResult.replace(/\n/g, `\n|   `);
         })
-        .join('\n');
+        .join('\n|\n');
       const outTiming: number = prec === 'ns' ? Number(this.timing) : prec === 'ms' ? Number(this.timing) / 1000000 : Number(this.timing) / 1000000000;
-      return `${this.name} - ${outTiming}${prec}\n${output}`;
+      return `${this.name} - ${Math.round(outTiming)}${prec}${output ? `\n${output}` : ''}`;
+    }
+
+    static fromObject(obj: {name: string, timing: BigInt, children?: Result[]}) {
+      return new Result(obj.name, obj.timing, obj.children);
     }
   }
 

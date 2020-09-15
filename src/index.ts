@@ -10,12 +10,11 @@ import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './con
 
 export async function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config, parentTransaction?: Transaction) {
   const transaction = parentTransaction?.startChild('convert') || (process.env.NODE_EMAPC_DEBUG === 'true') ? Transaction.startTransaction('convert') : undefined;
-  console.log('convert -> transaction', transaction);
 
   if (!isInputDir) {
     const fileChild = transaction?.startChild(inputFileOrDir);
     const fnWithoutExt = path.basename(inputFileOrDir, '.pdf');
-    const outputFile = path.extname(outputFileOrDir) === '' ? path.join(outputFileOrDir, `${fnWithoutExt}.txt`) : outputFileOrDir;
+    const outputFile = path.extname(outputFileOrDir) === '.pdf' ? path.join(path.dirname(outputFileOrDir), `${fnWithoutExt}.txt`) : outputFileOrDir;
 
     if (path.extname(inputFileOrDir) !== '.pdf') {
       utils.logInfo('INPUT', `skipping the file ${path.resolve(inputFileOrDir)} as it is not a pdf file!`);
@@ -35,7 +34,6 @@ export async function convert(inputFileOrDir: string, isInputDir: boolean, outpu
 
       if (path.extname(filename) !== '.pdf') {
         utils.logInfo('INPUT', `skipping the file ${path.resolve(filename)} as it is not a pdf file!`);
-        return;
       } else {
         utils.logInfo('INPUT', `processing ${path.resolve(filename)}!`);
 
@@ -46,9 +44,8 @@ export async function convert(inputFileOrDir: string, isInputDir: boolean, outpu
   }
 
   const perf = await transaction?.end();
-  console.log('convert -> perf', perf);
   if (perf) {
-    console.log(perf.toString(Transaction.PRECISION.NS));
+    console.log(perf.toString(Transaction.PRECISION.MS));
   }
 }
 
