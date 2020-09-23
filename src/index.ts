@@ -8,11 +8,11 @@ import * as Extractor from './extractor';
 import * as utils from './utils';
 import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
 
-export async function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config, parentTransaction?: Transaction) {
-  const transaction = parentTransaction?.startChild('convert') || (process.env.NODE_EMAPC_DEBUG === 'true') ? Transaction.startTransaction('convert') : undefined;
+export async function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config, parentTransaction?: TraceIt.Transaction) {
+  const transaction = parentTransaction?.startChild('convert');
 
   if (!isInputDir) {
-    const fileChild = transaction?.startChild(inputFileOrDir);
+    const fileChild = transaction?.startChild('file');
     const fnWithoutExt = path.basename(inputFileOrDir, '.pdf');
     const outputFile = path.extname(outputFileOrDir) === '.pdf' ? path.join(path.dirname(outputFileOrDir), `${fnWithoutExt}.txt`) : outputFileOrDir;
 
@@ -28,8 +28,8 @@ export async function convert(inputFileOrDir: string, isInputDir: boolean, outpu
     const files = fs.readdirSync(inputFileOrDir, { withFileTypes: true });
 
     files.forEach((file) => {
+      const fileChild = transaction?.startChild('file');
       const filename = file.name;
-      const fileChild = transaction?.startChild(filename);
       const fnWithoutExt = path.basename(filename, path.extname(filename));
 
       if (path.extname(filename) !== '.pdf') {
@@ -43,10 +43,7 @@ export async function convert(inputFileOrDir: string, isInputDir: boolean, outpu
     });
   }
 
-  const perf = await transaction?.end();
-  if (perf) {
-    console.log(perf.toString(Transaction.PRECISION.MS));
-  }
+  transaction?.end();
 }
 
 function toWriteString(text: string) {
@@ -57,7 +54,7 @@ function joinSafe(array: string[], separator?: string): string {
   return array.map((cur: string) => (!separator ? cur : cur.replace(RegExp(separator, 'gi'), separator === ';' ? ',' : ';'))).join(separator);
 }
 
-function run(config: Config, inputFile: string, outputFile: string, transaction?: Transaction) {
+function run(config: Config, inputFile: string, outputFile: string, transaction?: TraceIt.Transaction) {
   const pdftotext = getBinary();
   const pdftotextCMD = `${pdftotext} -simple ${inputFile} -`;
   utils.logInfo('Read pdf', 'command: ' + pdftotextCMD);
