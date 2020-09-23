@@ -1,12 +1,20 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as TraceIt from 'trace-it';
+
 import { convert } from '.';
 import { load as loadConfig } from './config';
 import * as utils from './utils';
 
+TraceIt.init({ storage: 'lowdb', storageOptions: { dbName: './tmp/perf.json' } });
+
 const CONFIG_FILE = path.resolve('./emapc.conf.yml');
 
+const configTransaction = TraceIt.startTransaction('loadConfig');
+configTransaction.set('path', CONFIG_FILE);
 const config = loadConfig(CONFIG_FILE);
+configTransaction.set('config', config);
+configTransaction.end();
 
 if (!config.runner) utils.throwErr(new Error('CONFIG - runner config missing!'));
 

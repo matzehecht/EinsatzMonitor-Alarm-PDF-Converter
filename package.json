@@ -42,6 +42,7 @@
     "@typeonly/validator": "^0.5.1",
     "@types/yamljs": "^0.2.31",
     "shelljs": "^0.8.4",
+    "trace-it": "^1.0.0-dev.5",
     "yamljs": "^0.3.0"
   },
   "publishConfig": {
