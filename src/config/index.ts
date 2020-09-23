@@ -1,8 +1,11 @@
 import { createValidator } from '@typeonly/validator';
 import { existsSync, statSync } from 'fs';
+import * as path from 'path';
 import * as YAML from 'yamljs';
+
 import * as utils from '../utils';
 import { Config, Runner, Input, SectionType, Section, Output, Key, BaseKey, KeyValueKey, TableKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
+
 export { Config, Runner, Input, SectionType, Section, Output, Key, BaseKey, KeyValueKey, TableKey, ListByWordKey, ValueByWordKey, ValueIndexKey };
 
 export function load(configPath: string): Config {
@@ -23,6 +26,12 @@ export function load(configPath: string): Config {
   if (config.runner?.inputDir && ( !existsSync(config.runner.inputDir) || !statSync(config.runner.inputDir).isDirectory() )) utils.throwErr(new Error('input dir does not exist'));
   if (config.runner?.outputDir && ( !existsSync(config.runner.outputDir) || !statSync(config.runner.outputDir).isDirectory() )) utils.throwErr(new Error('output dir does not exist'));
   if (config.runner?.archiveDir && ( !existsSync(config.runner.archiveDir) || !statSync(config.runner.archiveDir).isDirectory() )) utils.throwErr(new Error('archive dir does not exist'));
+
+  if (config.runner) {
+    config.runner.inputDir = path.resolve(config.runner.inputDir);
+    config.runner.outputDir = path.resolve(config.runner.outputDir);
+    config.runner.archiveDir = config.runner.archiveDir && path.resolve(config.runner.archiveDir);
+  }
 
   return config;
 }

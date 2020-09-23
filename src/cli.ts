@@ -49,8 +49,8 @@ function parseArgs(argv: string[]) {
         utils.throwErr(new Error('output dir does not exist'));
       }
 
-      outputFileOrDir = !isInputDir ? `${path.resolve(outputArg)}/${path.basename(inputFileOrDir)}` : path.resolve(outputArg);
-      utils.logInfo('OUTPUT', `Using generated file name ${outputFileOrDir}`);
+      outputFileOrDir = path.resolve(outputArg);
+      utils.logInfo('OUTPUT', `Using input file name`);
     } else {
       if (!fs.existsSync(path.dirname(outputArg))) {
         utils.throwErr(new Error('output dir does not exist'));
