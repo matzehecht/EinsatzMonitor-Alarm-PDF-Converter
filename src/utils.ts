@@ -1,4 +1,6 @@
 import { appendFile, appendFileSync } from 'fs';
+import * as path from 'path';
+
 import * as CONST from './const';
 
 export function logInfo(...msg: string[]) {
@@ -25,4 +27,8 @@ ${err.stack || ''}
 `
   );
   process.exit(1);
+}
+
+export function unixPathFrom(oldPath: string) {
+  return oldPath.split(path.sep).join(path.posix.sep).slice(oldPath.indexOf(':') + 1);
 }
