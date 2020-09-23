@@ -1,4 +1,4 @@
-import { Transaction } from './perf';
+import * as TraceIt from 'trace-it';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as child from 'child_process';
@@ -14,7 +14,7 @@ export async function convert(inputFileOrDir: string, isInputDir: boolean, outpu
   if (!isInputDir) {
     const fileChild = transaction?.startChild('file');
     const fnWithoutExt = path.basename(inputFileOrDir, '.pdf');
-    const outputFile = path.extname(outputFileOrDir) === '.pdf' ? path.join(path.dirname(outputFileOrDir), `${fnWithoutExt}.txt`) : outputFileOrDir;
+    const outputFile = path.extname(outputFileOrDir) === '' ? path.join(outputFileOrDir, `${fnWithoutExt}.txt`) : outputFileOrDir;
 
     if (path.extname(inputFileOrDir) !== '.pdf') {
       utils.logInfo('INPUT', `skipping the file ${path.resolve(inputFileOrDir)} as it is not a pdf file!`);
@@ -73,7 +73,7 @@ function run(config: Config, inputFile: string, outputFile: string, transaction?
   const keyValueSeparator = config.output.keyValueSeparator || ': ';
   const outputKeys = config.output.keys;
 
-  Object.entries((outputKeys)).every(([key, keyConfig]: [string, Key]) => {
+  Object.entries(outputKeys).every(([key, keyConfig]: [string, Key]) => {
     if (!output[keyConfig.inputSection]) {
       utils.throwErr(new Error(`OUTPUT - section ${keyConfig.inputSection} not configured in input`));
       return false;
@@ -89,17 +89,17 @@ function run(config: Config, inputFile: string, outputFile: string, transaction?
 
         if (thisKeyConfig.type === 'column') {
           const values = sectionValues
-            .map(row => row[thisKeyConfig.inputKeyWord])
-            .filter(value => {
+            .map((row) => row[thisKeyConfig.inputKeyWord])
+            .filter((value) => {
               return !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter));
             });
 
           writer.write(toWriteString(`${key}${keyValueSeparator}${joinSafe(values, separator)}`));
           return true;
         } else {
-          const row = sectionValues.find(row => Object.values(row)[0] === thisKeyConfig.inputKeyWord);
+          const row = sectionValues.find((row) => Object.values(row)[0] === thisKeyConfig.inputKeyWord);
           const values = row ? Object.values(row) : undefined;
-          const curatedValues = values?.slice(1).filter(value => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter))) || [];
+          const curatedValues = values?.slice(1).filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter))) || [];
 
           writer.write(toWriteString(`${key}${keyValueSeparator}${joinSafe(curatedValues, separator)}`));
           return true;
@@ -107,9 +107,10 @@ function run(config: Config, inputFile: string, outputFile: string, transaction?
       } else if ('index' in keyConfig) {
         // is ValueByWordKey
         const thisKeyConfig = keyConfig as ValueByWordKey;
-        const rows = sectionValues.filter(row => thisKeyConfig.inputKeyWords.includes(Object.values(row)[0]));
-        const values = rows.map(row => Object.values(row)[thisKeyConfig.index + 1])
-          .filter(value => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter)));
+        const rows = sectionValues.filter((row) => thisKeyConfig.inputKeyWords.includes(Object.values(row)[0]));
+        const values = rows
+          .map((row) => Object.values(row)[thisKeyConfig.index + 1])
+          .filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter)));
 
         writer.write(toWriteString(`${key}${keyValueSeparator}${values.join(' ')}`));
         return true;
@@ -139,12 +140,14 @@ function run(config: Config, inputFile: string, outputFile: string, transaction?
       }
       const thisKeyConfig = keyConfig as KeyValueKey;
 
-      const value = thisKeyConfig.inputKeyWords.reduce((prev, key) => {
-        const thisValue = sectionValues[key];
-        if (!thisValue) return prev;
-        if (thisKeyConfig.filter && thisValue.match(RegExp(thisKeyConfig.filter))) return prev;
-        return [prev, thisValue].join(' ');
-      }, '').trim();
+      const value = thisKeyConfig.inputKeyWords
+        .reduce((prev, key) => {
+          const thisValue = sectionValues[key];
+          if (!thisValue) return prev;
+          if (thisKeyConfig.filter && thisValue.match(RegExp(thisKeyConfig.filter))) return prev;
+          return [prev, thisValue].join(' ');
+        }, '')
+        .trim();
 
       writer.write(toWriteString(`${key}${keyValueSeparator}${value}`));
       return true;

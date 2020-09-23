@@ -1,4 +1,5 @@
-import * as fs from 'fs';
+import * as chokidar from 'chokidar';
+import { Stats, promises as fsPromises } from 'fs';
 import * as path from 'path';
 import * as TraceIt from 'trace-it';
 
@@ -18,15 +19,22 @@ configTransaction.end();
 
 if (!config.runner) utils.throwErr(new Error('CONFIG - runner config missing!'));
 
-run();
+const watcher = chokidar.watch(`${utils.unixPathFrom(config.runner!.inputDir)}/*.pdf`, {
+  followSymlinks: false,
+  depth: 0
+});
 
-fs.watch(config.runner?.inputDir as string, run);
+watcher.on('add', run);
 
-async function run() {
-  await convert(config.runner?.inputDir as string, true, config.runner?.outputDir as string, config);
+async function run(filepath: string, stat?: Stats) {
+  const fileChangeTransaction = TraceIt.startTransaction('file change detected');
+  fileChangeTransaction.set('filepath', filepath);
+  await convert(filepath, false, config.runner?.outputDir as string, config, fileChangeTransaction);
+  console.log('run -> config.runner?.archiveDir', config.runner?.archiveDir);
   if (config.runner?.archiveDir) {
-    const files = await fs.promises.readdir(config.runner?.inputDir as string, { withFileTypes: true });
-    const pdfFiles = files.filter(f => f.isFile() && path.extname(f.name) === '.pdf');
-    pdfFiles.forEach(pdf => fs.promises.rename(path.resolve(config.runner?.inputDir as string, pdf.name), path.resolve(config.runner?.archiveDir as string, pdf.name)));
+    const archiveTransaction = fileChangeTransaction.startChild('archive');
+    await fsPromises.rename(path.resolve(filepath), path.resolve(config.runner?.archiveDir as string, path.basename(filepath)));
+    archiveTransaction.end();
   }
+  fileChangeTransaction.end();
 }
