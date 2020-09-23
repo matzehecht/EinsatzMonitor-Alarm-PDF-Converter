@@ -30,7 +30,7 @@ async function run(filepath: string, stat?: Stats) {
   const fileChangeTransaction = TraceIt.startTransaction('file change detected');
   fileChangeTransaction.set('filepath', filepath);
   await convert(filepath, false, config.runner?.outputDir as string, config, fileChangeTransaction);
-  console.log('run -> config.runner?.archiveDir', config.runner?.archiveDir);
+
   if (config.runner?.archiveDir) {
     const archiveTransaction = fileChangeTransaction.startChild('archive');
     await fsPromises.rename(path.resolve(filepath), path.resolve(config.runner?.archiveDir as string, path.basename(filepath)));
