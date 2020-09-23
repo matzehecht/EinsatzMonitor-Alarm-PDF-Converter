@@ -1,7 +1,7 @@
 import { Config, SectionType } from './config';
-import { Transaction } from './perf';
+import * as TraceIt from 'trace-it';
 
-export function extract(raw: string, config: Config, parentTransaction?: Transaction): Parsed {
+export function extract(raw: string, config: Config, parentTransaction?: TraceIt.Transaction): Parsed {
   const rawArray = raw.split(/\r?\n/);
 
   const exInTextKeys = config.input.inTextKeys.reduce((prev, inTextKey) => {
