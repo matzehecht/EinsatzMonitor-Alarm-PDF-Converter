@@ -89,9 +89,9 @@ WantedBy=multi-user.target\" > /etc/systemd/system/emapc-service.service
   sudo systemctl start emapc-service.service
 fi
 
-" > lib/installer/install-${linux[name]}.sh
+" > install-${linux[name]}.sh
 
-  chmod +x lib/installer/install-${linux[name]}.sh
+  chmod +x install-${linux[name]}.sh
 done
 
 echo "make win installers"
@@ -137,7 +137,7 @@ If (\$args[0] -eq 'srv') {
   & \"c:\\emapc\\${win[nssm]}\" start EMAPC-Service
 }
 
-" > lib/installer/install-${win[name]}.ps1
+" > install-${win[name]}.ps1
 
-  chmod +x lib/installer/install-${win[name]}.ps1
+  chmod +x install-${win[name]}.ps1
 done
