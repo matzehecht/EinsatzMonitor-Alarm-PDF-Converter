@@ -42,4 +42,4 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Compile
-        run: ./compile.sh
+        run: ./compileCli.sh && ./compileRunner.sh && ./makeInstaller.sh 12345678 v0.0.0
