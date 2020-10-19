@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import * as path from 'path';
-const { version } = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
 
 // Make log dir
 if (!fs.existsSync('./logs')) fs.mkdirSync('./logs');
@@ -10,20 +9,19 @@ export const INTERNAL_ERROR = `An internal error occured!
 Please check the log file for more information!
 Path: ${LOG_PATH}`;
 
-export const HELP_MESSAGE = `VERSION ${version || 'dev system'}
-EMAPC (EinsatzMonitor-Alarm-PDF-Converter).
+export const HELP_MESSAGE = `EMAPC (EinsatzMonitor-Alarm-PDF-Converter).
 MIT Licensed.
 Written by Matthias Hecht (https://github.com/matzehecht).
 Source available: https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter
 
-Documentation: https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/README.md
+Documentation: https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/
 
 This tool extracts the relevant information of the alarm pdf into a key-value formated file.
 
 USAGE: extractor [--config configFilePath] inputFileOrDir outFileOrDir
 
 MANDATORY ARGUMENTS:
-    inputFile           This has to be a valid path to either a PDF file. (The alarm pdf file).  
+    inputFile           This has to be a valid path to either a PDF file. (The alarm pdf file).
                         Or this can be a path to a folder. 
                         In this case emapc will process all pdf files in this folder.
 
