@@ -54,7 +54,7 @@ output:
       inputKeyWord: EM
       filter: ^.*1(\/|-)00$
 runner:
-  inputDir: ./input/
-  archiveDir: ./archive/
+  inputDir: ../Examples/
+  # archiveDir: ./archive/
   outputDir: ./output/
   interval: 60

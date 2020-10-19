@@ -1,5 +1,5 @@
 import * as chokidar from 'chokidar';
-import { Stats, promises as fsPromises } from 'fs';
+import { Stats, promises as fsPromises, existsSync } from 'fs';
 import * as path from 'path';
 import * as TraceIt from 'trace-it';
 import { LowDbAdapter } from '@trace-it/lowdb-adapter';
@@ -10,13 +10,14 @@ import * as utils from './utils';
 
 const shouldTrace = Boolean(process.env.SHOULD_TRACE) || false;
 
-const adapter = shouldTrace ? new LowDbAdapter({ dbName: './tmp/perf.json' }) : undefined;
+const adapter = shouldTrace ? new LowDbAdapter({ dbName: path.join(path.dirname(process.execPath), './tmp/perf.json') }) : undefined;
 if (shouldTrace) TraceIt.init(adapter as LowDbAdapter);
 
-const CONFIG_FILE = path.resolve('./emapc.conf.yml');
+const CONFIG_FILE = path.join(path.dirname(process.execPath), './emapc.conf.yml');
 
 const configTransaction = shouldTrace ? TraceIt.startTransaction('loadConfig') : undefined;
 configTransaction?.set('path', CONFIG_FILE);
+if (CONFIG_FILE && !existsSync(CONFIG_FILE)) utils.throwErr(new Error('config file does not exist'));
 const config = loadConfig(CONFIG_FILE);
 configTransaction?.set('config', config);
 configTransaction?.end();

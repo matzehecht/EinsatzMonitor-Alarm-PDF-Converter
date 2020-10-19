@@ -1,6 +1,7 @@
 import * as TraceIt from 'trace-it';
 import * as fs from 'fs';
 import * as os from 'os';
+import { promisify } from 'util';
 import * as child from 'child_process';
 import { Config, Key } from './config';
 import * as path from 'path';
@@ -8,7 +9,7 @@ import * as Extractor from './extractor';
 import * as utils from './utils';
 import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
 
-export async function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config, parentTransaction?: TraceIt.Transaction) {
+export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config, parentTransaction?: TraceIt.Transaction) {
   const transaction = parentTransaction?.startChild('convert');
 
   if (!isInputDir) {
@@ -54,12 +55,12 @@ function joinSafe(array: string[], separator?: string): string {
   return array.map((cur: string) => (!separator ? cur : cur.replace(RegExp(separator, 'gi'), separator === ';' ? ',' : ';'))).join(separator);
 }
 
-function run(config: Config, inputFile: string, outputFile: string, transaction?: TraceIt.Transaction) {
+async function run(config: Config, inputFile: string, outputFile: string, transaction?: TraceIt.Transaction) {
   const pdftotext = getBinary();
-  const pdftotextCMD = `${pdftotext} -simple ${inputFile} -`;
-  utils.logInfo('Read pdf', 'command: ' + pdftotextCMD);
+  const pdftotextArgs = ['-simple', inputFile, '-'];
+  utils.logInfo('Read pdf', `command: ${pdftotext}, args: ${pdftotextArgs}`);
   const readChild = transaction?.startChild('read');
-  const raw = child.execSync(pdftotextCMD, { encoding: 'latin1' });
+  const raw = (await promisify(child.execFile)(pdftotext, pdftotextArgs, { encoding: 'latin1' })).stdout;
   readChild?.end();
 
   const extractChild = transaction?.startChild('extract');
@@ -167,10 +168,10 @@ function getBinary() {
 
   switch (os.arch()) {
     case 'x64':
-      script = script + '64';
+      script += '64';
       break;
     case 'x32':
-      script = script + '32';
+      script += '32';
       break;
     default:
       utils.throwErr(new Error(`Architecture ${os.arch()} not supported`));
