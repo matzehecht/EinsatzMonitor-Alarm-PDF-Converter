@@ -109,3 +109,5 @@ bin
 **/*.to.json
 
 tmp
+
+lib/installer
