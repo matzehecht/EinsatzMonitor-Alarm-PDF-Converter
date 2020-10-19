@@ -18,7 +18,7 @@ Documentation: https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/
 
 This tool extracts the relevant information of the alarm pdf into a key-value formated file.
 
-USAGE: extractor [--config configFilePath] inputFileOrDir outFileOrDir
+USAGE: emapc [--config configFilePath] inputFileOrDir outFileOrDir
 
 MANDATORY ARGUMENTS:
     inputFile           This has to be a valid path to either a PDF file. (The alarm pdf file).
