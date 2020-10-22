@@ -1,3 +1,11 @@
+# [1.0.0-dev.5](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.0.0-dev.4...v1.0.0-dev.5) (2020-10-22)
+
+
+### Bug Fixes
+
+* **installer:** fixes installer ([2a2c833](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/2a2c83367cfac7b8183c4b69dccc1fc8e9a5a9a7))
+* **runner:** fixes archiving (caused by incomplete async handling) ([ccacf7b](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/ccacf7b7a8b68d29bcc9a8418fc5cc259fe7370b))
+
 # [1.0.0-dev.4](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.0.0-dev.3...v1.0.0-dev.4) (2020-10-22)
 
 
