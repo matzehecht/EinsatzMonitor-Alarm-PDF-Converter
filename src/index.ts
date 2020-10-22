@@ -22,7 +22,7 @@ export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileO
     } else {
       utils.logInfo('INPUT', `processing ${path.resolve(inputFileOrDir)}!`);
 
-      run(config, inputFileOrDir, outputFile, fileChild);
+      run(config, inputFileOrDir, outputFile, fileChild).catch(err => utils.throwErr(err));
     }
     fileChild?.end();
   } else {
@@ -38,7 +38,7 @@ export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileO
       } else {
         utils.logInfo('INPUT', `processing ${path.resolve(filename)}!`);
 
-        run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild);
+        run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild).catch(err => utils.throwErr(err));
       }
       fileChild?.end();
     });
@@ -153,6 +153,7 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
       writer.write(toWriteString(`${key}${keyValueSeparator}${value}`));
       return true;
     } else {
+      writer.write(toWriteString(`${key}${keyValueSeparator}`));
       utils.logInfo('OUTPUT', 'empty key', key);
       return true;
     }
@@ -191,5 +192,5 @@ function getBinary() {
       utils.throwErr(new Error(`OS ${os.platform()} not supported`));
   }
 
-  return path.resolve(`./lib/pdftotext/${pathToScript}/${script}`);
+  return path.join(path.dirname(process.execPath), `./lib/pdftotext/${pathToScript}/${script}`);
 }

@@ -8,7 +8,6 @@ export interface Runner {
   inputDir: string;
   outputDir: string;
   archiveDir?: string;
-  interval: number
 }
 
 export interface Input {
