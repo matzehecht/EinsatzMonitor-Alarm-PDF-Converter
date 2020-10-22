@@ -55,6 +55,9 @@ if [[ \"\$1\" != \"cli\" && \"\$1\" != \"srv\" ]]; then
 fi
 
 mkdir /usr/local/emapc
+mkdir /usr/local/emapc/input
+mkdir /usr/local/emapc/output
+mkdir /usr/local/emapc/archive
 mkdir /usr/local/emapc/lib
 mkdir /usr/local/emapc/lib/pdftotext
 mkdir /usr/local/emapc/lib/pdftotext/linux
@@ -106,6 +109,9 @@ for win in ${!win@}; do
 
 New-Item -Path \"c:\\\" -Name \"emapc\" -ItemType \"directory\"
 New-Item -Path \"c:\\emapc\" -Name \"lib\" -ItemType \"directory\"
+New-Item -Path \"c:\\emapc\" -Name \"input\" -ItemType \"directory\"
+New-Item -Path \"c:\\emapc\" -Name \"output\" -ItemType \"directory\"
+New-Item -Path \"c:\\emapc\" -Name \"archive\" -ItemType \"directory\"
 New-Item -Path \"c:\\emapc\\lib\" -Name \"pdftotext\" -ItemType \"directory\"
 New-Item -Path \"c:\\emapc\\lib\\pdftotext\" -Name \"win\" -ItemType \"directory\"
 
