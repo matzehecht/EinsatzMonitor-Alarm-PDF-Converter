@@ -49,7 +49,7 @@ for linux in ${!linux@}; do
   echo "make ${linux[name]} installer"
   echo "#!/bin/bash
 
-if [[ \"\$1\" == \"-h\" ]]; then
+if [[ \"\$1\" != \"cli\" && \"\$1\" != \"srv\" ]]; then
   echo \"USAGE: install-${linux[name]} <cli or srv>\"
   exit 0
 fi
@@ -72,6 +72,8 @@ fi
 if [[ \"\$1\" == \"srv\" ]]; then
   rm -rf /usr/local/emapc/emapc-runner
   curl -L https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/download/$gitTag/${linux[runnerBin]} -o /usr/local/emapc/emapc-runner
+
+  curl -L https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/emapc.conf.yml -o /usr/local/emapc/emapc.conf.yml
 
   echo \"[Unit]
 Description=This is a service for running the emapc.
@@ -97,7 +99,7 @@ done
 echo "make win installers"
 for win in ${!win@}; do
   echo "make ${win[name]} installer"
-  echo "If (\$args[0] -eq '-h') {
+  echo "If (!(\$args[0] -eq 'cli' -Or \$args[0] -eq 'srv')) {
   Write-Host \"USAGE: install-${win[name]}.ps1 <cli or srv>\"
   exit 0
 }
@@ -121,6 +123,8 @@ If (\$args[0] -eq 'srv') {
 
   Remove-Item -Force \"c:\\emapc\\nssm\\${win[nssm]}\"
   Invoke-WebRequest -Uri https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/lib/nssm/${win[nssm]} -OutFile \"c:\\emapc\\${win[nssm]}\"
+  
+  Invoke-WebRequest -Uri https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/emapc.conf.yml -OutFile \"c:\\emapc\\emapc.conf.yml\"
 
   & \"c:\\emapc\\${win[nssm]}\" install EMAPC-Service \"c:\\emapc\\emapc-runner.exe\"
 
