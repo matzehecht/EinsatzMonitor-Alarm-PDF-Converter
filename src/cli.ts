@@ -19,7 +19,7 @@ function parseArgs(argv: string[]) {
   }
   const args = argv.slice(2);
 
-  // get optional config
+  // get config
   const configIndex = args.findIndex((a) => ['--config', '-c'].includes(a));
   if (configIndex === -1) utils.throwErr(new Error('CONFIG - no config provided'));
   const configFile = args[configIndex + 1];

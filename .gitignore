@@ -110,4 +110,4 @@ bin
 
 tmp
 
-lib/installer
+install-*
