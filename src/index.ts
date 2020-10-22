@@ -9,8 +9,10 @@ import * as Extractor from './extractor';
 import * as utils from './utils';
 import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
 
-export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config, parentTransaction?: TraceIt.Transaction) {
+export async function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config, parentTransaction?: TraceIt.Transaction) {
   const transaction = parentTransaction?.startChild('convert');
+
+  const prems: Promise<void>[] = [];
 
   if (!isInputDir) {
     const fileChild = transaction?.startChild('file');
@@ -22,13 +24,13 @@ export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileO
     } else {
       utils.logInfo('INPUT', `processing ${path.resolve(inputFileOrDir)}!`);
 
-      run(config, inputFileOrDir, outputFile, fileChild).catch(err => utils.throwErr(err));
+      prems.push(run(config, inputFileOrDir, outputFile, fileChild).catch(err => utils.throwErr(err)));
     }
     fileChild?.end();
   } else {
     const files = fs.readdirSync(inputFileOrDir, { withFileTypes: true });
 
-    files.forEach((file) => {
+    const prems = files.map(async (file) => {
       const fileChild = transaction?.startChild('file');
       const filename = file.name;
       const fnWithoutExt = path.basename(filename, path.extname(filename));
@@ -38,13 +40,14 @@ export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileO
       } else {
         utils.logInfo('INPUT', `processing ${path.resolve(filename)}!`);
 
-        run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild).catch(err => utils.throwErr(err));
+        prems.push(run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild).catch(err => utils.throwErr(err)));
       }
       fileChild?.end();
     });
   }
 
   transaction?.end();
+  return Promise.all(prems);
 }
 
 function toWriteString(text: string) {
