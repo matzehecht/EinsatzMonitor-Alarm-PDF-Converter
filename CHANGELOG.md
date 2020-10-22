@@ -1,3 +1,16 @@
+# [1.0.0-dev.4](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.0.0-dev.3...v1.0.0-dev.4) (2020-10-22)
+
+
+### Bug Fixes
+
+* **config:** fixes config again ([961d50e](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/961d50e2dda520e04fb6daf71f70e16d5dc9b4ea))
+
+
+### Features
+
+* **runner:** adds first runner ([a305d14](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/a305d141397dbb2b9347dedb7a5a4e6727d86a6a))
+* **service:** introduces services ([fa049ae](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/fa049ae4e7ba3aab45b4ec912b0f6e3b193d349e))
+
 # [1.0.0-dev.3](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.0.0-dev.2...v1.0.0-dev.3) (2020-09-13)
 
 
