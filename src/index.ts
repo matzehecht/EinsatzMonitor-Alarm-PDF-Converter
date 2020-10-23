@@ -24,7 +24,7 @@ export async function convert(inputFileOrDir: string, isInputDir: boolean, outpu
     } else {
       utils.logInfo('INPUT', `processing ${path.resolve(inputFileOrDir)}!`);
 
-      prems.push(run(config, inputFileOrDir, outputFile, fileChild).catch((err) => utils.throwErr(err)));
+      prems.push(run(config, inputFileOrDir, outputFile, fileChild));
     }
     fileChild?.end();
   } else {
@@ -40,9 +40,7 @@ export async function convert(inputFileOrDir: string, isInputDir: boolean, outpu
       } else {
         utils.logInfo('INPUT', `processing ${path.resolve(filename)}!`);
 
-        prems.push(
-          run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild).catch((err) => utils.throwErr(err))
-        );
+        prems.push(run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild));
       }
       fileChild?.end();
     });
@@ -82,8 +80,7 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
 
     Object.entries(outputKeys).every(([key, keyConfig]: [string, Key]) => {
       if (!output[keyConfig.inputSection]) {
-        utils.throwErr(new Error(`OUTPUT - section ${keyConfig.inputSection} not configured in input`));
-        return false;
+        throw new Error(`OUTPUT - section ${keyConfig.inputSection} not configured in input`);
       }
 
       const sectionValues = output[keyConfig.inputSection];
@@ -108,7 +105,9 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
             const values = row ? Object.values(row) : undefined;
             const curatedValues = values?.slice(1).filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter))) || [];
 
-            writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(curatedValues, separator)}${thisKeyConfig.suffix || ''}`));
+            writer.write(
+              toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(curatedValues, separator)}${thisKeyConfig.suffix || ''}`)
+            );
             return true;
           }
         } else if ('index' in keyConfig) {
@@ -169,8 +168,7 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
     const errWriter = fs.createWriteStream(outputFile);
     errWriter.write(raw);
     errWriter.close();
-    utils.throwErr(err);
-    return;
+    throw err;
   }
 }
 
@@ -186,7 +184,7 @@ function getBinary() {
       script += '32';
       break;
     default:
-      utils.throwErr(new Error(`Architecture ${os.arch()} not supported`));
+      throw new Error(`Architecture ${os.arch()} not supported`);
   }
 
   switch (os.platform()) {
@@ -200,8 +198,8 @@ function getBinary() {
       pathToScript = 'win';
       break;
     default:
-      utils.throwErr(new Error(`OS ${os.platform()} not supported`));
+      throw new Error(`OS ${os.platform()} not supported`);
   }
 
-  return path.join(path.dirname(process.execPath), `./lib/pdftotext/${pathToScript}/${script}`);
+  return path.join(utils.basePath, `./lib/pdftotext/${pathToScript}/${script}`);
 }
