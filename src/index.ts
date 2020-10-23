@@ -24,7 +24,7 @@ export async function convert(inputFileOrDir: string, isInputDir: boolean, outpu
     } else {
       utils.logInfo('INPUT', `processing ${path.resolve(inputFileOrDir)}!`);
 
-      prems.push(run(config, inputFileOrDir, outputFile, fileChild).catch(err => utils.throwErr(err)));
+      prems.push(run(config, inputFileOrDir, outputFile, fileChild).catch((err) => utils.throwErr(err)));
     }
     fileChild?.end();
   } else {
@@ -40,7 +40,9 @@ export async function convert(inputFileOrDir: string, isInputDir: boolean, outpu
       } else {
         utils.logInfo('INPUT', `processing ${path.resolve(filename)}!`);
 
-        prems.push(run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild).catch(err => utils.throwErr(err)));
+        prems.push(
+          run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild).catch((err) => utils.throwErr(err))
+        );
       }
       fileChild?.end();
     });
@@ -66,104 +68,110 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
   const raw = (await promisify(child.execFile)(pdftotext, pdftotextArgs, { encoding: 'latin1' })).stdout;
   readChild?.end();
 
-  const extractChild = transaction?.startChild('extract');
-  const output = Extractor.extract(raw, config, extractChild);
-  extractChild?.end();
+  try {
+    const extractChild = transaction?.startChild('extract');
+    const output = Extractor.extract(raw, config, extractChild);
+    extractChild?.end();
 
-  const writeChild = transaction?.startChild('write');
-  const writer = fs.createWriteStream(outputFile);
+    const writeChild = transaction?.startChild('write');
+    const writer = fs.createWriteStream(outputFile);
 
-  const separator = config.output.separator || ';';
-  const keyValueSeparator = config.output.keyValueSeparator || ': ';
-  const outputKeys = config.output.keys;
+    const separator = config.output.separator || ';';
+    const keyValueSeparator = config.output.keyValueSeparator || ': ';
+    const outputKeys = config.output.keys;
 
-  Object.entries(outputKeys).every(([key, keyConfig]: [string, Key]) => {
-    if (!output[keyConfig.inputSection]) {
-      utils.throwErr(new Error(`OUTPUT - section ${keyConfig.inputSection} not configured in input`));
-      return false;
-    }
+    Object.entries(outputKeys).every(([key, keyConfig]: [string, Key]) => {
+      if (!output[keyConfig.inputSection]) {
+        utils.throwErr(new Error(`OUTPUT - section ${keyConfig.inputSection} not configured in input`));
+        return false;
+      }
 
-    const sectionValues = output[keyConfig.inputSection];
+      const sectionValues = output[keyConfig.inputSection];
 
-    if (Array.isArray(sectionValues)) {
-      // is table section
-      if ('type' in keyConfig) {
-        // is ListByWordKey
-        const thisKeyConfig = keyConfig as ListByWordKey;
+      if (Array.isArray(sectionValues)) {
+        // is table section
+        if ('type' in keyConfig) {
+          // is ListByWordKey
+          const thisKeyConfig = keyConfig as ListByWordKey;
 
-        if (thisKeyConfig.type === 'column') {
-          const values = sectionValues
-            .map((row) => row[thisKeyConfig.inputKeyWord])
-            .filter((value) => {
-              return !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter));
-            });
+          if (thisKeyConfig.type === 'column') {
+            const values = sectionValues
+              .map((row) => row[thisKeyConfig.inputKeyWord])
+              .filter((value) => {
+                return !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter));
+              });
 
-          writer.write(toWriteString(`${key}${keyValueSeparator}${joinSafe(values, separator)}`));
+            writer.write(toWriteString(`${key}${keyValueSeparator}${joinSafe(values, separator)}`));
+            return true;
+          } else {
+            const row = sectionValues.find((row) => Object.values(row)[0] === thisKeyConfig.inputKeyWord);
+            const values = row ? Object.values(row) : undefined;
+            const curatedValues = values?.slice(1).filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter))) || [];
+
+            writer.write(toWriteString(`${key}${keyValueSeparator}${joinSafe(curatedValues, separator)}`));
+            return true;
+          }
+        } else if ('index' in keyConfig) {
+          // is ValueByWordKey
+          const thisKeyConfig = keyConfig as ValueByWordKey;
+          const rows = sectionValues.filter((row) => thisKeyConfig.inputKeyWords.includes(Object.values(row)[0]));
+          const values = rows
+            .map((row) => Object.values(row)[thisKeyConfig.index + 1])
+            .filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter)));
+
+          writer.write(toWriteString(`${key}${keyValueSeparator}${values.join(' ')}`));
           return true;
+        } else if ('rowIndex' in keyConfig) {
+          // is ValueIndexKey
+          const thisKeyConfig = keyConfig as ValueIndexKey;
+
+          const row = sectionValues[thisKeyConfig.rowIndex];
+          const value = Object.values(row)[thisKeyConfig.columnIndex].trim();
+
+          if (thisKeyConfig.filter && value.match(RegExp(thisKeyConfig.filter))) {
+            writer.write(toWriteString(`${key}${keyValueSeparator}`));
+            return true;
+          } else {
+            writer.write(toWriteString(`${key}${keyValueSeparator}${value}`));
+            return true;
+          }
         } else {
-          const row = sectionValues.find((row) => Object.values(row)[0] === thisKeyConfig.inputKeyWord);
-          const values = row ? Object.values(row) : undefined;
-          const curatedValues = values?.slice(1).filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter))) || [];
-
-          writer.write(toWriteString(`${key}${keyValueSeparator}${joinSafe(curatedValues, separator)}`));
-          return true;
+          throw new Error(`OUTPUT - key ${key} should be configured as Table Key`);
         }
-      } else if ('index' in keyConfig) {
-        // is ValueByWordKey
-        const thisKeyConfig = keyConfig as ValueByWordKey;
-        const rows = sectionValues.filter((row) => thisKeyConfig.inputKeyWords.includes(Object.values(row)[0]));
-        const values = rows
-          .map((row) => Object.values(row)[thisKeyConfig.index + 1])
-          .filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter)));
+      } else if (Object.keys(sectionValues).length !== 0) {
+        // is keyValue section
+        if (!('inputKeyWords' in keyConfig)) {
+          throw new Error(`OUTPUT - key ${key} should has inputKeyWords as it is a key value key`);
+        }
+        const thisKeyConfig = keyConfig as KeyValueKey;
 
-        writer.write(toWriteString(`${key}${keyValueSeparator}${values.join(' ')}`));
+        const value = thisKeyConfig.inputKeyWords
+          .reduce((prev, key) => {
+            const thisValue = sectionValues[key];
+            if (!thisValue) return prev;
+            if (thisKeyConfig.filter && thisValue.match(RegExp(thisKeyConfig.filter))) return prev;
+            return [prev, thisValue].join(' ');
+          }, '')
+          .trim();
+
+        writer.write(toWriteString(`${key}${keyValueSeparator}${value}`));
         return true;
-      } else if ('rowIndex' in keyConfig) {
-        // is ValueIndexKey
-        const thisKeyConfig = keyConfig as ValueIndexKey;
-
-        const row = sectionValues[thisKeyConfig.rowIndex];
-        const value = Object.values(row)[thisKeyConfig.columnIndex].trim();
-
-        if (thisKeyConfig.filter && value.match(RegExp(thisKeyConfig.filter))) {
-          writer.write(toWriteString(`${key}${keyValueSeparator}`));
-          return true;
-        } else {
-          writer.write(toWriteString(`${key}${keyValueSeparator}${value}`));
-          return true;
-        }
       } else {
-        utils.throwErr(new Error(`OUTPUT - key ${key} should be configured as Table Key`));
-        return false;
+        writer.write(toWriteString(`${key}${keyValueSeparator}`));
+        utils.logInfo('OUTPUT', 'empty key', key);
+        return true;
       }
-    } else if (Object.keys(sectionValues).length !== 0) {
-      // is keyValue section
-      if (!('inputKeyWords' in keyConfig)) {
-        utils.throwErr(new Error(`OUTPUT - key ${key} should has inputKeyWords as it is a key value key`));
-        return false;
-      }
-      const thisKeyConfig = keyConfig as KeyValueKey;
+    });
+    writeChild?.end();
 
-      const value = thisKeyConfig.inputKeyWords
-        .reduce((prev, key) => {
-          const thisValue = sectionValues[key];
-          if (!thisValue) return prev;
-          if (thisKeyConfig.filter && thisValue.match(RegExp(thisKeyConfig.filter))) return prev;
-          return [prev, thisValue].join(' ');
-        }, '')
-        .trim();
-
-      writer.write(toWriteString(`${key}${keyValueSeparator}${value}`));
-      return true;
-    } else {
-      writer.write(toWriteString(`${key}${keyValueSeparator}`));
-      utils.logInfo('OUTPUT', 'empty key', key);
-      return true;
-    }
-  });
-  writeChild?.end();
-
-  writer.close();
+    writer.close();
+  } catch (err) {
+    const errWriter = fs.createWriteStream(outputFile);
+    errWriter.write(raw);
+    errWriter.close();
+    utils.throwErr(err);
+    return;
+  }
 }
 
 function getBinary() {
