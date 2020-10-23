@@ -1,7 +1,7 @@
 # EinsatzMonitor-Alarm-PDF-Converter
 
-> Click here for the [German documentation](#dokumentation).  
-> Klicke hier für die [deutsche Dokumentation](#dokumentation).
+> Click here for the [German documentation](#dokumentation)  
+> Klicke hier für die [deutsche Dokumentation](#dokumentation)  
 
 ## Documentation
 
