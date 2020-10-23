@@ -1,3 +1,16 @@
+# [1.0.0-dev.6](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.0.0-dev.5...v1.0.0-dev.6) (2020-10-23)
+
+
+### Bug Fixes
+
+* fixes build ([dad3558](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/dad3558107a7221a353339847499f2882dd6005b))
+
+
+### Features
+
+* adds a fallback that writes the raw input text to the output if something fails ([e96e034](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/e96e0340429e6ac7ff8d096d638f3f627fbe7efa))
+* adds a fallback that writes the raw input text to the output if something fails ([e2fe586](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/e2fe5865d397eb7a76dbaa9f4c040aa3ceeb32d1))
+
 # [1.0.0-dev.5](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.0.0-dev.4...v1.0.0-dev.5) (2020-10-22)
 
 
