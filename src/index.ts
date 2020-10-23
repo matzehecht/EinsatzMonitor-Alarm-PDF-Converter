@@ -101,14 +101,14 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
                 return !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter));
               });
 
-            writer.write(toWriteString(`${key}${keyValueSeparator}${joinSafe(values, separator)}`));
+            writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(values, separator)}${thisKeyConfig.suffix || ''}`));
             return true;
           } else {
             const row = sectionValues.find((row) => Object.values(row)[0] === thisKeyConfig.inputKeyWord);
             const values = row ? Object.values(row) : undefined;
             const curatedValues = values?.slice(1).filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter))) || [];
 
-            writer.write(toWriteString(`${key}${keyValueSeparator}${joinSafe(curatedValues, separator)}`));
+            writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(curatedValues, separator)}${thisKeyConfig.suffix || ''}`));
             return true;
           }
         } else if ('index' in keyConfig) {
@@ -119,7 +119,7 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
             .map((row) => Object.values(row)[thisKeyConfig.index + 1])
             .filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter)));
 
-          writer.write(toWriteString(`${key}${keyValueSeparator}${values.join(' ')}`));
+          writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${values.join(' ')}${thisKeyConfig.suffix || ''}`));
           return true;
         } else if ('rowIndex' in keyConfig) {
           // is ValueIndexKey
@@ -132,7 +132,7 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
             writer.write(toWriteString(`${key}${keyValueSeparator}`));
             return true;
           } else {
-            writer.write(toWriteString(`${key}${keyValueSeparator}${value}`));
+            writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${value}${thisKeyConfig.suffix || ''}`));
             return true;
           }
         } else {
@@ -154,7 +154,7 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
           }, '')
           .trim();
 
-        writer.write(toWriteString(`${key}${keyValueSeparator}${value}`));
+        writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${value}${thisKeyConfig.suffix || ''}`));
         return true;
       } else {
         writer.write(toWriteString(`${key}${keyValueSeparator}`));

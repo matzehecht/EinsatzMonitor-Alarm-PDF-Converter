@@ -33,6 +33,8 @@ export type Key = KeyValueKey | TableKey;
 
 export interface BaseKey {
   inputSection: string | 'inText';
+  prefix?: string;
+  suffix?: string;
   filter?: string;
 }
 
