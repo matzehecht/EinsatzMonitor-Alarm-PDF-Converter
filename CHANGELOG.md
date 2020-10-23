@@ -1,3 +1,10 @@
+# [1.0.0-dev.7](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.0.0-dev.6...v1.0.0-dev.7) (2020-10-23)
+
+
+### Features
+
+* adds optional value pre- and suffix ([c67672a](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/c67672aef849d276d9c55300428edd8309cf9bb9))
+
 # [1.0.0-dev.6](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.0.0-dev.5...v1.0.0-dev.6) (2020-10-23)
 
 
