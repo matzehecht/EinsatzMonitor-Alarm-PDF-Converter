@@ -15,6 +15,7 @@ output:
       inputSection: Einsatzort
       inputKeyWords:
         - Ort
+      prefix: Deutschland, 
       index: 0
     Ortsteil:
       inputSection: Einsatzort
