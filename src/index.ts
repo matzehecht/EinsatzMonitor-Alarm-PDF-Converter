@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as Extractor from './extractor';
 import * as utils from './utils';
 import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
+import { writer } from 'repl';
 
 export async function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config, parentTransaction?: TraceIt.Transaction) {
   const transaction = parentTransaction?.startChild('convert');
