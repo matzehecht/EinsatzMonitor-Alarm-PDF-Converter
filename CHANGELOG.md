@@ -1,3 +1,45 @@
+# 1.0.0 (2020-10-24)
+
+
+### Bug Fixes
+
+* **extractor:** fixes failure if section key word is contained elsewhere in the file ([701f402](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/701f40246c2f6b4bc7afb43af0b1e8c06a324623))
+* **extractor:** fixes wrong handling of similar keys in restString ([0ae0317](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/0ae031711066dfb0d5859b687d6c71d579da917e))
+* fixes build ([64ea8e9](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/64ea8e94efcdc79931ceffd22246d7d388839c60))
+* fixes the fallback mode ([7e7f6f9](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/7e7f6f9e1e80ea26cf7dcfa61e521f7c905ca140))
+* **config:** fixes config again ([807dc98](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/807dc987835c7c1e26c790501fefe780f6462f84))
+* **help:** fixes version in help ([9f32ae0](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/9f32ae0df25a4542efedab5950ec6462d90b7274))
+* **installer:** fixes installer ([1cacb5d](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/1cacb5d127e1caf7c6285db30fd9ef009f5159e4))
+* **output:** fixes safe string joins (replacing separators) ([56abac0](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/56abac0d80b0f36e3b14cccbfebc4f589bf153b3))
+* **runner:** fixes archiving (caused by incomplete async handling) ([cdc7900](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/cdc7900f348d21c4674dd888bd00678e35b71fd2))
+
+
+### Code Refactoring
+
+* **config:** new better config format ([3972607](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/3972607e1b68c596a0013aff41efd871a93121cb))
+
+
+### Features
+
+* adds a fallback that writes the raw input text to the output if something fails ([1102cd3](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/1102cd3ae4b82ba7f8199b972243cfc986e1a0bd))
+* adds a fallback that writes the raw input text to the output if something fails ([e2653b8](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/e2653b8d1b75b74035ddff84ce94e672e535c8f9))
+* adds optional value pre- and suffix ([04698ba](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/04698ba06b30498b2468d15633d18b3ca1323b7b))
+* **config:** makes config optional ([1c4bc3e](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/1c4bc3e5085726a11ac104a5b09292935b7fea93))
+* **extractor:** now supporting in text keys ([31293e7](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/31293e7f5d791b6915c10c60497c89f230cd3c3b))
+* **output:** now supports fixed sets of keys alias keys and similar ([c988640](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/c9886407b81b4db361167fa92bbbe8182fe17688))
+* **output:** optionally output rowHeaders ([d0da946](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/d0da946fcec6d58eba4aa086fa3661f71ee22cb2))
+* **output:** replace seperator in table output ([71a0479](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/71a0479afbdf14c0d5c612e0391f534484b0d00e))
+* **runner:** adds first runner ([8549fb8](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/8549fb8884e662f6c03c15a009bf8c3385eb5098))
+* **service:** introduces services ([6ccd7dc](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/6ccd7dc1cd655459f924af0de26e30b6776895c8))
+* finishes first iteration MVP :tada: :tada: ([691b9a1](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/691b9a1a5b7f5e6713ad899877cf9b54cb98aea2))
+
+
+### BREAKING CHANGES
+
+* **output:** now supports a fixed structure and a fixed set of keys. Also it supports merging
+multiple input keys. There are multiple ways to output a table. And you can filter the output.
+* **config:** changed config stucture and now using yaml as config file type
+
 # [1.0.0-dev.8](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.0.0-dev.7...v1.0.0-dev.8) (2020-10-24)
 
 
