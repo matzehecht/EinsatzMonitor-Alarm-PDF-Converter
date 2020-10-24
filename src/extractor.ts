@@ -1,6 +1,8 @@
 import { Config, SectionType } from './config';
 import * as TraceIt from 'trace-it';
 
+const WELL_KNOWN_KEYS = ['Datum'];
+
 export function extract(raw: string, config: Config, parentTransaction?: TraceIt.Transaction): Parsed {
   const rawArray = raw.split(/\r?\n/);
 
@@ -101,42 +103,50 @@ function minNull(input: number) {
 function extractKeyVal(rawArray: string[]): ParsedKVSection {
   const linesWithoutHeading = rawArray.slice(1);
 
-  const extracted = {} as ParsedKVSection;
-
-  linesWithoutHeading.forEach((line, indexLine) => {
+  const extracted = linesWithoutHeading.reduce((prev, line, indexLine) => {
     const key = line.split(/\s\s/)[0];
-
     const trimmedKey = key.trim();
 
     if (trimmedKey !== '') {
       const indexValue = line.slice(key.length).search(/\S/) + key.length;
-
       const value = line.slice(indexValue).split(/\s\s/)[0];
 
-      extracted[trimmedKey] = value.trim();
+      prev[trimmedKey] = value.trim();
 
       const endIndexValue = indexValue + value.length;
       const restString = line.slice(endIndexValue).trim();
 
-      if (restString.startsWith('Datum:')) extracted.Datum = restString.replace('Datum:', '').split(/\s\s/)[0].trim();
-      if (restString.startsWith(trimmedKey))
-        extracted[trimmedKey] =
-          extracted[trimmedKey] +
-          ' ' +
-          restString
-            .replace(RegExp(trimmedKey + '( \\d*)?'), '')
+      const isWellKnown = WELL_KNOWN_KEYS.find((k) => restString.startsWith(k));
+      if (isWellKnown) {
+        prev[isWellKnown] = restString
+          .replace(RegExp(`^${isWellKnown}[^a-zA-Z0-9]*`), '')
+          .split(/\s\s/)[0]
+          .trim();
+      } else if (restString.startsWith(trimmedKey)) {
+        const restKey = restString.match(RegExp(`^${trimmedKey}([^a-zA-Z0-9][a-zA-Z0-9]*)?`))?.[0];
+        if (restKey === trimmedKey) {
+          extracted[trimmedKey] +=
+            ' ' +
+            restString
+              .replace(trimmedKey, '')
+              .split(/\s\s/)[0]
+              .trim();
+        } else if (restKey) {
+          prev[restKey] = restString
+            .replace(restKey, '')
             .split(/\s\s/)[0]
             .trim();
+        }
+      }
 
-      linesWithoutHeading.every((lineBelow, indexBelow) => {
-        if (indexBelow <= indexLine) return true;
+      linesWithoutHeading.slice(indexLine + 1).every(lineBelow => {
         if (!lineBelow.startsWith('     ')) return false;
-        extracted[trimmedKey] = extracted[trimmedKey] + ' ' + lineBelow.slice(indexValue).split(/\s\s/)[0].trim();
-
+        prev[trimmedKey] += ' ' + lineBelow.slice(indexValue).split(/\s\s/)[0].trim();
         return true;
       });
     }
-  });
+    return prev;
+  }, {} as ParsedKVSection);
 
   return extracted;
 }
