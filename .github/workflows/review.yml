@@ -1,0 +1,73 @@
+name: Review
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - name: Install dependencies
+        run: npm ci
+      - name: build
+        run: npm run build
+      - name: Compile
+        run: ./compileCli.sh && ./compileRunner.sh
+      - uses: actions/upload-artifact@v2
+        with:
+          name: emapc-cli-linux-x32
+          path: bin/cli/linux/emapc32
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v2
+        with:
+          name: emapc-cli-linux-x64
+          path: bin/cli/linux/emapc64
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v2
+        with:
+          name: emapc-cli-win-x32.exe
+          path: bin/cli/win/emapc32.exe
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v2
+        with:
+          name: emapc-cli-win-x64.exe
+          path: bin/cli/win/emapc64.exe
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v2
+        with:
+          name: emapc-cli-macos-x64
+          path: bin/cli/macos/emapc64
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v2
+        with:
+          name: emapc-srv-linux-x32
+          path: bin/srv/linux/emapc32
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v2
+        with:
+          name: emapc-srv-linux-x64
+          path: bin/srv/linux/emapc64
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v2
+        with:
+          name: emapc-srv-win-x32.exe
+          path: bin/srv/win/emapc32.exe
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v2
+        with:
+          name: emapc-srv-win-x64.exe
+          path: bin/srv/win/emapc64.exe
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v2
+        with:
+          name: emapc-srv-macos-x64
+          path: bin/srv/macos/emapc64
+          if-no-files-found: error
