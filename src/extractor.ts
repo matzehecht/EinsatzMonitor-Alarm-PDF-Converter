@@ -31,7 +31,10 @@ export function extract(raw: string, config: Config, parentTransaction?: TraceIt
 
 function extractSection(rawArray: string[], [sectionKey, sectionType]: [string, SectionType]): ParsedSection {
   // Find first line of section. If a section spans over two pages there can be two first lines.
-  const indexes = rawArray.reduce((prev, r, i) => (r.includes(sectionKey) ? prev.concat(i) : prev), [] as number[]);
+  const indexes = rawArray.reduce(
+    (prev, r, i) => (r.match(RegExp(`(^|[^a-zA-Z0-9])${sectionKey}([^a-zA-Z0-9]|$)`)) && rawArray[i - 1].trim().length === 0 ? prev.concat(i) : prev),
+    [] as number[]
+  );
 
   const subSections = indexes.map(i => extractSubSection(rawArray, sectionType, i));
 
