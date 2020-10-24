@@ -121,7 +121,7 @@ input:
 ```
 
 The output part will now specify how the output should look like. It also maps the extracted input values to an output key. But first the output part specifies the separator used between the key and the related value (called `keyValueSeparator`) and the separator used between mutliple values (called `separator`). Both mentioned configurations are optional (`keyValueSeparator` defaults to `=` and `separator` defaults to `;`).  
-The last thing specified in the output part are the output keys. They are located below the key `keys`. The output keys are little bit more complex. Each key is a mapping of it's name (will also be whats written in the output as key) to it's configuration. Each output key has to specify which input section it belongs to. Note: the inText keys are belonging to the section `inText`. Optionally the output keys can specify a filter. This filter will be used to determine if one value of this output key should be included in the output (for example you don't want to print cars with the number '00' in it then set `filter` to '00'. The filter takes an [RegExp](https://en.wikipedia.org/wiki/Regular_expression)).  
+The last thing specified in the output part are the output keys. They are located below the key `keys`. The output keys are little bit more complex. Each key is a mapping of it's name (will also be whats written in the output as key) to it's configuration. Each output key has to specify which input section it belongs to. Note: the inText keys are belonging to the section `inText`. Optionally the output keys can specify a filter. This filter will be used to determine if one value of this output key should be included in the output (for example you don't want to print cars with the number '00' in it then set `filter` to '00'. The filter takes an [RegExp](https://en.wikipedia.org/wiki/Regular_expression)). Also each key can optionally specify a prefix and/or suffix. This will be printed before/after the value.  
 Now it's getting complex: If the output key will have a simple key value like format the configuration will take a list of input keywords (specified by `inputKeyWords`). Emapc looks for these input keys in the specified inputSection and merge them for the output. This can be used if the same information is can have different keys for different alarms.  
 If the output key is contained in a table section or a try-section you have to use another format to specify the output. Here you have multiple options. If the output should print all values of a column or a row you should specify the `type` (`row` or `column`) and the inputKeyWord containing the row or column header. If you want to print one value of a row with a specific row header, you can specify a list of inputKeyWords (like for the keyValue described before) and the columnIndex of the value. Last but nor least: If you want to select one value of a specific row specified by an index, you can specify a `rowIndex` and a `columnIndex`.  
 *Example:*
@@ -134,6 +134,8 @@ output:
     # Example for keyValue format
     Meldebild:
       inputSection: Einsatzanlass
+      suffix: something behind
+      prefix: something in front
       inputKeyWords:
         - Meldebild
     # Example for table - all values of a column (with a filter for anything which ends with 1/00 or 1-00).
@@ -142,14 +144,14 @@ output:
       type: 'column'
       inputKeyWord: EM        # Can be something different (compared to inputSection) for other columns than the first
       filter: ^.*1(\/|-)00$
-    # Example for table - one value from a column specified with key words
+    # Example for table - one value from a row specified with key words
     Ortszusatz:
       inputSection: Einsatzort
       inputKeyWords:
         - Ortszusatz
         - Bemerkung
       index: 0
-    # Example for table - one value from a column specified with indexes
+    # Example for table - one value specified with indexes
     Straße:
       inputSection: Einsatzort
       rowIndex: 1
@@ -285,7 +287,7 @@ input:
 ```
 
 Der Ausgabeteil gibt nun an, wie die Ausgabe aussehen soll. Er ordnet auch die extrahierten Eingabewerte den Ausgabeschlüsseln zu. Aber zuerst gibt der Ausgabeteil das Trennzeichen an, das zwischen dem Schlüssel und dem zugehörigen Wert verwendet wird (genannt "keyValueSeparator") und das Trennzeichen, das zwischen mehreren Werten verwendet wird (genannt "separator"). Beide genannten Konfigurationen sind optional (`keyValueSeparator` ist standardmäßig `=` und `separator` ist standardmäßig `;`).  
-Das letzte, was im Ausgabeteil angegeben wird, sind die Ausgabeschlüssel. Sie befinden sich unterhalb des Schlüssels `keys`. Die Ausgabeschlüssel sind etwas komplexer. Jeder Schlüssel ist eine Abbildung seines Namens (wird auch das sein, was in der Ausgabe als Schlüssel geschrieben wird) zu seiner Konfiguration. Jeder Ausgabeschlüssel muss angeben, zu welchem Eingabeabschnitt er gehört. Anmerkung: Die inText-Schlüssel gehören zum Abschnitt `inText`. Optional können die Ausgabeschlüssel einen Filter angeben. Dieser Filter wird benutzt, um zu bestimmen, ob ein Wert dieses Ausgabeschlüssels in der Ausgabe enthalten sein soll (wenn z.B. kein Auto mit der Nummer '00' ausgegeben werden soll: setze den `filter` auf '00'. Der Filter nimmt einen [RegExp](https://de.wikipedia.org/wiki/Regul%C3%A4rer_Ausdruck)).  
+Das letzte, was im Ausgabeteil angegeben wird, sind die Ausgabeschlüssel. Sie befinden sich unterhalb des Schlüssels `keys`. Die Ausgabeschlüssel sind etwas komplexer. Jeder Schlüssel ist eine Abbildung seines Namens (wird auch das sein, was in der Ausgabe als Schlüssel geschrieben wird) zu seiner Konfiguration. Jeder Ausgabeschlüssel muss angeben, zu welchem Eingabeabschnitt er gehört. Anmerkung: Die inText-Schlüssel gehören zum Abschnitt `inText`. Optional können die Ausgabeschlüssel einen Filter angeben. Dieser Filter wird benutzt, um zu bestimmen, ob ein Wert dieses Ausgabeschlüssels in der Ausgabe enthalten sein soll (wenn z.B. kein Auto mit der Nummer '00' ausgegeben werden soll: setze den `filter` auf '00'. Der Filter nimmt einen [RegExp](https://de.wikipedia.org/wiki/Regul%C3%A4rer_Ausdruck)). Außerdem kann jeder Schlüssel optional ein Präfix und/oder Suffix angeben. Dieses wird vor/nach dem Wert gedruckt.  
 Jetzt wird es kompliziert: Wenn der Ausgabeschlüssel ein einfaches schlüsselwertähnliches Format hat, nimmt die Konfiguration eine Liste von Eingabeschlüsselwörtern (spezifiziert durch `inputKeyWords`). Emapc sucht nach diesen Eingabeschlüsseln in der angegebenen inputSection und führt sie für die Ausgabe zusammen. Dies kann verwendet werden, wenn die gleiche Information verschiedene Eingabeschlüssel für verschiedene Alarme haben kann.  
 Wenn der Ausgabeschlüssel in einem Tabellenabschnitt oder einem Try-Abschnitt enthalten ist, muss ein anderes Format verwendet werden, um die Ausgabe zu spezifizieren. Hier gibt es mehrere Optionen. Wenn die Ausgabe alle Werte einer Spalte oder einer Zeile ausgeben soll, muss der `type` (`column` oder `row`) und das inputKeyWord, das den Zeilen- oder Spaltenkopf enthält, angegeben werden. Wenn ein Wert einer Zeile mit einem bestimmten Zeilenkopf ausgegeben werden soll, kann eine Liste von inputKeyWords (wie für den zuvor beschriebenen keyValue) und der columnIndex des Wertes angegeben werden. Last but not least: Wenn ein Wert einer bestimmten, durch einen Index spezifizierten Zeile ausgegeben werden soll, kann ein `rowIndex` und ein `columnIndex` angeben wrden.  
 *Beispiel:*
@@ -295,25 +297,27 @@ output:
   separator: ';'
   keyValueSeparator: '='
   keys:
-    # Example for keyValue format
+    # Beispiel für Schlüsselwert-Format
     Meldebild:
       inputSection: Einsatzanlass
+      suffix: irgendwas dahinter
+      prefix: irgendwas davor
       inputKeyWords:
         - Meldebild
-    # Example for table - all values of a column (with a filter for anything which ends with 1/00 or 1-00).
+    # Beispiel für Tabelle - alle Werte einer Spalte (mit einem Filter auf alles, was auf 1/00 oder 1-00 endet).
     Einsatzmittel:
       inputSection: EM
       type: 'column'
-      inputKeyWord: EM        # Can be something different (compared to inputSection) for other columns than the first
+      inputKeyWord: EM        # Kann unterschiedlich zur inputSection sein für Spalten, die nicht die erste sind.
       filter: ^.*1(\/|-)00$
-    # Example for table - one value from a column specified with key words
+    # Beispiel für Tabelle - ein Wert einer Zeile spezifiziert mit Schlüsselwörtern
     Ortszusatz:
       inputSection: Einsatzort
       inputKeyWords:
         - Ortszusatz
         - Bemerkung
       index: 0
-    # Example for table - one value from a column specified with indexes
+    # Beispiel für Tabelle - ein WErt angegeben mit Indizes
     Straße:
       inputSection: Einsatzort
       rowIndex: 1
