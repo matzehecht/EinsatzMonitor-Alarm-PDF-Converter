@@ -36,6 +36,8 @@ To get help with the installer you only have to call `./installer -h`.
 You can call the installer with `cli` to download and place the cli-tool and the dependencies.  
 If you call it with `srv` it will download and place the runner, the default config and the dependencies. It will also try to install an os service. It uses deamons on linux and native windows services with the help of nssm on windows.  
 
+**NOTE:** Error messages may occur during installation. This does not mean that the installation fails. The installer just tries to delete all dependencies and binaries and download them again. The former fails if emapc was not installed before.  
+
 ### USAGE
 
 #### CLI
@@ -87,6 +89,7 @@ emapc will now write the result back to a key value formatted text file.
 For writing emapc will loop over all output keys (specified in [configuration](#configuration)). This ensures that the output file has the same format for every run (of course the data is changing for different inputs).  
 The output will be written in a key value like format. Each line contains a new key value pair. The key and the value will be seperated with the configured keyValueSeparator (default: `=`).  
 If the key is a key that contains multiple values all values will be printed in this line separated by the configured separator (default: `;`).  
+Optionally emapc can add a prefix and a suffix to a value (one suffix and/or one prefix per key value pair).  
 Example:
 
 ```txt
@@ -166,9 +169,6 @@ runner:
 
 ## Dokumentation
 
-> WICHIG!  
-> Diese Dokumentation ist veraltet! Sie wird vor dem nächsten stabilen Release aktualisiert! Nehmt diese bitte nicht als richtig an!
-
 Der EMAPC (EinsatzMonitor-Alarm-PDF-Converter) bietet ein Toolset zur Konvertierung einer eingehenden Alarm-PDF in ein Format, das vom EinsatzMonitor lesbar ist.
 Dieses Tool extrahiert die relevanten Informationen der Alarm-PDF in eine schlüssel-wert-formatierte Datei, die durch die Mustererkennung des EinsatzMonitors gelesen werden kann.  
 
@@ -179,7 +179,7 @@ Du kannst mir auch gerne bei der Implementierung dieses Tools helfen. Erstelle h
 Bitte nutze den dev-Branch für neue Features und arbeite nicht auf dem master-Branch, wenn du nicht an einem Hotfix arbeitest.  
 Stelle sicher, dass du den aktuellen Status des übergeordneten Branches (dev oder master) verwendest, bevor du einen Merge anforderst.
 
-### Willst du EMAPC verwenden?
+### Du willst EMAPC verwenden?
 
 Kein Problem. Es gibt keine Einschränkungen für die Verwendung dieses Projekts.  
 Wenn du etwas Feedback hast: Bitte erstellen ein Issue und füge das Label `Feedback` hinzu.  
@@ -199,6 +199,8 @@ Um Hilfe mit dem Installationsprogramm zu erhalten, müssen Sie nur `./installer
 **VERWENDUNG:** `installer <cli or srv>`  (***ACHTUNG:** Bitte führe den insaller mit Admin-Rechten aus*)  
 Sie können den Installer mit `cli` aufrufen, um das Cli-Tool und alle Abhängigkeiten herunterzuladen und zu platzieren.  
 Wenn Sie den Installer mit `srv` aufrufen, wird das Runner-Tool, die Standardkonfiguration und alle Abhängigkeiten heruntergeladen und platziert. Außerdem wird versucht, einen Betriebssystemdienst zu installieren. Auf Linux werden deamon und auf Windows native Dienste mit Hilfe von nssm verwendet.  
+
+**NOTIZ:** Während der Installation können Fehlermeldungen auftreten. Das heißt nicht, dass die Installation fehlschlägt. Der Installer versucht nur alle Abhängigkeiten und Binärdateien zu löschen und neu herunterzuladen. Ersteres schläägt fehl, wenn emapc zuvor nicht installiert war.  
 
 ### VERWENDUNG
 
@@ -251,6 +253,7 @@ Emapc schreibt nun das Ergebnis in eine Textdatei im Schlüsselwertformat.
 Zum Schreiben iteriert emapc über alle Ausgabeschlüssel (festgesetzt in [configuration](#configuration)). Dies stellt sicher, dass die Ausgabedatei für jeden Durchlauf das gleiche Format hat (natürlich ändern sich die Daten für verschiedene Eingaben).  
 Die Ausgabe wird in einem schlüsselwertähnlichen Format geschrieben. Jede Zeile enthält ein neues Schlüsselwertpaar. Der Schlüssel und der Wert werden mit dem konfigurierten keyValueSeparator (Standard: `=`) getrennt.  
 Wenn es sich bei dem Schlüssel um einen Schlüssel handelt, der mehrere Werte enthält, werden alle Werte in dieser Zeile ausgegeben, getrennt durch das konfigurierte Trennzeichen (Voreinstellung: `;`).  
+Optional kann emapc ein Präfix und ein Suffix zu einem Wert hinzufügen (ein Suffix und/oder ein Präfix pro Schlüssel-Wert-Paar).  
 Beispiel:
 
 ```txt
