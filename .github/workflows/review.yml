@@ -19,8 +19,8 @@ jobs:
         run: npm ci
       - name: build
         run: npm run build
-      - name: Compile
-        run: ./compileCli.sh && ./compileRunner.sh
+      - name: Compile cli
+        run: ./compileCli.sh
       - uses: actions/upload-artifact@v2
         with:
           name: emapc-cli-linux-x32
@@ -46,6 +46,8 @@ jobs:
           name: emapc-cli-macos-x64
           path: bin/cli/macos/emapc64
           if-no-files-found: error
+      - name: Compile srv
+        run: ./compileRunner.sh
       - uses: actions/upload-artifact@v2
         with:
           name: emapc-srv-linux-x32
