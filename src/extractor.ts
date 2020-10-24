@@ -16,7 +16,7 @@ export function extract(raw: string, config: Config, parentTransaction?: TraceIt
         return extractedPrev;
       }
     }, '');
-    indexes.forEach(i => rawArray.splice(i, 1));
+    indexes.forEach((i) => rawArray.splice(i, 1));
     prev[inTextKey] = extracted.trim();
     return prev;
   }, {} as ParsedKVSection);
@@ -27,7 +27,7 @@ export function extract(raw: string, config: Config, parentTransaction?: TraceIt
 
   const sections = config.input.sections;
 
-  Object.entries(sections).forEach(section => extractedSection[section[0]] = extractSection(rawArray, section));
+  Object.entries(sections).forEach((section) => (extractedSection[section[0]] = extractSection(rawArray, section)));
   return extractedSection;
 }
 
@@ -38,7 +38,7 @@ function extractSection(rawArray: string[], [sectionKey, sectionType]: [string, 
     [] as number[]
   );
 
-  const subSections = indexes.map(i => extractSubSection(rawArray, sectionType, i));
+  const subSections = indexes.map((i) => extractSubSection(rawArray, sectionType, i));
 
   return Array.isArray(subSections[0]) ? subSections.flat() : subSections.reduce((p, c) => ({ ...p, ...c }), {});
 }
@@ -46,7 +46,7 @@ function extractSection(rawArray: string[], [sectionKey, sectionType]: [string, 
 function extractSubSection(rawArray: string[], sectionType: SectionType, index: number): ParsedSection {
   const trimmedLeft = rawArray.slice(index);
 
-  const endIndex = trimmedLeft.findIndex(line => line.trim().length === 0);
+  const endIndex = trimmedLeft.findIndex((line) => line.trim().length === 0);
 
   const relevantLines = trimmedLeft.slice(0, endIndex);
 
@@ -70,7 +70,7 @@ function extractTable(rawArray: string[]): ParsedTableSectionRow[] {
     .match(/(\s\s|^)(\S)/g)
     ?.reduce((prev, match) => prev.concat(rawArray[0].indexOf(match, prev[prev.length - 1]) + match.search(/\S/)), [] as number[]);
 
-  const columns = columnIndexes?.map(i => rawArray[0].substring(i).split(/\s\s/)[0]);
+  const columns = columnIndexes?.map((i) => rawArray[0].substring(i).split(/\s\s/)[0]);
 
   if (!columnIndexes || !columns) throw new Error('No columns found in Table');
 
@@ -79,7 +79,7 @@ function extractTable(rawArray: string[]): ParsedTableSectionRow[] {
     columns.unshift('');
   }
 
-  const rows = rawArray.slice(1).map(line => {
+  const rows = rawArray.slice(1).map((line) => {
     const row = {} as ParsedTableSectionRow;
 
     columnIndexes?.forEach((columnIndex, i) => {
