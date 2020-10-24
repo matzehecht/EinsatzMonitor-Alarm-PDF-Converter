@@ -1,3 +1,12 @@
+# [1.0.0-dev.8](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.0.0-dev.7...v1.0.0-dev.8) (2020-10-24)
+
+
+### Bug Fixes
+
+* **extractor:** fixes failure if section key word is contained elsewhere in the file ([af4adcd](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/af4adcd234277551a53126dcc92cb5a2dbb0da93))
+* **extractor:** fixes wrong handling of similar keys in restString ([9e522d7](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/9e522d71e0b9bfffb733d21b1fb6d8a7fa3c094d))
+* fixes the fallback mode ([3af4329](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/3af432999da6c87dcb1a3fe196ecf92a61b6449b))
+
 # [1.0.0-dev.7](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.0.0-dev.6...v1.0.0-dev.7) (2020-10-23)
 
 
