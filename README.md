@@ -34,9 +34,7 @@ To get help with the installer you only have to call `./installer -h`.
 
 **USAGE:** `installer <cli or srv>`  (***ATTENTION:** Please run the installer with root/elevated privileges*)  
 You can call the installer with `cli` to download and place the cli-tool and the dependencies.  
-If you call it with `srv` it will download and place the runner, the default config and the dependencies. It will also try to install an os service. It uses deamons on linux and native windows services with the help of nssm on windows.  
-
-**NOTE:** Error messages may occur during installation. This does not mean that the installation fails. The installer just tries to delete all dependencies and binaries and download them again. The former fails if emapc was not installed before.  
+If you call it with `srv` it will download and place the runner, the default config and the dependencies. If there was a config before, it will rename that to `emapc.conf.yml.old` and download the new default config. It will also try to install an os service. It uses deamons on linux and native windows services with the help of nssm on windows.  
 
 ### USAGE
 
@@ -200,9 +198,7 @@ Um Hilfe mit dem Installationsprogramm zu erhalten, müssen Sie nur `./installer
 
 **VERWENDUNG:** `installer <cli or srv>`  (***ACHTUNG:** Bitte führe den insaller mit Admin-Rechten aus*)  
 Sie können den Installer mit `cli` aufrufen, um das Cli-Tool und alle Abhängigkeiten herunterzuladen und zu platzieren.  
-Wenn Sie den Installer mit `srv` aufrufen, wird das Runner-Tool, die Standardkonfiguration und alle Abhängigkeiten heruntergeladen und platziert. Außerdem wird versucht, einen Betriebssystemdienst zu installieren. Auf Linux werden deamon und auf Windows native Dienste mit Hilfe von nssm verwendet.  
-
-**NOTIZ:** Während der Installation können Fehlermeldungen auftreten. Das heißt nicht, dass die Installation fehlschlägt. Der Installer versucht nur alle Abhängigkeiten und Binärdateien zu löschen und neu herunterzuladen. Ersteres schläägt fehl, wenn emapc zuvor nicht installiert war.  
+Wenn Sie den Installer mit `srv` aufrufen, wird das Runner-Tool, die Standardkonfiguration und alle Abhängigkeiten heruntergeladen und platziert. Wenn es vorher schon eine Konfiguration gab, wird diese zu `emapc.conf.yml.old` umbenannt und die neue Standardkonfiguration heruntergeladen. Außerdem wird versucht, einen Betriebssystemdienst zu installieren. Auf Linux werden deamon und auf Windows native Dienste mit Hilfe von nssm verwendet.  
 
 ### VERWENDUNG
 

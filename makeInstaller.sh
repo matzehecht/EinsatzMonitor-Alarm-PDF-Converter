@@ -54,13 +54,10 @@ if [[ \"\$1\" != \"cli\" && \"\$1\" != \"srv\" ]]; then
   exit 0
 fi
 
-mkdir /usr/local/emapc
-mkdir /usr/local/emapc/input
-mkdir /usr/local/emapc/output
-mkdir /usr/local/emapc/archive
-mkdir /usr/local/emapc/lib
-mkdir /usr/local/emapc/lib/pdftotext
-mkdir /usr/local/emapc/lib/pdftotext/linux
+mkdir -p /usr/local/emapc/input
+mkdir -p /usr/local/emapc/output
+mkdir -p /usr/local/emapc/archive
+mkdir -p /usr/local/emapc/lib/pdftotext/linux
 
 rm -rf /usr/local/emapc/lib/pdftotext/linux/${linux[lib]}
 curl -L https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/lib/pdftotext/linux/${linux[lib]} -o /usr/local/emapc/lib/pdftotext/linux/${linux[lib]}
@@ -76,6 +73,7 @@ if [[ \"\$1\" == \"srv\" ]]; then
   rm -rf /usr/local/emapc/emapc-runner
   curl -L https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/download/$gitTag/${linux[runnerBin]} -o /usr/local/emapc/emapc-runner
 
+  if [ -f /usr/local/emapc/emapc.conf.yml ]; then mv /usr/local/emapc/emapc.conf.yml /usr/local/emapc/emapc.conf.yml.old; fi
   curl -L https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/emapc.conf.yml -o /usr/local/emapc/emapc.conf.yml
 
   echo \"[Unit]
@@ -93,7 +91,6 @@ WantedBy=multi-user.target\" > /etc/systemd/system/emapc-service.service
   sudo systemctl daemon-reload
   sudo systemctl start emapc-service.service
 fi
-
 " > install-${linux[name]}.sh
 
   chmod +x install-${linux[name]}.sh
@@ -107,38 +104,44 @@ for win in ${!win@}; do
   exit 0
 }
 
-New-Item -Path \"c:\\\" -Name \"emapc\" -ItemType \"directory\"
-New-Item -Path \"c:\\emapc\" -Name \"lib\" -ItemType \"directory\"
-New-Item -Path \"c:\\emapc\" -Name \"input\" -ItemType \"directory\"
-New-Item -Path \"c:\\emapc\" -Name \"output\" -ItemType \"directory\"
-New-Item -Path \"c:\\emapc\" -Name \"archive\" -ItemType \"directory\"
-New-Item -Path \"c:\\emapc\\lib\" -Name \"pdftotext\" -ItemType \"directory\"
-New-Item -Path \"c:\\emapc\\lib\\pdftotext\" -Name \"win\" -ItemType \"directory\"
+function Remove-If-Exists {
+    param (
+        \$Path
+    )
 
-Remove-Item -Force \"c:\\emapc\\lib\\pdftotext\\win\\${win[lib]}\"
+    if (Test-Path \$Path) { Remove-Item \$Path -Force }
+}
+
+New-Item \"c:\\emapc\\input\" -ItemType \"directory\" -Force
+New-Item \"c:\\emapc\\output\" -ItemType \"directory\" -Force
+New-Item \"c:\\emapc\\archive\" -ItemType \"directory\" -Force
+New-Item \"c:\\emapc\\lib\\pdftotext\\win\" -ItemType \"directory\" -Force
+
+Remove-If-Exists -Path \"c:\\emapc\\lib\\pdftotext\\win\\${win[lib]}\"
 Invoke-WebRequest -Uri https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/lib/pdftotext/win/${win[lib]} -OutFile \"c:\\emapc\\lib\\pdftotext\\win\\${win[lib]}\"
 
 If (\$args[0] -eq 'cli') {
-  Remove-Item -Force \"c:\\emapc\\emapc-cli.exe\"
+  Remove-If-Exists -Path \"c:\\emapc\\emapc-cli.exe\"
   Invoke-WebRequest -Uri https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/download/$gitTag/${win[cliBin]} -OutFile \"c:\\emapc\\emapc-cli.exe\"
 }
 
 If (\$args[0] -eq 'srv') {
-  Remove-Item -Force \"c:\\emapc\\emapc-runner.exe\"
+  if ((Test-Path \"c:\\emapc\\${win[nssm]}\") -And (Test-Path \"c:\\emapc\\emapc-runner.exe\")) { 
+    & \"c:\\emapc\\${win[nssm]}\" stop EMAPC-Service
+    & \"c:\\emapc\\${win[nssm]}\" remove EMAPC-Service confirm
+  }
+
+  Remove-If-Exists -Path \"c:\\emapc\\emapc-runner.exe\"
   Invoke-WebRequest -Uri https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/download/$gitTag/${win[runnerBin]} -OutFile \"c:\\emapc\\emapc-runner.exe\"
 
-  Remove-Item -Force \"c:\\emapc\\nssm\\${win[nssm]}\"
+  Remove-If-Exists -Path \"c:\\emapc\\${win[nssm]}\"
   Invoke-WebRequest -Uri https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/lib/nssm/${win[nssm]} -OutFile \"c:\\emapc\\${win[nssm]}\"
   
+  if (Test-Path \"c:\\emapc\\emapc.conf.yml\") { Rename-Item -Path \"c:\\emapc\\emapc.conf.yml\" -NewName \"c:\\emapc\\emapc.conf.yml.old\" -Force }
   Invoke-WebRequest -Uri https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/emapc.conf.yml -OutFile \"c:\\emapc\\emapc.conf.yml\"
-
-  & \"c:\\emapc\\${win[nssm]}\" install EMAPC-Service \"c:\\emapc\\emapc-runner.exe\"
 
   \$powershell = (Get-Command powershell).Source
   \$arguments = '-ExecutionPolicy Bypass -NoProfile \"{0}\"' -f \"c:\\emapc\\emapc-runner.exe\"
-
-  & \"c:\\emapc\\${win[nssm]}\" stop EMAPC-Service
-  & \"c:\\emapc\\${win[nssm]}\" remove EMAPC-Service confirm
 
   & \"c:\\emapc\\${win[nssm]}\" install EMAPC-Service \$powershell \$arguments
   & \"c:\\emapc\\${win[nssm]}\" set EMAPC-Service AppDirectory \"c:\\emapc\"
@@ -146,7 +149,6 @@ If (\$args[0] -eq 'srv') {
   & \"c:\\emapc\\${win[nssm]}\" set EMAPC-Service AppStderr \"c:\\emapc\\service-error.log\"
   & \"c:\\emapc\\${win[nssm]}\" start EMAPC-Service
 }
-
 " > install-${win[name]}.ps1
 
   chmod +x install-${win[name]}.ps1
