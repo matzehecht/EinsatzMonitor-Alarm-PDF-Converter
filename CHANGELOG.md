@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.0.0...v1.1.0) (2020-10-25)
+
+
+### Bug Fixes
+
+* **installer:** configuration will not be overwritten anymore ([73413a4](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/73413a4c9d8c55604935d7129049768f7be74341))
+
+
+### Features
+
+* **output:** adds fallback if some required keys are empty ([086b9cd](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/086b9cd328695fb6c229e5d3cfb2d67822c9430a))
+
 # 1.0.0 (2020-10-24)
 
 
