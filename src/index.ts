@@ -105,6 +105,8 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
             const values = row ? Object.values(row) : undefined;
             const curatedValues = values?.slice(1).filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter))) || [];
 
+            if (keyConfig.required && curatedValues.length === 0) throw new Error(`OUTPUT - key ${key} is required but empty`);
+
             writer.write(
               toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(curatedValues, separator)}${thisKeyConfig.suffix || ''}`)
             );
@@ -118,6 +120,8 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
             .map((row) => Object.values(row)[thisKeyConfig.index + 1])
             .filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter)));
 
+          if (keyConfig.required && values.length === 0) throw new Error(`OUTPUT - key ${key} is required but empty`);
+
           writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${values.join(' ')}${thisKeyConfig.suffix || ''}`));
           return true;
         } else if ('rowIndex' in keyConfig) {
@@ -126,6 +130,8 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
 
           const row = sectionValues[thisKeyConfig.rowIndex];
           const value = Object.values(row)[thisKeyConfig.columnIndex].trim();
+
+          if (keyConfig.required && value.length === 0) throw new Error(`OUTPUT - key ${key} is required but empty`);
 
           if (thisKeyConfig.filter && value.match(RegExp(thisKeyConfig.filter))) {
             writer.write(toWriteString(`${key}${keyValueSeparator}`));
@@ -153,10 +159,15 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
           }, '')
           .trim();
 
+        if (keyConfig.required && value.length === 0) throw new Error(`OUTPUT - key ${key} is required but empty`);
+
         writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${value}${thisKeyConfig.suffix || ''}`));
         return true;
       } else {
         writer.write(toWriteString(`${key}${keyValueSeparator}`));
+
+        if (keyConfig.required) throw new Error(`OUTPUT - key ${key} is required but empty`);
+
         utils.logInfo('OUTPUT', 'empty key', key);
         return true;
       }

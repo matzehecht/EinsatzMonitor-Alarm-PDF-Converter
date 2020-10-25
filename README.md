@@ -85,7 +85,7 @@ Now let us talk about table sections. First emapc looks at the first line of thi
 
 emapc will now write the result back to a key value formatted text file.  
 For writing emapc will loop over all output keys (specified in [configuration](#configuration)). This ensures that the output file has the same format for every run (of course the data is changing for different inputs).  
-The output will be written in a key value like format. Each line contains a new key value pair. The key and the value will be seperated with the configured keyValueSeparator (default: `=`).  
+The output will be written in a key value like format. Each line contains a new key value pair. The key and the value will be seperated with the configured keyValueSeparator (default: `: `).  
 If the key is a key that contains multiple values all values will be printed in this line separated by the configured separator (default: `;`).  
 Optionally emapc can add a prefix and a suffix to a value (one suffix and/or one prefix per key value pair).  
 Example:
@@ -118,8 +118,8 @@ input:
     - Sondersignal
 ```
 
-The output part will now specify how the output should look like. It also maps the extracted input values to an output key. But first the output part specifies the separator used between the key and the related value (called `keyValueSeparator`) and the separator used between mutliple values (called `separator`). Both mentioned configurations are optional (`keyValueSeparator` defaults to `=` and `separator` defaults to `;`).  
-The last thing specified in the output part are the output keys. They are located below the key `keys`. The output keys are little bit more complex. Each key is a mapping of it's name (will also be whats written in the output as key) to it's configuration. Each output key has to specify which input section it belongs to. Note: the inText keys are belonging to the section `inText`. Optionally the output keys can specify a filter. This filter will be used to determine if one value of this output key should be included in the output (for example you don't want to print cars with the number '00' in it then set `filter` to '00'. The filter takes an [RegExp](https://en.wikipedia.org/wiki/Regular_expression)). Also each key can optionally specify a prefix and/or suffix. This will be printed before/after the value.  
+The output part will now specify how the output should look like. It also maps the extracted input values to an output key. But first the output part specifies the separator used between the key and the related value (called `keyValueSeparator`) and the separator used between mutliple values (called `separator`). Both mentioned configurations are optional (`keyValueSeparator` defaults to `: ` and `separator` defaults to `;`).  
+The last thing specified in the output part are the output keys. They are located below the key `keys`. The output keys are little bit more complex. Each key is a mapping of it's name (will also be whats written in the output as key) to it's configuration. Each output key has to specify which input section it belongs to. Note: the inText keys are belonging to the section `inText`. Optionally the output keys can specify a filter. This filter will be used to determine if one value of this output key should be included in the output (for example you don't want to print cars with the number '00' in it then set `filter` to '00'. The filter takes an [RegExp](https://en.wikipedia.org/wiki/Regular_expression)). Also each key can optionally specify a prefix and/or suffix. This will be printed before/after the value. Finally, any key can be defined as required. If no value is available, emapc switches to fallback mode and prints the raw input text (looks like in the PDF) to the output, so that the 'Einsatzmonitor' can switch to fallback mode too.  
 Now it's getting complex: If the output key will have a simple key value like format the configuration will take a list of input keywords (specified by `inputKeyWords`). Emapc looks for these input keys in the specified inputSection and merge them for the output. This can be used if the same information is can have different keys for different alarms.  
 If the output key is contained in a table section or a try-section you have to use another format to specify the output. Here you have multiple options. If the output should print all values of a column or a row you should specify the `type` (`row` or `column`) and the inputKeyWord containing the row or column header. If you want to print one value of a row with a specific row header, you can specify a list of inputKeyWords (like for the keyValue described before) and the columnIndex of the value. Last but nor least: If you want to select one value of a specific row specified by an index, you can specify a `rowIndex` and a `columnIndex`.  
 *Example:*
@@ -127,7 +127,7 @@ If the output key is contained in a table section or a try-section you have to u
 ```yaml
 output:
   separator: ';'
-  keyValueSeparator: '='
+  keyValueSeparator: ':'
   keys:
     # Example for keyValue format
     Meldebild:
@@ -249,7 +249,7 @@ Zu den tabellenähnlichen Abschnitten: Hier schaut emapc auf die erste Zeile. Es
 
 Emapc schreibt nun das Ergebnis in eine Textdatei im Schlüsselwertformat.  
 Zum Schreiben iteriert emapc über alle Ausgabeschlüssel (festgesetzt in [configuration](#configuration)). Dies stellt sicher, dass die Ausgabedatei für jeden Durchlauf das gleiche Format hat (natürlich ändern sich die Daten für verschiedene Eingaben).  
-Die Ausgabe wird in einem schlüsselwertähnlichen Format geschrieben. Jede Zeile enthält ein neues Schlüsselwertpaar. Der Schlüssel und der Wert werden mit dem konfigurierten keyValueSeparator (Standard: `=`) getrennt.  
+Die Ausgabe wird in einem schlüsselwertähnlichen Format geschrieben. Jede Zeile enthält ein neues Schlüsselwertpaar. Der Schlüssel und der Wert werden mit dem konfigurierten keyValueSeparator (Standard: `: `) getrennt.  
 Wenn es sich bei dem Schlüssel um einen Schlüssel handelt, der mehrere Werte enthält, werden alle Werte in dieser Zeile ausgegeben, getrennt durch das konfigurierte Trennzeichen (Voreinstellung: `;`).  
 Optional kann emapc ein Präfix und ein Suffix zu einem Wert hinzufügen (ein Suffix und/oder ein Präfix pro Schlüssel-Wert-Paar).  
 Beispiel:
@@ -282,8 +282,8 @@ input:
     - Sondersignal
 ```
 
-Der Ausgabeteil gibt nun an, wie die Ausgabe aussehen soll. Er ordnet auch die extrahierten Eingabewerte den Ausgabeschlüsseln zu. Aber zuerst gibt der Ausgabeteil das Trennzeichen an, das zwischen dem Schlüssel und dem zugehörigen Wert verwendet wird (genannt "keyValueSeparator") und das Trennzeichen, das zwischen mehreren Werten verwendet wird (genannt "separator"). Beide genannten Konfigurationen sind optional (`keyValueSeparator` ist standardmäßig `=` und `separator` ist standardmäßig `;`).  
-Das letzte, was im Ausgabeteil angegeben wird, sind die Ausgabeschlüssel. Sie befinden sich unterhalb des Schlüssels `keys`. Die Ausgabeschlüssel sind etwas komplexer. Jeder Schlüssel ist eine Abbildung seines Namens (wird auch das sein, was in der Ausgabe als Schlüssel geschrieben wird) zu seiner Konfiguration. Jeder Ausgabeschlüssel muss angeben, zu welchem Eingabeabschnitt er gehört. Anmerkung: Die inText-Schlüssel gehören zum Abschnitt `inText`. Optional können die Ausgabeschlüssel einen Filter angeben. Dieser Filter wird benutzt, um zu bestimmen, ob ein Wert dieses Ausgabeschlüssels in der Ausgabe enthalten sein soll (wenn z.B. kein Auto mit der Nummer '00' ausgegeben werden soll: setze den `filter` auf '00'. Der Filter nimmt einen [RegExp](https://de.wikipedia.org/wiki/Regul%C3%A4rer_Ausdruck)). Außerdem kann jeder Schlüssel optional ein Präfix und/oder Suffix angeben. Dieses wird vor/nach dem Wert gedruckt.  
+Der Ausgabeteil gibt nun an, wie die Ausgabe aussehen soll. Er ordnet auch die extrahierten Eingabewerte den Ausgabeschlüsseln zu. Aber zuerst gibt der Ausgabeteil das Trennzeichen an, das zwischen dem Schlüssel und dem zugehörigen Wert verwendet wird (genannt "keyValueSeparator") und das Trennzeichen, das zwischen mehreren Werten verwendet wird (genannt "separator"). Beide genannten Konfigurationen sind optional (`keyValueSeparator` ist standardmäßig `: ` und `separator` ist standardmäßig `;`).  
+Das letzte, was im Ausgabeteil angegeben wird, sind die Ausgabeschlüssel. Sie befinden sich unterhalb des Schlüssels `keys`. Die Ausgabeschlüssel sind etwas komplexer. Jeder Schlüssel ist eine Abbildung seines Namens (wird auch das sein, was in der Ausgabe als Schlüssel geschrieben wird) zu seiner Konfiguration. Jeder Ausgabeschlüssel muss angeben, zu welchem Eingabeabschnitt er gehört. Anmerkung: Die inText-Schlüssel gehören zum Abschnitt `inText`. Optional können die Ausgabeschlüssel einen Filter angeben. Dieser Filter wird benutzt, um zu bestimmen, ob ein Wert dieses Ausgabeschlüssels in der Ausgabe enthalten sein soll (wenn z.B. kein Auto mit der Nummer '00' ausgegeben werden soll: setze den `filter` auf '00'. Der Filter nimmt einen [RegExp](https://de.wikipedia.org/wiki/Regul%C3%A4rer_Ausdruck)). Außerdem kann jeder Schlüssel optional ein Präfix und/oder Suffix angeben. Dieses wird vor/nach dem Wert gedruckt. Letztlich kann jeder Schlüssel als erforderlich definiert werden (`required: true`). Falls für diesen Schlüssel kein Wert vorhanden ist schält emapc in den fallback modus und gibt den rohen Eingabetext (sieht wie die PDF aus) in die Ausgabe aus, so dass auch der Einsatzmonitor in den Fallbackmodus schalten kann.  
 Jetzt wird es kompliziert: Wenn der Ausgabeschlüssel ein einfaches schlüsselwertähnliches Format hat, nimmt die Konfiguration eine Liste von Eingabeschlüsselwörtern (spezifiziert durch `inputKeyWords`). Emapc sucht nach diesen Eingabeschlüsseln in der angegebenen inputSection und führt sie für die Ausgabe zusammen. Dies kann verwendet werden, wenn die gleiche Information verschiedene Eingabeschlüssel für verschiedene Alarme haben kann.  
 Wenn der Ausgabeschlüssel in einem Tabellenabschnitt oder einem Try-Abschnitt enthalten ist, muss ein anderes Format verwendet werden, um die Ausgabe zu spezifizieren. Hier gibt es mehrere Optionen. Wenn die Ausgabe alle Werte einer Spalte oder einer Zeile ausgeben soll, muss der `type` (`column` oder `row`) und das inputKeyWord, das den Zeilen- oder Spaltenkopf enthält, angegeben werden. Wenn ein Wert einer Zeile mit einem bestimmten Zeilenkopf ausgegeben werden soll, kann eine Liste von inputKeyWords (wie für den zuvor beschriebenen keyValue) und der columnIndex des Wertes angegeben werden. Last but not least: Wenn ein Wert einer bestimmten, durch einen Index spezifizierten Zeile ausgegeben werden soll, kann ein `rowIndex` und ein `columnIndex` angeben wrden.  
 *Beispiel:*
@@ -291,7 +291,7 @@ Wenn der Ausgabeschlüssel in einem Tabellenabschnitt oder einem Try-Abschnitt e
 ```yaml
 output:
   separator: ';'
-  keyValueSeparator: '='
+  keyValueSeparator: ':'
   keys:
     # Beispiel für Schlüsselwert-Format
     Meldebild:
