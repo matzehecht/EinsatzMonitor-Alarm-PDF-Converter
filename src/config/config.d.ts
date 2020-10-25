@@ -33,6 +33,9 @@ export type Key = KeyValueKey | TableKey;
 
 export interface BaseKey {
   inputSection: string | 'inText';
+  // ? maybe it would be better to make the input section required than the keys?
+  // ? That would be an major release and cause less flexibility than decaring it on key level.
+  required?: boolean;
   prefix?: string;
   suffix?: string;
   filter?: string;
