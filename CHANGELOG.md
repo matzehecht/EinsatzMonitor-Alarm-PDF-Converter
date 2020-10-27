@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.1.0...v1.1.1) (2020-10-27)
+
+
+### Bug Fixes
+
+* adds uninstaller ([bdca29a](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/bdca29ac2fd472d26c5223dc91ba9373dd0b2b75))
+
 # [1.1.0](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.0.0...v1.1.0) (2020-10-25)
 
 
