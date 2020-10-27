@@ -8,12 +8,14 @@ declare -A linux0=(
   [cliBin]="emapc-cli-linux-x32"
   [runnerBin]="emapc-srv-linux-x32"
   [lib]="pdftotext32"
+  [uninstaller]="uninstall-linux32.sh"
 )
 declare -A linux1=(
   [name]="linux64"
   [cliBin]="emapc-cli-linux-x64"
   [runnerBin]="emapc-srv-linux-x64"
   [lib]="pdftotext64"
+  [uninstaller]="uninstall-linux64.sh"
 )
 
 declare -n linux
@@ -24,6 +26,7 @@ declare -A win0=(
   [runnerBin]="emapc-srv-win-x32.exe"
   [lib]="pdftotext32.exe"
   [nssm]="nssm32.exe"
+  [uninstaller]="uninstall-win32.ps1"
 )
 declare -A win1=(
   [name]="win64"
@@ -31,6 +34,7 @@ declare -A win1=(
   [runnerBin]="emapc-srv-win-x64.exe"
   [lib]="pdftotext64.exe"
   [nssm]="nssm64.exe"
+  [uninstaller]="uninstall-win32.ps1"
 )
 
 declare -n win
@@ -53,11 +57,19 @@ if [[ \"\$1\" != \"cli\" && \"\$1\" != \"srv\" ]]; then
   echo \"USAGE: install-${linux[name]} <cli or srv>\"
   exit 0
 fi
+  
+if [[ \$EUID -ne 0 ]]; then
+   echo \"This script must be run as root\" 
+   exit 1
+fi
 
 mkdir -p /usr/local/emapc/input
 mkdir -p /usr/local/emapc/output
 mkdir -p /usr/local/emapc/archive
 mkdir -p /usr/local/emapc/lib/pdftotext/linux
+
+rm -rf /usr/local/emapc/${linux[uninstaller]}
+curl -L https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/lib/uninstaller/${linux[uninstaller]} -o /usr/local/emapc/${linux[uninstaller]}
 
 rm -rf /usr/local/emapc/lib/pdftotext/linux/${linux[lib]}
 curl -L https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/lib/pdftotext/linux/${linux[lib]} -o /usr/local/emapc/lib/pdftotext/linux/${linux[lib]}
@@ -99,7 +111,9 @@ done
 echo "make win installers"
 for win in ${!win@}; do
   echo "make ${win[name]} installer"
-  echo "If (!(\$args[0] -eq 'cli' -Or \$args[0] -eq 'srv')) {
+  echo "#Requires -RunAsAdministrator
+
+If (!(\$args[0] -eq 'cli' -Or \$args[0] -eq 'srv')) {
   Write-Host \"USAGE: install-${win[name]}.ps1 <cli or srv>\"
   exit 0
 }
@@ -116,6 +130,9 @@ New-Item \"c:\\emapc\\input\" -ItemType \"directory\" -Force
 New-Item \"c:\\emapc\\output\" -ItemType \"directory\" -Force
 New-Item \"c:\\emapc\\archive\" -ItemType \"directory\" -Force
 New-Item \"c:\\emapc\\lib\\pdftotext\\win\" -ItemType \"directory\" -Force
+
+Remove-If-Exists -Path \"c:\\emapc\\${win[uninstaller]}\"
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/lib/uninstaller/${win[uninstaller]} -OutFile \"c:\\emapc\\${win[uninstaller]}\"
 
 Remove-If-Exists -Path \"c:\\emapc\\lib\\pdftotext\\win\\${win[lib]}\"
 Invoke-WebRequest -Uri https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/lib/pdftotext/win/${win[lib]} -OutFile \"c:\\emapc\\lib\\pdftotext\\win\\${win[lib]}\"
