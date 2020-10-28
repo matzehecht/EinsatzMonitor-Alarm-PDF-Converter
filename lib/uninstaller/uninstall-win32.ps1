@@ -1,11 +1,13 @@
 #Requires -RunAsAdministrator
 
-if ((Test-Path "c:\emapc\nssm32.exe") -And (Test-Path "c:\emapc\emapc-runner.exe")) { 
+if (Test-Path "c:\emapc\nssm32.exe") { 
   & "c:\emapc\nssm32.exe" stop EMAPC-Service
   & "c:\emapc\nssm32.exe" remove EMAPC-Service confirm
 }
 
-Set-Location -Path "c:\"
+Push-Location "c:\"
 
 Remove-Item "c:\emapc" -Recurse -Force
+
+Pop-Location
 

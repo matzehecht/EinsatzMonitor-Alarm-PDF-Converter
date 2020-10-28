@@ -46,9 +46,11 @@ rm -f /usr/lib/systemd/system/emapc-service.service # and symlinks that might be
 systemctl daemon-reload
 systemctl reset-failed
 
-cd \$HOME
+pushd /
 
-rm -rf /usr/local/emapc" > lib/uninstaller/uninstall-${linux[name]}.sh
+rm -rf /usr/local/emapc
+
+popd" > lib/uninstaller/uninstall-${linux[name]}.sh
 
   chmod +x lib/uninstaller/uninstall-${linux[name]}.sh
 done
@@ -58,14 +60,16 @@ for win in ${!win@}; do
   echo "make ${win[name]} uninstaller"
   echo "#Requires -RunAsAdministrator
 
-if ((Test-Path \"c:\\emapc\\${win[nssm]}\") -And (Test-Path \"c:\\emapc\\emapc-runner.exe\")) { 
+if (Test-Path \"c:\\emapc\\${win[nssm]}\") { 
   & \"c:\\emapc\\${win[nssm]}\" stop EMAPC-Service
   & \"c:\\emapc\\${win[nssm]}\" remove EMAPC-Service confirm
 }
 
-Set-Location -Path \"c:\\\"
+Push-Location \"c:\\\"
 
 Remove-Item \"c:\\emapc\" -Recurse -Force
+
+Pop-Location
 " > lib/uninstaller/uninstall-${win[name]}.ps1
 
   chmod +x lib/uninstaller/uninstall-${win[name]}.ps1
