@@ -34,7 +34,7 @@ declare -A win1=(
   [runnerBin]="emapc-srv-win-x64.exe"
   [lib]="pdftotext64.exe"
   [nssm]="nssm64.exe"
-  [uninstaller]="uninstall-win32.ps1"
+  [uninstaller]="uninstall-win64.ps1"
 )
 
 declare -n win
