@@ -14,6 +14,8 @@ rm -f /usr/lib/systemd/system/emapc-service.service # and symlinks that might be
 systemctl daemon-reload
 systemctl reset-failed
 
-cd $HOME
+pushd /
 
 rm -rf /usr/local/emapc
+
+popd
