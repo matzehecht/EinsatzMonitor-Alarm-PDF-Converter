@@ -1,7 +1,173 @@
 # EinsatzMonitor-Alarm-PDF-Converter
 
-> Click here for the [German documentation](#dokumentation)  
-> Klicke hier für die [deutsche Dokumentation](#dokumentation)  
+> Click here for the [English documentation](#documentation)  
+
+## Dokumentation
+
+Der EMAPC (EinsatzMonitor-Alarm-PDF-Converter) bietet ein Toolset zur Konvertierung einer eingehenden Alarm-PDF in ein Format, das vom EinsatzMonitor lesbar ist.
+Dieses Tool extrahiert die relevanten Informationen der Alarm-PDF in eine schlüssel-wert-formatierte Datei, die durch die Mustererkennung des EinsatzMonitors gelesen werden kann.  
+
+### Mitarbeit
+
+Möchtest du mit an emapc arbeiten? Zögere nicht, Fehler zu melden oder Feature-Anfragen zu stellen. Bitte nutze dazu die Issues-Funktion.  
+Du kannst mir auch gerne bei der Implementierung dieses Tools helfen. Erstelle hierzu ein fork diese Repos -> Arbeite auf diesem Fork und stelle mir dann einen PR ein.  
+Stelle sicher, dass du den aktuellen Status des `main`-Branches verwendest, bevor du einen Merge anforderst.  
+Halte dich bei den commit messages bitte an die [conventional commits](https://www.conventionalcommits.org/de/v1.0.0/).
+
+### Du willst EMAPC verwenden?
+
+Kein Problem. Es gibt keine Einschränkungen für die Verwendung dieses Projekts.  
+Wenn du etwas Feedback hast: Bitte erstellen ein Issue und füge das Label `Feedback` hinzu.  
+Wenn du noch etwas anderes zu diesem Projekt sagen willst: Erstelle ein Issue und füge das Label `Hi` hinzu.
+
+### INSTALLATION
+
+Das Tool kann auf der [Release-Seite](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases) heruntergeladen werden.  
+Dort kann die Binärdateien und Installationsskripte für jedes Release gefunden werden (in der Dropdown-Liste Assets). Emapc unterstützt Linux (32-Bit und 64-Bit), Windows (32-Bit und 64-Bit) und Mac (64-Bit).  
+Für jede unterstützte Architektur gibt es das Kommandozeilen-Tool (cli-tool) und die Runner-Binärdatei.  
+Erstere wird zur einmaligen Verarbeitung der Eingabe verwendet. Wenn das Tool alle Eingaben verarbeitet hat, wird es beendet.  
+Das zweite läuft, bis es händisch gestoppt wird. Es überwacht das angegebene Verzeichnis und verarbeitet jede Datei, die in das Verzeichnis gelegt wird.
+
+Auf der Release-Seite befinden sich auch Installationsskripte für Windows und Linux (32-Bit und 64-Bit). Diese können verwendet werden, um die Binärdatei und alle Abhängigkeiten herunterzuladen und zu platzieren.  
+
+Die Sktipte können auf Windwos mit Powershell (oder der Kommandozeile) und auf Linux mit der bash ausgeführt werden. Sie benöitgen allerdings Administrations-/root-rechte.  
+**VERWENDUNG:** `installer <cli or srv>`  
+Um das Kommandozeilen-Tool zu installieren kann das Installationsskript mit `cli` aufgerufen werden.  
+Wenn das Installationsskript mit `srv` aufgerufen wird, wird der runner/ der Dienst installiert. Wenn es vorher schon eine Konfiguration gab, wird diese zu `emapc.conf.yml.old` umbenannt und die neue Standardkonfiguration heruntergeladen. Außerdem wird versucht, einen Betriebssystemdienst zu installieren. Auf Linux werden deamon und auf Windows native Dienste mit Hilfe von nssm verwendet.  
+
+Das Installationsskript lädt auch ein Deinstallationsskript herunter. Es befindet sich ebenfalls in `c:\emapc\` bzw. `/usr/local/emapc`. Das Skript deinstalliert und entfernt alle Komponenten des Kommandozeilen-Tools und des Runner-Tools.
+
+### VERWENDUNG
+
+#### CLI
+
+`emapc --config konfigurationsDateiPfad eingabeDateiOderOrdner ausgabeDateiOderOrdner`
+
+##### NOTWENDIGE ARGUMENTE
+
+- **eingabeDateiOderOrdner:**  
+  Dies muss ein gültiger Pfad zu einer PDF-Datei sein. (Die Alarm-PDF-Datei).  
+  Oder dies kann ein Pfad zu einem Ordner sein. In diesem Fall wird emapc alle PDF-Dateien in diesem Ordner verarbeiten.
+
+- **ausgabeDateiOderOrdner:**  
+  Dies kann der Pfad zu einer *(noch nicht existierenden)* Ausgabedatei sein.  
+  > In diesem Fall verwendet emapc den angegebenen Dateinamen.  
+
+  **\- ODER -**  
+  Dies kann der Pfad zu einem bestehenden Verzeichnis sein.  
+  > In diesem Fall übernimmt emapc den Dateinamen aus der Eingabe.
+
+- **--config** *<Pfad/zur/Konfiguration/Datei.json>*  
+  Diesem Parameter sollte ein gültiger Pfad zu einer benutzerdefinierten Konfigurationsdatei folgen.  
+
+#### RUNNER
+
+Der Runner verwendet eine Konfigurationsdatei, die im Arbeitsverzeichnis abgelegt wird und den Namen `emapc.conf.yml` hat. Der Installer legt das Arbeitsverzeichnis auf `/usr/local/emapc/` bzw. `C:\emapc` fest. Der Installer lädt außerdem eine Standardkonfiguration.  
+Die Konfiguration wird [unten](#konfiguration) erklärt.
+
+> **HINWEIS:** Da emapc Standard-Betriebssystem-Dienste verwendet, können Standard-Betriebssystem-Tools verwendt werden, um diesen Dienst zu verwalten. Auf Windows kann der Dienstmanager verwendet werden. Auf Windows verwendet emapc nssm als Wrapper, so dass auch nssm-Befehle verwendet werden können. [Weitere Informationen](http://nssm.cc/). Der Installer enthält auch die ausführbare nssm-Datei (zu finden unter `/usr/local/emapc/` oder `C:\emapc`).
+
+### Wie es funktioniert
+
+Unabhängig davon, ob das Kommandozeilen- oder das Runner-Tool verwendet wird, wird emapc durch eine Konfigurationsdatei konfiguriert. In dieser kann angeben werden, welche Eingaben erwartet werden, was in der Ausgabe stehen soll und einige zusätzliche Dinge. Die Konfiguration wird [später](#konfiguration) erklärt.
+Wie oben erwähnt verwendet emapc PDF-Dateien als Eingabe. Das Tool iteriert über alle Dateien, die als Input angegeben wurden (entweder als Argument oder in der Konfiguration).  
+Nach einiger Initialisierung (wie dem Parsen der Eingabeargumente und der Konfiguration) wird jede Eingabedatei einzeln verarbeitet.  
+EMAPC verwendet das `pdftotext` Kommandozeilen-Tool des [xpdf Projekts](https://www.xpdfreader.com/). Dieses Tool ist im Installer enthalten, so dass emapc vollständig `battery-included` ist (alle Abhängigkeiten werden mitgeliefert).  
+Nun veratbeitet emapc diesen Text. Zuerst versucht emapc, einige spezielle Schlüssel (genannt `inText`-Schlüssel) zu extrahieren. Diese Schlüssel werden in der Konfiguration festgelegt, wie [unten](#konfiguration) beschrieben. Das Werkzeug sucht nach Zeilen, die einen der Spezialschlüssel enthalten. Für jeden Spezialschlüssel werden alle gefundenen Zeilen verkettet und gespeichert (und später bei der Ausgabe verwendet). Die gefundenen Zeilen werden in den nächsten Schritten nicht mehr beachtet.  
+Emapc wird die nächsten Schritte für jeden Abschnitt (in der Konfiguration angegeben) einzeln durchführen.  
+Der erste dieser Schritte besteht darin, festzustellen, wo die Abschnitte beginnen. Hierfür wird nach Zeilen mit dem angegebenen Schlüsselwort gesucht. Für Abschnitte, die sich über mehrere Seiten erstrecken, gibt es mehrere Zeilen mit dem Schlüsselwort. Emapc behandelt sie als Unterabschnitte und führt sie später zusammen.  
+Das Ende eines (Unter-)Abschnitts wird durch eine Leerzeile (Zeile mit nur Leerzeichen, Tabulatoren oder einer leeren Zeichenfolge) erkannt.  
+Nun werden Abschnitte, die ein tabellenartiges Format haben, anders verarbeitet als Abschnitte, die einen Schlüsselwert ähnliches Format haben (das Format wird in der Konfiguration angegeben).  
+Aber zuerst versucht emapc, das Format des Abschnitts zu erraten, sofern der Typ des Abschnitts auf `try` gesetzt ist. Emapc rät, indem es schaut, ob die Zeile mit dem Schlüsselwort mit einigen Leerzeichen (Leerzeichen oder Tabulatoren) beginnt. Wenn dies der Fall ist, wirg angenommen, dass der Abschnitt eine Tabelle ist, andernfalls wird angenommen, dass es sich um ein Schlüsselwertformatähnlichen Abschnitt handelt *(vielleicht sollte dieser Test anders gemacht werden)*.  
+
+Zu der Verarbeitung der Schlüsselwert-Abschnitte: Emapc durchläuft die Zeilen dieses Abschnitts in einer Schleife. Für jede Zeile wird der Schlüssel extrahiert, indem nach dem ersten Vorkommen von zwei Leerzeichen hintereinander gesucht und dann den Text davor genommen. Anschließend wird der Wert in der gleichen Zeile extrahiert. Dazu nimmt emapc den Text zwischen den ersten beiden Leerzeichen aufeinander folgenden Leerzeichen und dem zweiten Vorkommen davon. Dieser Text ist der extrahierte Wert. Der gesamte Text, der sich nach dem zweiten Auftreten von zwei aufeinanderfolgenden Leerzeichen befindet, wird später als 'restlicher Text' behandelt. Jetzt behandelt emapc die Zeilen unterhalb der aktuellen Zeile. Erst versucht emapc zu erkennen, ob der Text in diesen Zeilen Teil des aktuellen Wertes sein sollte. Hierzu wird geprüft, ob diese Zeilen mit einigen Leerzeichen beginnen (Es werden alle folgenden Zeilen angeschaut, bis eine mit einem neuen Schlüssel gefunden wird). Die gefundenen Werte werden verkettet. Schließlich betrachtet emapc den (oben erwähnten) restlichen Text. Hierbei schaut emapc, ob dieser Text mit einem ähnlichen Format wie der aktuelle Schlüssel beginnt oder andere bekannte Schlüsselwörter (wie 'Datum:') verwendet. Wenn ja hängt emapc diesen Text als separate Schlüsselwerte an.
+
+Zu den tabellenähnlichen Abschnitten: Hier schaut emapc auf die erste Zeile. Es wird angenommen, dass in dieser Zeile die Spaltenüberschriften stehen. Emapc vesucht den Text der jeweiligen Kopfzeile und den zugehörigen Startindex zu extrahieren. Es wird davon ausgegangen, dass die jeweilige Spalte in allen Zeilen am gleichen Startindex (+- 2) beginnt. Weiter wird davon ausgegangen, dass die Spaltenüberschriften durch mindestens zwei Leerzeichen getrennt sind. Falls die erste Spalte keine Überschrift enthält (z.B. bei Tabellen mit Zeilenüberschriften), fügt emapc eine leere Überschrift und den dazu gehörigen Index (0) ein. Nach dem Extrahieren der Spaltenüberschriften iteriert emapc über die folgenden Zeilen und versucht, die Werte jeder Spalte für die jeweilige Zeile durch den erkannten Spaltenstartindex und den Startindex der nächsten Spalte zu extrahieren.
+
+Emapc schreibt nun das Ergebnis in eine Textdatei im Schlüsselwertformat.  
+Zum Schreiben iteriert emapc über alle Ausgabeschlüssel (festgesetzt in [configuration](#configuration)). Dies stellt sicher, dass die Ausgabedatei für jeden Durchlauf das gleiche Format hat (natürlich ändern sich die Daten für verschiedene Eingaben).  
+Die Ausgabe wird in einem schlüsselwertähnlichen Format geschrieben. Jede Zeile enthält ein neues Schlüsselwertpaar. Der Schlüssel und der Wert werden mit dem konfigurierten keyValueSeparator (Standard: `: `) getrennt.  
+Wenn es sich bei dem Schlüssel um einen Schlüssel handelt, der mehrere Werte enthält, werden alle Werte in dieser Zeile ausgegeben, getrennt durch das konfigurierte Trennzeichen (Voreinstellung: `;`).  
+Optional kann emapc ein Präfix und ein Suffix zu einem Wert hinzufügen (ein Suffix und/oder ein Präfix pro Schlüssel-Wert-Paar).  
+Beispiel:
+
+```txt
+# ein Wert
+Meldebild=TH Ölspur
+# mehrere Werte
+Einsatzmittel=FW1/1;FW1/2
+```
+
+**WICHTIG:** Wenn irgendein Schritt der Konvertierung fehlschlägt, schreibt empac den Rohtext der Eingabe-PDF in die Ausgabe-Textdatei!
+
+### Konfiguration
+
+Für emapc ist die Konfiguration erforderlich. Die Konfiguration wird in einer [yaml](https://de.wikipedia.org/wiki/YAML)-Datei vorgenommen. Eine Beispielkonfiguration ist [hier](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/blob/main/emapc.conf.yml) zu finden (Das Beispiel sollte für Feuerwehren im Landkreis Biberach funktionieren).  
+
+Die Konfiguration gliedert sich grundsätzlich in 3 Teile: `Input`, `Output` und einen optionalen `Runner` Teil. Der Runner-Teil ist erforderlich, wenn emapc als Dienst/Runner betrieben wird.  
+
+Der Input-Teil sagt emapc, wie die Eingabedateien in etwa aussehen werden. Dazu werden die erwarteten (Eingabe-)Abschnitte und spezielle 'inTextKeys' angegeben. Die inTextKeys sind eine Liste von speziellen Schlüssel (sie werden [oben](#wie-es-funktioniert) beschrieben). Die Abschnitts-Konfiguration andererseits ist eine Abbildung von Sektionsnamen (sollte das Sektions-Schlüsselwort/Header aus der Eingabedatei sein) auf den Sektionstyp. Erlaubte Typen sind `keyValue`, `table` und `try`, falls emapc versuchen sollte, den Typ zu erkennen (beschrieben [oben](#wie-es-funktioniert)).  
+*Beispiel:*
+
+```yaml
+input:
+  sections:
+    Einsatzanlass: keyValue
+    Einsatzort: try
+    EM: table
+  inTextKeys:
+    - Sondersignal
+```
+
+Der Ausgabeteil gibt nun an, wie die Ausgabe aussehen soll. Er ordnet auch die extrahierten Eingabewerte den Ausgabeschlüsseln zu. Aber zuerst gibt der Ausgabeteil das Trennzeichen an, das zwischen dem Schlüssel und dem zugehörigen Wert verwendet wird (genannt "keyValueSeparator") und das Trennzeichen, das zwischen mehreren Werten verwendet wird (genannt "separator"). Beide genannten Konfigurationen sind optional (`keyValueSeparator` ist standardmäßig `: ` und `separator` ist standardmäßig `;`).  
+Das letzte, was im Ausgabeteil angegeben wird, sind die Ausgabeschlüssel. Sie befinden sich unterhalb des Schlüssels `keys`. Die Ausgabeschlüssel sind etwas komplexer. Jeder Schlüssel ist eine Abbildung seines Namens (wird auch das sein, was in der Ausgabe als Schlüssel geschrieben wird) zu seiner Konfiguration. Jeder Ausgabeschlüssel muss angeben, zu welchem Eingabeabschnitt er gehört. Anmerkung: Die inText-Schlüssel gehören zum Abschnitt `inText`. Optional können die Ausgabeschlüssel einen Filter angeben. Dieser Filter wird benutzt, um zu bestimmen, ob ein Wert dieses Ausgabeschlüssels in der Ausgabe enthalten sein soll (wenn z.B. kein Auto mit der Nummer '00' ausgegeben werden soll: setze den `filter` auf '00'. Der Filter nimmt einen [RegExp](https://de.wikipedia.org/wiki/Regul%C3%A4rer_Ausdruck)). Außerdem kann jeder Schlüssel optional ein Präfix und/oder Suffix angeben. Dieses wird vor/nach dem Wert gedruckt. Letztlich kann jeder Schlüssel als erforderlich definiert werden (`required: true`). Falls für diesen Schlüssel kein Wert vorhanden ist schält emapc in den fallback modus und gibt den rohen Eingabetext (sieht wie die PDF aus) in die Ausgabe aus, so dass auch der Einsatzmonitor in den Fallbackmodus schalten kann.  
+Jetzt wird es kompliziert: Wenn der Ausgabeschlüssel ein einfaches schlüsselwertähnliches Format hat, nimmt die Konfiguration eine Liste von Eingabeschlüsselwörtern (spezifiziert durch `inputKeyWords`). Emapc sucht nach diesen Eingabeschlüsseln in der angegebenen inputSection und führt sie für die Ausgabe zusammen. Dies kann verwendet werden, wenn die gleiche Information verschiedene Eingabeschlüssel für verschiedene Alarme haben kann.  
+Wenn der Ausgabeschlüssel in einem Tabellenabschnitt oder einem Try-Abschnitt enthalten ist, muss ein anderes Format verwendet werden, um die Ausgabe zu spezifizieren. Hier gibt es mehrere Optionen. Wenn die Ausgabe alle Werte einer Spalte oder einer Zeile ausgeben soll, muss der `type` (`column` oder `row`) und das inputKeyWord, das den Zeilen- oder Spaltenkopf enthält, angegeben werden. Wenn ein Wert einer Zeile mit einem bestimmten Zeilenkopf ausgegeben werden soll, kann eine Liste von inputKeyWords (wie für den zuvor beschriebenen keyValue) und der columnIndex des Wertes angegeben werden. Last but not least: Wenn ein Wert einer bestimmten, durch einen Index spezifizierten Zeile ausgegeben werden soll, kann ein `rowIndex` und ein `columnIndex` angeben wrden.  
+*Beispiel:*
+
+```yaml
+output:
+  separator: ';'
+  keyValueSeparator: ':'
+  keys:
+    # Beispiel für Schlüsselwert-Format - erforderlich mit einem Suffix und einem Präfix
+    Meldebild:
+      inputSection: Einsatzanlass
+      required: true
+      suffix: irgendwas dahinter
+      prefix: irgendwas davor
+      inputKeyWords:
+        - Meldebild
+    # Beispiel für Tabelle - alle Werte einer Spalte (mit einem Filter auf alles, was auf 1/00 oder 1-00 endet).
+    Einsatzmittel:
+      inputSection: EM
+      type: 'column'
+      inputKeyWord: EM        # Kann unterschiedlich zur inputSection sein für Spalten, die nicht die erste sind.
+      filter: ^.*1(\/|-)00$
+    # Beispiel für Tabelle - ein Wert einer Zeile spezifiziert mit Schlüsselwörtern
+    Ortszusatz:
+      inputSection: Einsatzort
+      inputKeyWords:
+        - Ortszusatz
+        - Bemerkung
+      index: 0
+    # Beispiel für Tabelle - ein WErt angegeben mit Indizes
+    Straße:
+      inputSection: Einsatzort
+      rowIndex: 1
+      columnIndex: 0
+```
+
+Zuletzt: der Runner-Abschnitt.  
+Er gibt ein Eingabeverzeichnis, das Ausgabeverzeichnis und ein optionales Archivierungsverzeichnis an. Wenn letzteres angegeben wird: emapc verschiebt die Eingabedatei nach der Verarbeitung in das Archivverzeichnis.
+*Beispiel:*
+
+```yaml
+runner:
+  inputDir: ./input/
+  archiveDir: ./archive/
+  outputDir: ./output/
+```
 
 ## Documentation
 
@@ -30,11 +196,13 @@ The former one is used to process the input one time. If the tool has processed 
 The latter one will run until you stop it. It will watch the specified directory and process each file you paste in.
 
 On the releases page you can also find an installer for windows and linux (32-bit and 64-bit). You can use this installer to download and place the binary and all dependencies.  
-To get help with the installer you only have to call `./installer -h`.
 
-**USAGE:** `installer <cli or srv>`  (***ATTENTION:** Please run the installer with root/elevated privileges*)  
+The scripts can be executed on Windwos with Powershell (or the command prompt) and on Linux with bash. However, you need administration/root rights.  
+**USAGE:** `installer <cli or srv>`  
 You can call the installer with `cli` to download and place the cli-tool and the dependencies.  
 If you call it with `srv` it will download and place the runner, the default config and the dependencies. If there was a config before, it will rename that to `emapc.conf.yml.old` and download the new default config. It will also try to install an os service. It uses deamons on linux and native windows services with the help of nssm on windows.  
+
+The installer also downloads an uninstall script. It will also be located in `c:\emapc\` or `/usr/local/emapc`. It uninstalls and removes all components of the cli-tool and the runner-tool.
 
 ### USAGE
 
@@ -129,7 +297,7 @@ output:
   separator: ';'
   keyValueSeparator: ':'
   keys:
-    # Example for keyValue format
+    # Example for keyValue format - required and with a suffix and a prefix
     Meldebild:
       inputSection: Einsatzanlass
       suffix: something behind
@@ -159,170 +327,6 @@ output:
 Lastly: the runner-section.  
 it specifies an input directory, the output directory and an optional archive directory. If the latter one is given: emapc will move the input file to the archive directory after processing it.
 *Example:*
-
-```yaml
-runner:
-  inputDir: ./input/
-  archiveDir: ./archive/
-  outputDir: ./output/
-```
-
-## Dokumentation
-
-Der EMAPC (EinsatzMonitor-Alarm-PDF-Converter) bietet ein Toolset zur Konvertierung einer eingehenden Alarm-PDF in ein Format, das vom EinsatzMonitor lesbar ist.
-Dieses Tool extrahiert die relevanten Informationen der Alarm-PDF in eine schlüssel-wert-formatierte Datei, die durch die Mustererkennung des EinsatzMonitors gelesen werden kann.  
-
-### Mitarbeit
-
-Möchtest du mit an emapc arbeiten? Zögere nicht, Fehler zu melden oder Feature-Anfragen zu stellen. Bitte nutze dazu die Issues-Funktion.  
-Du kannst mir auch gerne bei der Implementierung dieses Tools helfen. Erstelle hierzu ein fork diese Repos -> Arbeite auf diesem Fork und stelle mir dann einen PR ein.  
-Stelle sicher, dass du den aktuellen Status des `main`-Branches verwendest, bevor du einen Merge anforderst.  
-Halte dich bei den commit messages bitte an die [conventional commits](https://www.conventionalcommits.org/de/v1.0.0/).
-
-### Du willst EMAPC verwenden?
-
-Kein Problem. Es gibt keine Einschränkungen für die Verwendung dieses Projekts.  
-Wenn du etwas Feedback hast: Bitte erstellen ein Issue und füge das Label `Feedback` hinzu.  
-Wenn du noch etwas anderes zu diesem Projekt sagen willst: Erstelle ein Issue und füge das Label `Hi` hinzu.
-
-### INSTALLATION
-
-Sie können das Tool auf der [Release-Seite](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases) herunterladen.  
-Dort finden Sie die Binärdateien und Installationsskripte für jedes Release (in der Dropdown-Liste Assets). Emapc unterstützt Linux (32-Bit und 64-Bit), Windows (32-Bit und 64-Bit) und Mac (64-Bit).  
-Für jede unterstützte Architektur finden Sie die Cli-Binärdatei und die Runner-Binärdatei.  
-Erstere wird zur einmaligen Verarbeitung der Eingabe verwendet. Wenn das Tool alle Eingaben verarbeitet hat, wird es beendet.  
-Das zweite läuft, bis Sie es stoppen. Es überwacht das angegebene Verzeichnis und verarbeitet jede Datei, die in das Verzeichnis gelegt wird.
-
-Auf der Release-Seite finden Sie auch Installationsskripte für Windows und Linux (32-Bit und 64-Bit). Sie können diesen Installer verwenden, um die Binärdatei und alle Abhängigkeiten herunterzuladen und zu platzieren.  
-Um Hilfe mit dem Installationsprogramm zu erhalten, müssen Sie nur `./installer -h` aufrufen.
-
-**VERWENDUNG:** `installer <cli or srv>`  (***ACHTUNG:** Bitte führe den insaller mit Admin-Rechten aus*)  
-Sie können den Installer mit `cli` aufrufen, um das Cli-Tool und alle Abhängigkeiten herunterzuladen und zu platzieren.  
-Wenn Sie den Installer mit `srv` aufrufen, wird das Runner-Tool, die Standardkonfiguration und alle Abhängigkeiten heruntergeladen und platziert. Wenn es vorher schon eine Konfiguration gab, wird diese zu `emapc.conf.yml.old` umbenannt und die neue Standardkonfiguration heruntergeladen. Außerdem wird versucht, einen Betriebssystemdienst zu installieren. Auf Linux werden deamon und auf Windows native Dienste mit Hilfe von nssm verwendet.  
-
-### VERWENDUNG
-
-#### CLI
-
-`emapc --config konfigurationsDateiPfad eingabeDateiOderOrdner ausgabeDateiOderOrdner`
-
-##### NOTWENDIGE ARGUMENTE
-
-- **eingabeDateiOderOrdner:**  
-  Dies muss ein gültiger Pfad zu einer PDF-Datei sein. (Die Alarm-PDF-Datei).  
-  Oder dies kann ein Pfad zu einem Ordner sein. In diesem Fall wird emapc alle PDF-Dateien in diesem Ordner verarbeiten.
-
-- **ausgabeDateiOderOrdner:**  
-  Dies kann der Pfad zu einer *(noch nicht existierenden)* Ausgabedatei sein.  
-  > In diesem Fall verwendet emapc den angegebenen Dateinamen.  
-
-  **\- ODER -**  
-  Dies kann der Pfad zu einem bestehenden Verzeichnis sein.  
-  > In diesem Fall übernimmt emapc den Dateinamen aus der Eingabe.
-
-- **--config** *<Pfad/zur/Konfiguration/Datei.json>*  
-  Diesem Parameter sollte ein gültiger Pfad zu einer benutzerdefinierten Konfigurationsdatei folgen.  
-
-#### RUNNER
-
-Der Runner verwendet eine Konfigurationsdatei, die im Arbeitsverzeichnis abgelegt wird und den Namen `emapc.conf.yml` hat. Der Installer legt das Arbeitsverzeichnis auf `/usr/local/emapc/` bzw. `C:\emapc` fest. Der Installer lädt außerdem eine Standardkonfiguration.  
-Die Konfiguration wird [unten](#konfiguration) erklärt.
-
-> **HINWEIS:** Da emapc Standard-Betriebssystem-Dienste verwendet, können Standard-Betriebssystem-Tools verwendt werden, um diesen Dienst zu verwalten. Auf Windows kann der Dienstmanager verwendet werden. Auf Windows verwendet emapc nssm als Wrapper, so dass auch nssm-Befehle verwendet werden können. [Weitere Informationen](http://nssm.cc/). Der Installer enthält auch die ausführbare nssm-Datei (zu finden unter `/usr/local/emapc/` oder `C:\emapc`).
-
-### Wie es funktioniert
-
-Unabhängig davon, ob Sie das Cli- oder das Runner-Tool verwenden, wird emapc durch eine Konfigurationsdatei konfiguriert. In dieser können Sie angeben, welche Eingaben Sie erwarten, was Sie in der Ausgabe haben wollen und einige zusätzliche Dinge. Die Konfiguration wird [später](#konfiguration) erklärt.
-Wie oben erwähnt verwendet emapc PDF-Dateien als Eingabe. Das Tool iteriert über alle Dateien, die als Input angegeben wurden (entweder als Argument oder in der Konfiguration).  
-Nach einiger Initialisierung (wie dem Parsen der Eingabeargumente und der Konfiguration) wird jede Eingabedatei einzeln verarbeitet.  
-EMAPC verwendet das `pdftotext` cli-Tool des [xpdf Projekts](https://www.xpdfreader.com/). Dieses Tool ist im Installer enthalten, so dass emapc vollständig `battery-included` ist (alle Abhängigkeiten werden mitgeliefert).  
-Nun veratbeitet emapc diesen Text. Zuerst versucht emapc, einige spezielle Schlüssel (genannt `inText`-Schlüssel) zu extrahieren. Diese Schlüssel werden in der Konfiguration festgelegt, wie [unten](#konfiguration) beschrieben. Das Werkzeug sucht nach Zeilen, die einen der Spezialschlüssel enthalten. Für jeden Spezialschlüssel werden alle gefundenen Zeilen verkettet und gespeichert (und später bei der Ausgabe verwendet). Die gefundenen Zeilen werden in den nächsten Schritten nicht mehr beachtet.  
-Emapc wird die nächsten Schritte für jeden Abschnitt (in der Konfiguration angegeben) einzeln durchführen.  
-Der erste dieser Schritte besteht darin, festzustellen, wo die Abschnitte beginnen. Hierfür wird nach Zeilen mit dem angegebenen Schlüsselwort gesucht. Für Abschnitte, die sich über mehrere Seiten erstrecken, gibt es mehrere Zeilen mit dem Schlüsselwort. Emapc behandelt sie als Unterabschnitte und führt sie später zusammen.  
-Das Ende eines (Unter-)Abschnitts wird durch eine Leerzeile (Zeile mit nur Leerzeichen, Tabulatoren oder einer leeren Zeichenfolge) erkannt.  
-Nun werden Abschnitte, die ein tabellenartiges Format haben, anders verarbeitet als Abschnitte, die einen Schlüsselwert ähnliches Format haben (das Format wird in der Konfiguration angegeben).  
-Aber zuerst versucht emapc, das Format des Abschnitts zu erraten, sofern der Typ des Abschnitts auf `try` gesetzt ist. Emapc rät, indem es schaut, ob die Zeile mit dem Schlüsselwort mit einigen Leerzeichen (Leerzeichen oder Tabulatoren) beginnt. Wenn dies der Fall ist, wirg angenommen, dass der Abschnitt eine Tabelle ist, andernfalls wird angenommen, dass es sich um ein Schlüsselwertformatähnlichen Abschnitt handelt *(vielleicht sollte dieser Test anders gemacht werden)*.  
-
-Zu der Verarbeitung der Schlüsselwert-Abschnitte: Emapc durchläuft die Zeilen dieses Abschnitts in einer Schleife. Für jede Zeile wird der Schlüssel extrahiert, indem nach dem ersten Vorkommen von zwei Leerzeichen hintereinander gesucht und dann den Text davor genommen. Anschließend wird der Wert in der gleichen Zeile extrahiert. Dazu nimmt emapc den Text zwischen den ersten beiden Leerzeichen aufeinander folgenden Leerzeichen und dem zweiten Vorkommen davon. Dieser Text ist der extrahierte Wert. Der gesamte Text, der sich nach dem zweiten Auftreten von zwei aufeinanderfolgenden Leerzeichen befindet, wird später als 'restlicher Text' behandelt. Jetzt behandelt emapc die Zeilen unterhalb der aktuellen Zeile. Erst versucht emapc zu erkennen, ob der Text in diesen Zeilen Teil des aktuellen Wertes sein sollte. Hierzu wird geprüft, ob diese Zeilen mit einigen Leerzeichen beginnen (Es werden alle folgenden Zeilen angeschaut, bis eine mit einem neuen Schlüssel gefunden wird). Die gefundenen Werte werden verkettet. Schließlich betrachtet emapc den (oben erwähnten) restlichen Text. Hierbei schaut emapc, ob dieser Text mit einem ähnlichen Format wie der aktuelle Schlüssel beginnt oder andere bekannte Schlüsselwörter (wie 'Datum:') verwendet. Wenn ja hängt emapc diesen Text als separate Schlüsselwerte an.
-
-Zu den tabellenähnlichen Abschnitten: Hier schaut emapc auf die erste Zeile. Es wird angenommen, dass in dieser Zeile die Spaltenüberschriften stehen. Emapc vesucht den Text der jeweiligen Kopfzeile und den zugehörigen Startindex zu extrahieren. Es wird davon ausgegangen, dass die jeweilige Spalte in allen Zeilen am gleichen Startindex (+- 2) beginnt. Weiter wird davon ausgegangen, dass die Spaltenüberschriften durch mindestens zwei Leerzeichen getrennt sind. Falls die erste Spalte keine Überschrift enthält (z.B. bei Tabellen mit Zeilenüberschriften), fügt emapc eine leere Überschrift und den dazu gehörigen Index (0) ein. Nach dem Extrahieren der Spaltenüberschriften iteriert emapc über die folgenden Zeilen und versucht, die Werte jeder Spalte für die jeweilige Zeile durch den erkannten Spaltenstartindex und den Startindex der nächsten Spalte zu extrahieren.
-
-Emapc schreibt nun das Ergebnis in eine Textdatei im Schlüsselwertformat.  
-Zum Schreiben iteriert emapc über alle Ausgabeschlüssel (festgesetzt in [configuration](#configuration)). Dies stellt sicher, dass die Ausgabedatei für jeden Durchlauf das gleiche Format hat (natürlich ändern sich die Daten für verschiedene Eingaben).  
-Die Ausgabe wird in einem schlüsselwertähnlichen Format geschrieben. Jede Zeile enthält ein neues Schlüsselwertpaar. Der Schlüssel und der Wert werden mit dem konfigurierten keyValueSeparator (Standard: `: `) getrennt.  
-Wenn es sich bei dem Schlüssel um einen Schlüssel handelt, der mehrere Werte enthält, werden alle Werte in dieser Zeile ausgegeben, getrennt durch das konfigurierte Trennzeichen (Voreinstellung: `;`).  
-Optional kann emapc ein Präfix und ein Suffix zu einem Wert hinzufügen (ein Suffix und/oder ein Präfix pro Schlüssel-Wert-Paar).  
-Beispiel:
-
-```txt
-# ein Wert
-Meldebild=TH Ölspur
-# mehrere Werte
-Einsatzmittel=FW1/1;FW1/2
-```
-
-**WICHTIG:** Wenn irgendein Schritt der Konvertierung fehlschlägt, schreibt empac den Rohtext der Eingabe-PDF in die Ausgabe-Textdatei!
-
-### Konfiguration
-
-Für emapc ist die Konfiguration erforderlich. Die Konfiguration wird in einer [yaml](https://de.wikipedia.org/wiki/YAML)-Datei vorgenommen. Eine Beispielkonfiguration ist [hier](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/blob/main/emapc.conf.yml) zu finden (Das Beispiel sollte für Feuerwehren im Landkreis Biberach funktionieren).  
-
-Die Konfiguration gliedert sich grundsätzlich in 3 Teile: `Input`, `Output` und einen optionalen `Runner` Teil. Der Runner-Teil ist erforderlich, wenn emapc als Dienst/Runner betrieben wird.  
-
-Der Input-Teil sagt emapc, wie die Eingabedateien in etwa aussehen werden. Dazu werden die erwarteten (Eingabe-)Abschnitte und spezielle 'inTextKeys' angegeben. Die inTextKeys sind eine Liste von speziellen Schlüssel (sie werden [oben](#wie-es-funktioniert) beschrieben). Die Abschnitts-Konfiguration andererseits ist eine Abbildung von Sektionsnamen (sollte das Sektions-Schlüsselwort/Header aus der Eingabedatei sein) auf den Sektionstyp. Erlaubte Typen sind `keyValue`, `table` und `try`, falls emapc versuchen sollte, den Typ zu erkennen (beschrieben [oben](#wie-es-funktioniert)).  
-*Beispiel:*
-
-```yaml
-input:
-  sections:
-    Einsatzanlass: keyValue
-    Einsatzort: try
-    EM: table
-  inTextKeys:
-    - Sondersignal
-```
-
-Der Ausgabeteil gibt nun an, wie die Ausgabe aussehen soll. Er ordnet auch die extrahierten Eingabewerte den Ausgabeschlüsseln zu. Aber zuerst gibt der Ausgabeteil das Trennzeichen an, das zwischen dem Schlüssel und dem zugehörigen Wert verwendet wird (genannt "keyValueSeparator") und das Trennzeichen, das zwischen mehreren Werten verwendet wird (genannt "separator"). Beide genannten Konfigurationen sind optional (`keyValueSeparator` ist standardmäßig `: ` und `separator` ist standardmäßig `;`).  
-Das letzte, was im Ausgabeteil angegeben wird, sind die Ausgabeschlüssel. Sie befinden sich unterhalb des Schlüssels `keys`. Die Ausgabeschlüssel sind etwas komplexer. Jeder Schlüssel ist eine Abbildung seines Namens (wird auch das sein, was in der Ausgabe als Schlüssel geschrieben wird) zu seiner Konfiguration. Jeder Ausgabeschlüssel muss angeben, zu welchem Eingabeabschnitt er gehört. Anmerkung: Die inText-Schlüssel gehören zum Abschnitt `inText`. Optional können die Ausgabeschlüssel einen Filter angeben. Dieser Filter wird benutzt, um zu bestimmen, ob ein Wert dieses Ausgabeschlüssels in der Ausgabe enthalten sein soll (wenn z.B. kein Auto mit der Nummer '00' ausgegeben werden soll: setze den `filter` auf '00'. Der Filter nimmt einen [RegExp](https://de.wikipedia.org/wiki/Regul%C3%A4rer_Ausdruck)). Außerdem kann jeder Schlüssel optional ein Präfix und/oder Suffix angeben. Dieses wird vor/nach dem Wert gedruckt. Letztlich kann jeder Schlüssel als erforderlich definiert werden (`required: true`). Falls für diesen Schlüssel kein Wert vorhanden ist schält emapc in den fallback modus und gibt den rohen Eingabetext (sieht wie die PDF aus) in die Ausgabe aus, so dass auch der Einsatzmonitor in den Fallbackmodus schalten kann.  
-Jetzt wird es kompliziert: Wenn der Ausgabeschlüssel ein einfaches schlüsselwertähnliches Format hat, nimmt die Konfiguration eine Liste von Eingabeschlüsselwörtern (spezifiziert durch `inputKeyWords`). Emapc sucht nach diesen Eingabeschlüsseln in der angegebenen inputSection und führt sie für die Ausgabe zusammen. Dies kann verwendet werden, wenn die gleiche Information verschiedene Eingabeschlüssel für verschiedene Alarme haben kann.  
-Wenn der Ausgabeschlüssel in einem Tabellenabschnitt oder einem Try-Abschnitt enthalten ist, muss ein anderes Format verwendet werden, um die Ausgabe zu spezifizieren. Hier gibt es mehrere Optionen. Wenn die Ausgabe alle Werte einer Spalte oder einer Zeile ausgeben soll, muss der `type` (`column` oder `row`) und das inputKeyWord, das den Zeilen- oder Spaltenkopf enthält, angegeben werden. Wenn ein Wert einer Zeile mit einem bestimmten Zeilenkopf ausgegeben werden soll, kann eine Liste von inputKeyWords (wie für den zuvor beschriebenen keyValue) und der columnIndex des Wertes angegeben werden. Last but not least: Wenn ein Wert einer bestimmten, durch einen Index spezifizierten Zeile ausgegeben werden soll, kann ein `rowIndex` und ein `columnIndex` angeben wrden.  
-*Beispiel:*
-
-```yaml
-output:
-  separator: ';'
-  keyValueSeparator: ':'
-  keys:
-    # Beispiel für Schlüsselwert-Format
-    Meldebild:
-      inputSection: Einsatzanlass
-      suffix: irgendwas dahinter
-      prefix: irgendwas davor
-      inputKeyWords:
-        - Meldebild
-    # Beispiel für Tabelle - alle Werte einer Spalte (mit einem Filter auf alles, was auf 1/00 oder 1-00 endet).
-    Einsatzmittel:
-      inputSection: EM
-      type: 'column'
-      inputKeyWord: EM        # Kann unterschiedlich zur inputSection sein für Spalten, die nicht die erste sind.
-      filter: ^.*1(\/|-)00$
-    # Beispiel für Tabelle - ein Wert einer Zeile spezifiziert mit Schlüsselwörtern
-    Ortszusatz:
-      inputSection: Einsatzort
-      inputKeyWords:
-        - Ortszusatz
-        - Bemerkung
-      index: 0
-    # Beispiel für Tabelle - ein WErt angegeben mit Indizes
-    Straße:
-      inputSection: Einsatzort
-      rowIndex: 1
-      columnIndex: 0
-```
-
-Zuletzt: der Runner-Abschnitt.  
-Er gibt ein Eingabeverzeichnis, das Ausgabeverzeichnis und ein optionales Archivierungsverzeichnis an. Wenn letzteres angegeben wird: emapc verschiebt die Eingabedatei nach der Verarbeitung in das Archivverzeichnis.
-*Beispiel:*
 
 ```yaml
 runner:
