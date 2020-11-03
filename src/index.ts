@@ -9,7 +9,7 @@ import * as Extractor from './extractor';
 import * as utils from './utils';
 import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
 
-export async function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config, parentTransaction?: TraceIt.Transaction) {
+export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config, parentTransaction?: TraceIt.Transaction) {
   const transaction = parentTransaction?.startChild('convert');
 
   const prems: Promise<void>[] = [];
@@ -30,7 +30,7 @@ export async function convert(inputFileOrDir: string, isInputDir: boolean, outpu
   } else {
     const files = fs.readdirSync(inputFileOrDir, { withFileTypes: true });
 
-    const prems = files.map(async (file) => {
+    files.every((file) => {
       const fileChild = transaction?.startChild('file');
       const filename = file.name;
       const fnWithoutExt = path.basename(filename, path.extname(filename));
@@ -43,6 +43,7 @@ export async function convert(inputFileOrDir: string, isInputDir: boolean, outpu
         prems.push(run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild));
       }
       fileChild?.end();
+      return true;
     });
   }
 
