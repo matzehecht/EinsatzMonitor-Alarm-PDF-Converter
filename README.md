@@ -4,6 +4,9 @@
 
 ## Dokumentation
 
+*Toolset für den [EinsatzMonitor der Feuer Software GmbH](https://feuersoftware.com/einsatzmonitor/).*  
+*Bei Fragen erreicht ihr mich in dem ihr ein `Issue` erstellt oder per Mail [`dev@hecht.space`](mailto:dev@hecht.space?subject=[EMAPC]%20Deine%20Frage).*
+
 Der EMAPC (EinsatzMonitor-Alarm-PDF-Converter) bietet ein Toolset zur Konvertierung einer eingehenden Alarm-PDF in ein Format, das vom EinsatzMonitor lesbar ist.
 Dieses Tool extrahiert die relevanten Informationen der Alarm-PDF in eine schlüssel-wert-formatierte Datei, die durch die Mustererkennung des EinsatzMonitors gelesen werden kann.  
 
@@ -170,6 +173,9 @@ runner:
 ```
 
 ## Documentation
+
+*Toolset for [EinsatzMonitor made by Feuer Software GmbH](https://feuersoftware.com/einsatzmonitor/).*  
+*If you have questions create an `issue` or contact me via mail [`dev@hecht.space`](mailto:dev@hecht.space?subject=[EMAPC]%20Your%20question).*
 
 The EMAPC (EinsatzMonitor-Alarm-PDF-Converter) provides a toolset to convert an incoming alarm PDF into a format that can be read by the EinsatzMonitor.
 This tool extracts the relevant information of the alarm pdf into a key-value formated file that can be read by the pattern matching of the EinsatzMonitor.
