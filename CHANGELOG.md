@@ -1,3 +1,11 @@
+## [1.1.3](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.1.2...v1.1.3) (2021-01-15)
+
+
+### Bug Fixes
+
+* **extractor:** fixes wrong output on empty input values ([965e684](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/965e68414979ddda7aad2341ba26318bff7be66d)), closes [#23](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/issues/23)
+* fixes cli ([713cc62](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/713cc62444111caa112208a880eba1dcac5c7d00))
+
 ## [1.1.2](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.1.1...v1.1.2) (2020-10-28)
 
 
