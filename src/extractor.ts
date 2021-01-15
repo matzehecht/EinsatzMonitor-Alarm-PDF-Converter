@@ -106,8 +106,14 @@ function extractKeyVal(rawArray: string[]): ParsedKVSection {
   const extracted = linesWithoutHeading.reduce((prev, line, indexLine) => {
     const key = line.split(/\s\s/)[0];
     const trimmedKey = key.trim();
-
     if (trimmedKey !== '') {
+      
+      if (!line.slice(key.length).trim()) {
+        // If value pf key is empty
+        prev[trimmedKey] = '';
+        return prev;
+      }
+      
       const indexValue = line.slice(key.length).search(/\S/) + key.length;
       const value = line.slice(indexValue).split(/\s\s/)[0];
 

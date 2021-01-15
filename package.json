@@ -27,15 +27,15 @@
   "homepage": "https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter#readme",
   "devDependencies": {
     "@semantic-release/changelog": "^5.0.1",
-    "@semantic-release/exec": "^3.3.8",
-    "@semantic-release/git": "^7.0.18",
+    "@semantic-release/exec": "^5.0.0",
+    "@semantic-release/git": "^9.0.0",
     "@trace-it/lowdb-adapter": "^1.0.0",
     "@trace-it/types": "^2.0.0",
     "@types/node": "^14.6.4",
     "@types/shelljs": "^0.8.8",
     "@types/yamljs": "^0.2.31",
     "eslint": "^7.12.1",
-    "semantic-release": "^17.2.3",
+    "semantic-release": "^17.3.1",
     "shx": "^0.3.2",
     "trace-it": "^1.0.0",
     "ts-node": "^9.0.0",
@@ -50,12 +50,7 @@
   },
   "release": {
     "branches": [
-      "+([0-9])?(.{+([0-9]),x}).x",
-      "main",
-      {
-        "name": "dev",
-        "prerelease": true
-      }
+      "main"
     ],
     "plugins": [
       "@semantic-release/commit-analyzer",
