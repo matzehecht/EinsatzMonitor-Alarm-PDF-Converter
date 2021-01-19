@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.1.3...v1.1.4) (2021-01-19)
+
+
+### Bug Fixes
+
+* **dependencies:** fixes missing module error ([48241d1](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/48241d1fd0c89c68b616b225a371ff02021b07f4))
+
 ## [1.1.3](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.1.2...v1.1.3) (2021-01-15)
 
 
