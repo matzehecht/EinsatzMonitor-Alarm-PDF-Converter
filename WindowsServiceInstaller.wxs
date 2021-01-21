@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*"
+    Name="EinsatzMonitor Alarm PDF Converter"
+    Language="1033"
+    Version="$(var.Version)"
+    Manufacturer="Matthias Hecht"
+    UpgradeCode="69db581d-4fbf-4a36-a18c-2111700cb3c5"
+    Codepage="1252">
+
+    <Package Id="*"
+      Compressed="yes"/>
+
+    <Condition Message="You need to be an administrator to install this product.">
+      Privileged
+    </Condition>
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of EMAPC is already installed."
+      Schedule="afterInstallExecute" />
+
+    <Media Id="1"
+      Cabinet="setup.cab"
+      EmbedCab="yes" />
+
+    <?if $(sys.BUILDARCH)="x86"?>
+    <?define ProgramFiles="ProgramFilesFolder"?>
+    <?define PdftoText="pdftotext32.exe"?>
+    <?define EmapcRunner="emapc32.exe"?>
+    <?define Nssm="nssm32.exe"?>
+    <?elseif $(sys.BUILDARCH)="x64"?>
+    <?define ProgramFiles="ProgramFiles64Folder"?>
+    <?define PdftoText="pdftotext64.exe"?>
+    <?define EmapcRunner="emapc64.exe"?>
+    <?define Nssm="nssm64.exe"?>
+    <?else?>
+    <?error Unsupported value of sys.BUILDARCH=$(sys.BUILDARCH)?>
+    <?endif?>
+
+    <!-- Integrate cli as soon as installer ui is integrated -->
+    <!--<Feature Id="CLI" Title="Install the command line utility" Level="0">
+      <ComponentGroupRef Id="Config" />
+      <ComponentRef Id="INSTALLFOLDER" />
+		</Feature>-->
+
+    <Feature Id="Service"
+      Title="Install the windows service"
+      Level="1">
+      <ComponentGroupRef Id="Service" />
+      <ComponentRef Id="Pdftotext" />
+      <ComponentGroupRef Id="Config" />
+      <ComponentRef Id="Archive" />
+      <ComponentRef Id="Input" />
+      <ComponentRef Id="Logs" />
+      <ComponentRef Id="Output" />
+      <ComponentRef Id="INSTALLFOLDER" />
+    </Feature>
+
+    <ComponentGroup Id="Config"
+      Directory="INSTALLFOLDER">
+      <ComponentRef Id="EmapcConfig" />
+      <ComponentRef Id="ExampleConfig" />
+    </ComponentGroup>
+
+    <ComponentGroup Id="Service">
+      <ComponentRef Id="ServiceBin" />
+      <ComponentRef Id="ServiceWrapper" />
+    </ComponentGroup>
+
+    <Directory Id="TARGETDIR"
+      Name="SourceDir">
+      <Directory Id="$(var.ProgramFiles)">
+        <Directory Id="INSTALLFOLDER"
+          Name="EMAPC">
+
+          <Component Id="INSTALLFOLDER"
+            Guid="FC83F11D-3F34-4DF8-ABEF-421FE9D31111">
+            <RemoveFolder Id="INSTALLFOLDER"
+              On="uninstall" />
+            <RegistryValue Root="HKCU"
+              Key="Software\Emapc"
+              Type="string"
+              Value=""
+              KeyPath="yes" />
+            <RemoveFile Id='INSTALLFOLDERFILES'
+              On='uninstall'
+              Name='*' />
+          </Component>
+
+          <Component Id="ServiceBin"
+            Guid="A5096409-5768-475F-8878-B1F92C17A3AC">
+
+            <File Id="Service"
+              Name="emapc-runner.exe"
+              Source="bin\srv\win\$(var.EmapcRunner)">
+              <Permission User="Everyone"
+                GenericAll="yes" />
+            </File>
+          </Component>
+
+          <Component Id="ServiceWrapper"
+            Guid="E6164426-59A1-4DBD-A824-E9DBFB1D7D8C">
+            <File Id="Nssm"
+              Name="nssm.exe"
+              Source="lib\nssm\$(var.Nssm)"
+              KeyPath="yes">
+              <Permission User="Everyone"
+                GenericAll="yes" />
+            </File>
+
+            <?define ServiceName="EMAPC"?>
+
+            <ServiceInstall Id="InstallService"
+              Type="ownProcess"
+              Name="$(var.ServiceName)"
+              DisplayName="EinsatzMonitor-Alarm-PDF-Converter"
+              Description="This is a service for running the emapc."
+              Start="auto"
+              ErrorControl="normal"
+              Vital= "yes" />
+
+            <RegistryKey Root="HKLM"
+              Key="SYSTEM\CurrentControlSet\Services\$(var.ServiceName)\Parameters">
+              <RegistryValue Name="AppDirectory"
+                Value="[INSTALLFOLDER]"
+                Type="expandable" />
+              <RegistryValue Name="Application"
+                Value="[INSTALLFOLDER]emapc-runner.exe"
+                Type="expandable" />
+              <RegistryValue Name="AppStdout"
+                Value="[INSTALLFOLDER]service.log"
+                Type="expandable" />
+              <RegistryValue Name="AppStderr"
+                Value="[INSTALLFOLDER]service-error.log"
+                Type="expandable" />
+              <RegistryValue Name="AppRotate"
+                Value="1"
+                Type="integer" />
+              <RegistryValue Name="AppParameters"
+                Value=""
+                Type="expandable" />
+              <RegistryKey Key="AppExit">
+                <RegistryValue Value="Restart"
+                  Type="string" />
+              </RegistryKey>
+            </RegistryKey>
+
+            <ServiceControl Id="StartService"
+              Name="$(var.ServiceName)"
+              Start="install"
+              Stop="both"
+              Remove="uninstall"
+              Wait="yes" />
+
+          </Component>
+
+          <Component Id="EmapcConfig"
+            Guid="D1AF6A47-F6EB-4663-84F8-C0433D79AD32">
+
+            <File Id="EmapcConfig"
+              Name="emapc.conf.yml"
+              Source="emapc.conf.yml">
+              <Permission User="Everyone"
+                GenericAll="yes" />
+            </File>
+
+          </Component>
+
+          <Component Id="ExampleConfig"
+            Guid="343E4973-55CA-4A9E-A054-7243C91DC0ED">
+
+            <File Id="ExampleConfig"
+              Name="example.conf.yml"
+              Source="emapc.conf.yml">
+              <Permission User="Everyone"
+                GenericAll="yes" />
+            </File>
+
+          </Component>
+
+          <Directory Id="Archive"
+            Name="archive">
+            <Component Id="Archive"
+              Guid="75AA026B-F534-412D-9C0F-6994A0798537">
+              <CreateFolder />
+              <RemoveFile Id='Archive'
+                On='uninstall'
+                Name='*' />
+            </Component>
+          </Directory>
+
+          <Directory Id="Input"
+            Name="input">
+            <Component Id="Input"
+              Guid="9CAF27AC-CFA1-491C-B556-59AB155154DA">
+              <CreateFolder Directory="Input" />
+              <RemoveFile Id='Input'
+                On='uninstall'
+                Name='*' />
+            </Component>
+          </Directory>
+
+          <Directory Id="Lib"
+            Name="lib">
+            <Directory Id="Pdftotext"
+              Name="pdftotext">
+              <Directory Id="Win"
+                Name="win">
+                <Component Id="Pdftotext"
+                  Guid="C93ED2ED-3528-457D-915C-933F0D176FFC">
+
+                  <File Id="Pdftotext"
+                    Name="$(var.PdftoText)"
+                    Source="lib\pdftotext\win\$(var.PdftoText)">
+                    <Permission User="Everyone"
+                      GenericAll="yes" />
+                  </File>
+
+                </Component>
+              </Directory>
+            </Directory>
+          </Directory>
+
+          <Directory Id="Logs"
+            Name="logs">
+            <Component Id="Logs"
+              Guid="8C024E41-2318-403D-B126-7686A0CD0441">
+              <CreateFolder Directory="Logs" />
+              <RemoveFile Id='Logs'
+                On='uninstall'
+                Name='*' />
+            </Component>
+          </Directory>
+
+          <Directory Id="Output"
+            Name="output">
+            <Component Id="Output"
+              Guid="B33D4DE3-FC7A-43D7-91D5-E6D2F3AAD986">
+              <CreateFolder Directory="Output" />
+              <RemoveFile Id='Output'
+                On='uninstall'
+                Name='*' />
+            </Component>
+          </Directory>
+
+        </Directory>
+      </Directory>
+
+      <Directory Id="WINDOWSVOLUME" />
+    </Directory>
+
+    <CustomAction Id="CopyToNewLocation"
+      ExeCommand='cmd /c IF EXIST "emapc\emapc.conf.yml" (COPY /y "emapc\emapc.conf.yml" "[INSTALLFOLDER]")'
+      Directory="WINDOWSVOLUME"
+      Impersonate="no"
+      Execute="deferred" />
+
+    <CustomAction Id="UninstallOld"
+      ExeCommand='cmd /c IF EXIST "emapc\uninstall-win64.ps1" (powershell -ExecutionPolicy Bypass -File emapc\uninstall-win64.ps1)'
+      Directory="WINDOWSVOLUME"
+      Impersonate="no"
+      Execute="deferred" />
+
+    <InstallExecuteSequence>
+      <Custom Action="CopyToNewLocation"
+        Before="InstallFinalize"> NOT Installed </Custom>
+      <Custom Action="UninstallOld"
+        After="CopyToNewLocation"> NOT Installed </Custom>
+    </InstallExecuteSequence>
+  </Product>
+</Wix>
