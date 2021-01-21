@@ -1,10 +1,10 @@
 export interface Config {
   input: Input;
   output: Output;
-  runner?: Runner;
+  service?: service;
 }
 
-export interface Runner {
+export interface service {
   inputDir: string;
   outputDir: string;
   archiveDir?: string;

@@ -25,13 +25,13 @@ Wenn du noch etwas anderes zu diesem Projekt sagen willst: Erstelle ein Issue un
 
 Das Tool kann auf der [Release-Seite](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases) heruntergeladen werden.  
 Dort kann die Binärdateien und Installationsskripte für jedes Release gefunden werden (in der Dropdown-Liste Assets). Emapc unterstützt Linux (32-Bit [x86] und 64-Bit [x64]), Windows (32-Bit [x86] und 64-Bit [x64]) und Mac (64-Bit).  
-Für jede unterstützte Architektur gibt es das Kommandozeilen-Tool (cli-tool) und die Runner-Binärdatei.  
+Für jede unterstützte Architektur gibt es das Kommandozeilen-Tool (cli-tool) und die Dienst-Binärdatei.  
 Erstere wird zur einmaligen Verarbeitung der Eingabe verwendet. Wenn das Tool alle Eingaben verarbeitet hat, wird es beendet.  
 Das zweite läuft, bis es händisch gestoppt wird. Es überwacht das angegebene Verzeichnis und verarbeitet jede Datei, die in das Verzeichnis gelegt wird.
 
-Auf der Release-Seite befinden sich auch ein Installationsprogramm für Windows und Linux (32-Bit und 64-Bit). In dem Installationsprogramm für Windows (.msi-Datei) sind alle Abhängigkeiten enthalten. Beim Ausführen des Skripts werden diese im Installationsordner (`C:\Program Files\EMAPC`) abgelegt. Hierzu gehört auch die Konfigurationsdatei (`C:\Program Files\EMAPC\emapc.conf.yml`). Die Beispielkonfigurationsdatei (`C:\Program Files\EMAPC\example.conf.yml`) sollte nicht verändert werden um bei updates die neue Standardkonfiguration zu erhalten. Weiter wird der `Einsatzmonitor-Alarm-PDF-Converter`-Dienst in den Windows Diensten installiert und kann hier gestoppt un gestartet werden (zu finden unter: `Win + R` -> services.msc -> `ENTER`). Dieser Dienst startet nach Neustarts oder Crashes des Computers automatisch. EMAPC kann in den Windows `Programme und Features` deinstalliert werden. (Der Windows Installer unterstützt zur Zeit nur den Runner, nicht das Kommandozeilentool).
+Auf der Release-Seite befinden sich auch ein Installationsprogramm für Windows und Linux (32-Bit und 64-Bit). In dem Installationsprogramm für Windows (.msi-Datei) sind alle Abhängigkeiten enthalten. Beim Ausführen des Skripts werden diese im Installationsordner (`C:\Program Files\EMAPC`) abgelegt. Hierzu gehört auch die Konfigurationsdatei (`C:\Program Files\EMAPC\emapc.conf.yml`). Die Beispielkonfigurationsdatei (`C:\Program Files\EMAPC\example.conf.yml`) sollte nicht verändert werden um bei updates die neue Standardkonfiguration zu erhalten. Weiter wird der `Einsatzmonitor-Alarm-PDF-Converter`-Dienst in den Windows Diensten installiert und kann hier gestoppt un gestartet werden (zu finden unter: `Win + R` -> services.msc -> `ENTER`). Dieser Dienst startet nach Neustarts oder Crashes des Computers automatisch. EMAPC kann in den Windows `Programme und Features` deinstalliert werden. (Der Windows Installer unterstützt zur Zeit nur den Dienst, nicht das Kommandozeilentool).
 
-Das Installationsskript für Linux lädt auch ein Deinstallationsskript herunter. Es befindet sich ebenfalls in `/usr/local/emapc`. Das Skript deinstalliert und entfernt alle Komponenten des Kommandozeilen-Tools und des Runner-Tools.
+Das Installationsskript für Linux lädt auch ein Deinstallationsskript herunter. Es befindet sich ebenfalls in `/usr/local/emapc`. Das Skript deinstalliert und entfernt alle Komponenten des Kommandozeilen-Tools und des Dienstes.
 
 ### VERWENDUNG
 
@@ -56,16 +56,16 @@ Das Installationsskript für Linux lädt auch ein Deinstallationsskript herunter
 - **--config** *<Pfad/zur/Konfiguration/Datei.json>*  
   Diesem Parameter sollte ein gültiger Pfad zu einer benutzerdefinierten Konfigurationsdatei folgen.  
 
-#### RUNNER
+#### Dienst
 
-Der Runner verwendet eine Konfigurationsdatei, die im Arbeitsverzeichnis abgelegt wird und den Namen `emapc.conf.yml` hat. Der Installer legt das Arbeitsverzeichnis auf `/usr/local/emapc/` bzw. `C:\Program Files\EMAPC` fest. Der Installer lädt außerdem eine Standardkonfiguration.  
+Der Dienst verwendet eine Konfigurationsdatei, die im Arbeitsverzeichnis abgelegt wird und den Namen `emapc.conf.yml` hat. Der Installer legt das Arbeitsverzeichnis auf `/usr/local/emapc/` bzw. `C:\Program Files\EMAPC` fest. Der Installer lädt außerdem eine Standardkonfiguration.  
 Die Konfiguration wird [unten](#konfiguration) erklärt.
 
 > **HINWEIS:** Da emapc Standard-Betriebssystem-Dienste verwendet, können Standard-Betriebssystem-Tools verwendt werden, um diesen Dienst zu verwalten. Auf Windows kann der Dienstmanager verwendet werden. Auf Windows verwendet emapc nssm als Wrapper, so dass auch nssm-Befehle verwendet werden können. [Weitere Informationen](http://nssm.cc/). Der Installer enthält auch die ausführbare nssm-Datei (zu finden unter `/usr/local/emapc/` oder `C:\Program Files\EMAPC`).
 
 ### Wie es funktioniert
 
-Unabhängig davon, ob das Kommandozeilen- oder das Runner-Tool verwendet wird, wird emapc durch eine Konfigurationsdatei konfiguriert. In dieser kann angeben werden, welche Eingaben erwartet werden, was in der Ausgabe stehen soll und einige zusätzliche Dinge. Die Konfiguration wird [später](#konfiguration) erklärt.
+Unabhängig davon, ob das Kommandozeilentool oder den Dienst verwendet wird, wird emapc durch eine Konfigurationsdatei konfiguriert. In dieser kann angeben werden, welche Eingaben erwartet werden, was in der Ausgabe stehen soll und einige zusätzliche Dinge. Die Konfiguration wird [später](#konfiguration) erklärt.
 Wie oben erwähnt verwendet emapc PDF-Dateien als Eingabe. Das Tool iteriert über alle Dateien, die als Input angegeben wurden (entweder als Argument oder in der Konfiguration).  
 Nach einiger Initialisierung (wie dem Parsen der Eingabeargumente und der Konfiguration) wird jede Eingabedatei einzeln verarbeitet.  
 EMAPC verwendet das `pdftotext` Kommandozeilen-Tool des [xpdf Projekts](https://www.xpdfreader.com/). Dieses Tool ist im Installer enthalten, so dass emapc vollständig `battery-included` ist (alle Abhängigkeiten werden mitgeliefert).  
@@ -100,7 +100,7 @@ Einsatzmittel=FW1/1;FW1/2
 
 Für emapc ist die Konfiguration erforderlich. Die Konfiguration wird in einer [yaml](https://de.wikipedia.org/wiki/YAML)-Datei vorgenommen. Eine Beispielkonfiguration ist [hier](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/blob/main/emapc.conf.yml) zu finden (Das Beispiel sollte für Feuerwehren im Landkreis Biberach funktionieren).  
 
-Die Konfiguration gliedert sich grundsätzlich in 3 Teile: `Input`, `Output` und einen optionalen `Runner` Teil. Der Runner-Teil ist erforderlich, wenn emapc als Dienst/Runner betrieben wird.  
+Die Konfiguration gliedert sich grundsätzlich in 3 Teile: `Input`, `Output` und einen optionalen `Service` Teil. Der Dienst-Teil (`service`) ist erforderlich, wenn emapc als Dienst/Service betrieben wird.  
 
 Der Input-Teil sagt emapc, wie die Eingabedateien in etwa aussehen werden. Dazu werden die erwarteten (Eingabe-)Abschnitte und spezielle 'inTextKeys' angegeben. Die inTextKeys sind eine Liste von speziellen Schlüssel (sie werden [oben](#wie-es-funktioniert) beschrieben). Die Abschnitts-Konfiguration andererseits ist eine Abbildung von Sektionsnamen (sollte das Sektions-Schlüsselwort/Header aus der Eingabedatei sein) auf den Sektionstyp. Erlaubte Typen sind `keyValue`, `table` und `try`, falls emapc versuchen sollte, den Typ zu erkennen (beschrieben [oben](#wie-es-funktioniert)).  
 *Beispiel:*
@@ -154,12 +154,12 @@ output:
       columnIndex: 0
 ```
 
-Zuletzt: der Runner-Abschnitt.  
+Zuletzt: der Dienst-Abschnitt.  
 Er gibt ein Eingabeverzeichnis, das Ausgabeverzeichnis und ein optionales Archivierungsverzeichnis an. Wenn letzteres angegeben wird: emapc verschiebt die Eingabedatei nach der Verarbeitung in das Archivverzeichnis.
 *Beispiel:*
 
 ```yaml
-runner:
+service:
   inputDir: ./input/
   archiveDir: ./archive/
   outputDir: ./output/

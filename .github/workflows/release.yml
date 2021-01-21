@@ -11,6 +11,18 @@ jobs:
     name: Build
     steps:
       - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
       - name: Use Node.js 14
         uses: actions/setup-node@v1
         with:
@@ -23,6 +35,8 @@ jobs:
         with:
           name: built
           path: dist
+          if-no-files-found: error
+          retention-days: 7
   publish:
     runs-on: ubuntu-latest
     name: Publish
@@ -33,10 +47,18 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/download-artifact@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
         with:
-          name: built
-          path: dist
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
@@ -48,3 +70,149 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release
+  compile:
+    runs-on: ubuntu-latest
+    name: Compile
+    needs: [build, publish]
+    strategy:
+      matrix:
+        os: [mac, windows, linux]
+        arch: [x86, x64]
+        type: [service, cli]
+        include:
+          - os: windows
+            node: 12.9.1
+          - os: linux
+            node: 12.16.2
+          - os: mac
+            node: 12.16.2
+        exclude:
+          - os: mac
+            arch: x86
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Use Node.js 14
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - name: Install dependencies
+        run: npm ci
+      - uses: actions/download-artifact@v2
+        with:
+          name: built
+          path: dist
+      - uses: ./.github/actions/nexe-compile
+        with:
+          os: ${{ matrix.os }}
+          arch: ${{ matrix.arch }}
+          entrypoint: ${{ matrix.type }}
+          node-version: ${{ matrix.node }}
+      - uses: actions/upload-artifact@v2
+        if: ${{ matrix.os != 'windows' }}
+        with:
+          name: emapc-${{ matrix.type }}-${{ matrix.os }}-${{ matrix.arch }}
+          path: bin/${{ matrix.type }}/${{ matrix.os }}/emapc-${{ matrix.type }}-${{ matrix.os }}-${{ matrix.arch }}
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@v2
+        if: ${{ matrix.os == 'windows' }}
+        with:
+          name: emapc-${{ matrix.type }}-${{ matrix.os }}-${{ matrix.arch }}.exe
+          path: bin/${{ matrix.type }}/${{ matrix.os }}/emapc-${{ matrix.type }}-${{ matrix.os }}-${{ matrix.arch }}.exe
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload binary
+        uses: svenstaro/upload-release-action@v2
+        if: ${{ matrix.os != 'windows' }}
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: bin/${{ matrix.type }}/${{ matrix.os }}/emapc-${{ matrix.type }}-${{ matrix.os }}-${{ matrix.arch }}
+          asset_name: emapc-${{ matrix.type }}-${{ matrix.os }}-${{ matrix.arch }}
+          tag: ${{ github.ref }}
+      - name: Upload binary
+        uses: svenstaro/upload-release-action@v2
+        if: ${{ matrix.os == 'windows' }}
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: bin/${{ matrix.type }}/${{ matrix.os }}/emapc-${{ matrix.type }}-${{ matrix.os }}-${{ matrix.arch }}.exe
+          asset_name: emapc-${{ matrix.type }}-${{ matrix.os }}-${{ matrix.arch }}.exe
+          tag: ${{ github.ref }}
+  buildWinInstaller:
+    runs-on: windows-latest
+    name: Build Windows Installer
+    needs: [compile]
+    strategy:
+      matrix:
+        arch: [x64, x86]
+    steps:
+      - name: Fix git checkout line endings
+        run: git config --global core.autocrlf input
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v2
+        with:
+          name: emapc-service-windows-${{ matrix.arch }}.exe
+          path: bin/service/windows
+      - name: Setup wix toolset
+        uses: ./.github/actions/setup-wix-toolset
+      - id: gitVersion
+        name: Get version
+        run: |
+          $version = $(git tag --points-at HEAD) -replace 'v', ''
+          echo "::set-output name=tag::$(echo $version)"
+      - name: Preprocess and Compile WXS
+        run: candle.exe -ext WixUtilExtension -dVersion=$($env:TAG) -arch $($env:ARCH) "WindowsServiceInstaller.wxs" -out WindowsServiceInstaller.wixobj
+        env:
+          ARCH: ${{ matrix.os }}
+          TAG: ${{ steps.gitVersion.outputs.tag }}
+      - name: Link and Bundle wixobj
+        run: light.exe -ext WixUtilExtension "WindowsServiceInstaller.wixobj" -out emapc-windows-service-installer-${{ matrix.arch }}.msi
+      - name: Upload windows installer
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: emapc-windows-service-installer-${{ matrix.arch }}.msi
+          asset_name: Emapc-ServiceInstaller-Win${{ matrix.arch }}.msi
+          tag: ${{ github.ref }}
+  buildLinuxInstaller:
+    runs-on: ubuntu-latest
+    name: Build Linux Installer
+    needs: [compile]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: gitVersion
+        uses: ./.github/actions/get-git-head
+      - name: Make installer
+        run: ./makeInstaller.sh ${{ steps.gitVersion.outputs.sha }} ${{ steps.gitVersion.outputs.tag }}
+      - name: Upload linux installer x64
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: install-linuxx64.sh
+          asset_name: Emapc-Installer-Linuxx64.sh
+          tag: ${{ github.ref }}
+      - name: Upload linux installer x86
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: install-linuxx86.sh
+          asset_name: Emapc-Installer-Linuxx86.sh
+          tag: ${{ github.ref }}

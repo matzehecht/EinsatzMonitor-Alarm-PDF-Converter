@@ -4,26 +4,26 @@ gitHash=$1
 gitTag=$2
 
 declare -A linux0=(
-  [name]="linux32"
-  [cliBin]="emapc-cli-linux-x32"
-  [runnerBin]="emapc-srv-linux-x32"
+  [name]="linuxx86"
+  [cliBin]="emapc-cli-linux-x86"
+  [serviceBin]="emapc-srv-linux-x86"
   [lib]="pdftotext32"
-  [uninstaller]="uninstall-linux32.sh"
+  [uninstaller]="uninstall-linuxx86.sh"
 )
 declare -A linux1=(
-  [name]="linux64"
+  [name]="linuxx64"
   [cliBin]="emapc-cli-linux-x64"
-  [runnerBin]="emapc-srv-linux-x64"
+  [serviceBin]="emapc-srv-linux-x64"
   [lib]="pdftotext64"
-  [uninstaller]="uninstall-linux64.sh"
+  [uninstaller]="uninstall-linuxx64.sh"
 )
 
 declare -n linux
 
 declare -A mac0=(
-  [name]="mac64"
+  [name]="macx64"
   [cliBin]="emapc-cli-macos-x64"
-  [runnerBin]="emapc-srv-mac-x64"
+  [serviceBin]="emapc-srv-mac-x64"
   [lib]="mac/pdftotext64"
 )
 
@@ -63,11 +63,11 @@ if [[ \"\$1\" == \"cli\" ]]; then
 fi
 
 if [[ \"\$1\" == \"srv\" ]]; then
-  rm -rf /usr/local/emapc/emapc-runner
-  curl -L https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/download/$gitTag/${linux[runnerBin]} -o /usr/local/emapc/emapc-runner
+  rm -rf /usr/local/emapc/emapc-service
+  curl -L https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/download/$gitTag/${linux[serviceBin]} -o /usr/local/emapc/emapc-service
 
-  if [ -f /usr/local/emapc/emapc.conf.yml ]; then mv /usr/local/emapc/emapc.conf.yml /usr/local/emapc/emapc.conf.yml.old; fi
-  curl -L https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/emapc.conf.yml -o /usr/local/emapc/emapc.conf.yml
+  curl -L https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/example.conf.yml -o /usr/local/emapc/example.conf.yml
+  if [ ! -f /usr/local/emapc/emapc.conf.yml ]; then cp /usr/local/emapc/example.conf.yml /usr/local/emapc/emapc.conf.yml; fi
 
   echo \"[Unit]
 Description=This is a service for running the emapc.
@@ -75,7 +75,7 @@ Description=This is a service for running the emapc.
 [Service]
 User=root
 WorkingDirectory=/usr/local/emapc/
-ExecStart=emapc-runner
+ExecStart=emapc-service
 Restart=always
 
 [Install]

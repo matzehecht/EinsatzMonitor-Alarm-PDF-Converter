@@ -6,7 +6,7 @@ import * as YAML from 'yamljs';
 import * as utils from '../utils';
 import {
   Config,
-  Runner,
+  service,
   Input,
   SectionType,
   Section,
@@ -20,7 +20,7 @@ import {
   ValueIndexKey
 } from './config';
 
-export { Config, Runner, Input, SectionType, Section, Output, Key, BaseKey, KeyValueKey, TableKey, ListByWordKey, ValueByWordKey, ValueIndexKey };
+export { Config, service, Input, SectionType, Section, Output, Key, BaseKey, KeyValueKey, TableKey, ListByWordKey, ValueByWordKey, ValueIndexKey };
 
 export function load(configPath: string): Config {
   const config = YAML.load(configPath) as Config;
@@ -37,17 +37,17 @@ export function load(configPath: string): Config {
     utils.logInfo('CONFIG', 'validated config successfully!');
   }
 
-  if (config.runner?.inputDir && (!existsSync(config.runner.inputDir) || !statSync(config.runner.inputDir).isDirectory()))
+  if (config.service?.inputDir && (!existsSync(config.service.inputDir) || !statSync(config.service.inputDir).isDirectory()))
     throw new Error('input dir does not exist');
-  if (config.runner?.outputDir && (!existsSync(config.runner.outputDir) || !statSync(config.runner.outputDir).isDirectory()))
+  if (config.service?.outputDir && (!existsSync(config.service.outputDir) || !statSync(config.service.outputDir).isDirectory()))
     throw new Error('output dir does not exist');
-  if (config.runner?.archiveDir && (!existsSync(config.runner.archiveDir) || !statSync(config.runner.archiveDir).isDirectory()))
+  if (config.service?.archiveDir && (!existsSync(config.service.archiveDir) || !statSync(config.service.archiveDir).isDirectory()))
     throw new Error('archive dir does not exist');
 
-  if (config.runner) {
-    config.runner.inputDir = path.resolve(config.runner.inputDir);
-    config.runner.outputDir = path.resolve(config.runner.outputDir);
-    config.runner.archiveDir = config.runner.archiveDir && path.resolve(config.runner.archiveDir);
+  if (config.service) {
+    config.service.inputDir = path.resolve(config.service.inputDir);
+    config.service.outputDir = path.resolve(config.service.outputDir);
+    config.service.archiveDir = config.service.archiveDir && path.resolve(config.service.archiveDir);
   }
 
   return config;

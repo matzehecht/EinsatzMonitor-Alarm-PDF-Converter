@@ -56,7 +56,7 @@ output:
       type: 'column'
       inputKeyWord: EM
       filter: ^.*1(\/|-)00$
-runner:
+service:
   inputDir: ./input/
   archiveDir: ./archive/
   outputDir: ./output/
