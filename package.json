@@ -131,16 +131,6 @@
               "path": "install-linux64.sh",
               "name": "install-linux64.sh",
               "label": "Linux-x64 service installer"
-            },
-            {
-              "path": "install-win32.ps1",
-              "name": "install-win32.ps1",
-              "label": "Windows-x32 service installer"
-            },
-            {
-              "path": "install-win64.ps1",
-              "name": "install-win64.ps1",
-              "label": "Windows-x64 service installer"
             }
           ]
         }
