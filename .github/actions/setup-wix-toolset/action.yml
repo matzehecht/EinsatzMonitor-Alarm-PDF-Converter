@@ -1,0 +1,26 @@
+name: Setup wix toolset
+author: matzehecht
+description: This action installs the wix toolset version 3.11
+runs:
+  using: 'composite'
+  steps:
+    - name: Install wix toolset
+      shell: powershell
+      run: |
+        C:\\ProgramData\\chocolatey\\lib\\wixtoolset\\tools\\wix311.exe /install /quiet /norestart
+    - name: Configure PATH variable
+      shell: powershell
+      run: |
+        $wixToolsetBinPath = "C:\\Program Files (x86)\\WiX Toolset v3.11\\bin"
+        echo $wixToolsetBinPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    - name: Test installation
+      shell: powershell
+      run: |
+        if ((Get-Command "candle.exe" -ErrorAction SilentlyContinue) -eq $null)
+        {
+          Write-Host "Unable to find candle.exe in your PATH"
+        }
+        if ((Get-Command "light.exe" -ErrorAction SilentlyContinue) -eq $null)
+        {
+          Write-Host "Unable to find light.exe in your PATH"
+        }

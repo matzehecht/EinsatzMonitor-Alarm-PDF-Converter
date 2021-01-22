@@ -1,0 +1,26 @@
+name: Nexe compile
+author: matzehecht
+description: This action calls nexe.
+inputs:
+  entrypoint:
+    description: 'Entrypoint of the node script'
+    required: true
+    default: 'index.js'
+  os:
+    description: 'Operating system to compile too'
+    required: true
+    default: 'linux'
+  arch:
+    description: 'target architecture'
+    required: true
+    default: 'x86'
+  node-version:
+    description: 'The node version'
+    required: true
+    default: '12.16.2'
+runs:
+  using: 'composite'
+  steps:
+    - name: Install wix toolset
+      shell: bash
+      run: npx nexe -i dist/${{ inputs.entrypoint }}.js -o bin/${{ inputs.entrypoint }}/${{ inputs.os }}/emapc-${{ inputs.entrypoint }}-${{ inputs.os }}-${{ inputs.arch }} -t ${{ inputs.os }}-${{ inputs.arch }}-${{ inputs.node-version }} -n emapc

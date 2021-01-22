@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - release/**
 
 jobs:
   build:
@@ -11,6 +12,18 @@ jobs:
     name: Build
     steps:
       - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
       - name: Use Node.js 14
         uses: actions/setup-node@v1
         with:
@@ -19,57 +32,164 @@ jobs:
         run: npm ci
       - name: build
         run: npm run build
-      - name: Compile cli
-        run: ./compileCli.sh
       - uses: actions/upload-artifact@v2
         with:
-          name: emapc-cli-linux-x32
-          path: bin/cli/linux/emapc32
+          name: built
+          path: dist
           if-no-files-found: error
+          retention-days: 7
+  publish:
+    runs-on: ubuntu-latest
+    name: Publish
+    needs: [build]
+    outputs:
+      sha: ${{ steps.gitVersion.outputs.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - name: Install dependencies
+        run: npm ci
+      - name: Release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release --dry-run
+      - id: gitVersion
+        uses: ./.github/actions/get-git-head
+  compile:
+    runs-on: ubuntu-latest
+    name: Compile
+    needs: [build, publish]
+    strategy:
+      matrix:
+        os: [mac, windows, linux]
+        arch: [x86, x64]
+        type: [service, cli]
+        include:
+          - os: windows
+            node: 12.9.1
+          - os: linux
+            node: 12.16.2
+          - os: mac
+            node: 12.16.2
+        exclude:
+          - os: mac
+            arch: x86
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Use Node.js 14
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - name: Install dependencies
+        run: npm ci
+      - uses: actions/download-artifact@v2
+        with:
+          name: built
+          path: dist
+      - uses: ./.github/actions/nexe-compile
+        with:
+          os: ${{ matrix.os }}
+          arch: ${{ matrix.arch }}
+          entrypoint: ${{ matrix.type }}
+          node-version: ${{ matrix.node }}
+      - uses: actions/upload-artifact@v2
+        if: ${{ matrix.os != 'windows' }}
+        with:
+          name: emapc-${{ matrix.type }}-${{ matrix.os }}-${{ matrix.arch }}
+          path: bin/${{ matrix.type }}/${{ matrix.os }}/emapc-${{ matrix.type }}-${{ matrix.os }}-${{ matrix.arch }}
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@v2
+        if: ${{ matrix.os == 'windows' }}
+        with:
+          name: emapc-${{ matrix.type }}-${{ matrix.os }}-${{ matrix.arch }}.exe
+          path: bin/${{ matrix.type }}/${{ matrix.os }}/emapc-${{ matrix.type }}-${{ matrix.os }}-${{ matrix.arch }}.exe
+          if-no-files-found: error
+          retention-days: 7
+  buildWinInstaller:
+    runs-on: windows-latest
+    name: Build Windows Installer
+    needs: [compile]
+    strategy:
+      matrix:
+        arch: [x64, x86]
+    steps:
+      - name: Fix git checkout line endings
+        run: git config --global core.autocrlf input
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: emapc-service-windows-${{ matrix.arch }}.exe
+          path: bin/service/windows
+      - name: Setup wix toolset
+        uses: ./.github/actions/setup-wix-toolset
+      - name: Preprocess and Compile WXS
+        run: candle.exe -ext WixUtilExtension -dVersion="1.0.0" -arch $($env:ARCH) "WindowsServiceInstaller.wxs" -out WindowsServiceInstaller.wixobj
+        env:
+          ARCH: ${{ matrix.arch }}
+      - name: Link and Bundle wixobj
+        run: light.exe -ext WixUtilExtension "WindowsServiceInstaller.wixobj" -out emapc-windows-service-installer-${{ matrix.arch }}.msi
       - uses: actions/upload-artifact@v2
         with:
-          name: emapc-cli-linux-x64
-          path: bin/cli/linux/emapc64
+          name: emapc-windows-service-installer-${{ matrix.arch }}.msi
+          path: emapc-windows-service-installer-${{ matrix.arch }}.msi
           if-no-files-found: error
+          retention-days: 7
+  buildLinuxInstaller:
+    runs-on: ubuntu-latest
+    name: Build Linux Installer
+    needs: [compile, publish]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: gitVersion
+        uses: ./.github/actions/get-git-head
+      - name: Make installer
+        run: ./makeInstaller.sh ${{ needs.publish.outputs.sha }} v1.0.0
       - uses: actions/upload-artifact@v2
         with:
-          name: emapc-cli-win-x32.exe
-          path: bin/cli/win/emapc32.exe
+          name: install-linuxx64.sh
+          path: install-linuxx64.sh
           if-no-files-found: error
+          retention-days: 7
       - uses: actions/upload-artifact@v2
         with:
-          name: emapc-cli-win-x64.exe
-          path: bin/cli/win/emapc64.exe
+          name: install-linuxx86.sh
+          path: install-linuxx86.sh
           if-no-files-found: error
-      - uses: actions/upload-artifact@v2
-        with:
-          name: emapc-cli-macos-x64
-          path: bin/cli/macos/emapc64
-          if-no-files-found: error
-      - name: Compile srv
-        run: ./compileRunner.sh
-      - uses: actions/upload-artifact@v2
-        with:
-          name: emapc-srv-linux-x32
-          path: bin/srv/linux/emapc32
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v2
-        with:
-          name: emapc-srv-linux-x64
-          path: bin/srv/linux/emapc64
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v2
-        with:
-          name: emapc-srv-win-x32.exe
-          path: bin/srv/win/emapc32.exe
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v2
-        with:
-          name: emapc-srv-win-x64.exe
-          path: bin/srv/win/emapc64.exe
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v2
-        with:
-          name: emapc-srv-macos-x64
-          path: bin/srv/macos/emapc64
-          if-no-files-found: error
+          retention-days: 7

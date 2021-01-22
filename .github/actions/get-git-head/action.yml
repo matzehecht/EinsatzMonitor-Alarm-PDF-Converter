@@ -1,0 +1,19 @@
+name: Get git HEAD
+author: matzehecht
+description: This action returns the git HEAD and the tag of HEAD.
+outputs:
+  sha: 
+    description: The SHA of HEAD
+    value: ${{ steps.sha.outputs.sha }}
+  tag: 
+    description: The tag of HEAD
+    value: ${{ steps.tag.outputs.tag }}
+runs:
+  using: 'composite'
+  steps:
+    - id: sha
+      run: echo "::set-output name=sha::$(git rev-parse --verify HEAD)"
+      shell: bash
+    - id: tag
+      run: echo "::set-output name=tag::$(git tag --points-at HEAD)"
+      shell: bash

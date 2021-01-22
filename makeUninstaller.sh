@@ -1,16 +1,16 @@
 #!/bin/bash
 
 declare -A linux0=(
-  [name]="linux32"
+  [name]="linuxx86"
 )
 declare -A linux1=(
-  [name]="linux64"
+  [name]="linuxx64"
 )
 
 declare -n linux
 
 declare -A mac0=(
-  [name]="mac64"
+  [name]="macx64"
   [lib]="mac/pdftotext64"
 )
 

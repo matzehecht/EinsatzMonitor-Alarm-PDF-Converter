@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+  xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <Product Id="*"
     Name="EinsatzMonitor Alarm PDF Converter"
     Language="1033"
@@ -25,12 +26,12 @@
     <?if $(sys.BUILDARCH)="x86"?>
     <?define ProgramFiles="ProgramFilesFolder"?>
     <?define PdftoText="pdftotext32.exe"?>
-    <?define EmapcRunner="emapc32.exe"?>
+    <?define EmapcService="emapc-service-windows-x86.exe"?>
     <?define Nssm="nssm32.exe"?>
     <?elseif $(sys.BUILDARCH)="x64"?>
     <?define ProgramFiles="ProgramFiles64Folder"?>
     <?define PdftoText="pdftotext64.exe"?>
-    <?define EmapcRunner="emapc64.exe"?>
+    <?define EmapcService="emapc-service-windows-x64.exe"?>
     <?define Nssm="nssm64.exe"?>
     <?else?>
     <?error Unsupported value of sys.BUILDARCH=$(sys.BUILDARCH)?>
@@ -90,8 +91,8 @@
             Guid="A5096409-5768-475F-8878-B1F92C17A3AC">
 
             <File Id="Service"
-              Name="emapc-runner.exe"
-              Source="bin\srv\win\$(var.EmapcRunner)">
+              Name="emapc-service.exe"
+              Source="bin\service\windows\$(var.EmapcService)">
               <Permission User="Everyone"
                 GenericAll="yes" />
             </File>
@@ -124,7 +125,7 @@
                 Value="[INSTALLFOLDER]"
                 Type="expandable" />
               <RegistryValue Name="Application"
-                Value="[INSTALLFOLDER]emapc-runner.exe"
+                Value="[INSTALLFOLDER]emapc-service.exe"
                 Type="expandable" />
               <RegistryValue Name="AppStdout"
                 Value="[INSTALLFOLDER]service.log"
@@ -158,7 +159,7 @@
 
             <File Id="EmapcConfig"
               Name="emapc.conf.yml"
-              Source="emapc.conf.yml">
+              Source="example.conf.yml">
               <Permission User="Everyone"
                 GenericAll="yes" />
             </File>
@@ -170,7 +171,7 @@
 
             <File Id="ExampleConfig"
               Name="example.conf.yml"
-              Source="emapc.conf.yml">
+              Source="example.conf.yml">
               <Permission User="Everyone"
                 GenericAll="yes" />
             </File>
@@ -181,7 +182,10 @@
             Name="archive">
             <Component Id="Archive"
               Guid="75AA026B-F534-412D-9C0F-6994A0798537">
-              <CreateFolder />
+              <CreateFolder>
+                <util:PermissionEx User="Users"
+                  GenericAll="yes" />
+              </CreateFolder>
               <RemoveFile Id='Archive'
                 On='uninstall'
                 Name='*' />
@@ -192,7 +196,10 @@
             Name="input">
             <Component Id="Input"
               Guid="9CAF27AC-CFA1-491C-B556-59AB155154DA">
-              <CreateFolder Directory="Input" />
+              <CreateFolder Directory="Input">
+                <util:PermissionEx User="Users"
+                  GenericAll="yes" />
+              </CreateFolder>
               <RemoveFile Id='Input'
                 On='uninstall'
                 Name='*' />
@@ -224,7 +231,10 @@
             Name="logs">
             <Component Id="Logs"
               Guid="8C024E41-2318-403D-B126-7686A0CD0441">
-              <CreateFolder Directory="Logs" />
+              <CreateFolder Directory="Logs">
+                <util:PermissionEx User="Users"
+                  GenericAll="yes" />
+              </CreateFolder>
               <RemoveFile Id='Logs'
                 On='uninstall'
                 Name='*' />
@@ -235,7 +245,10 @@
             Name="output">
             <Component Id="Output"
               Guid="B33D4DE3-FC7A-43D7-91D5-E6D2F3AAD986">
-              <CreateFolder Directory="Output" />
+              <CreateFolder Directory="Output">
+                <util:PermissionEx User="Users"
+                  GenericAll="yes" />
+              </CreateFolder>
               <RemoveFile Id='Output'
                 On='uninstall'
                 Name='*' />

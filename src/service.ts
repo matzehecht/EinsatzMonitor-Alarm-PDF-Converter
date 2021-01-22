@@ -22,9 +22,9 @@ const config = loadConfig(CONFIG_FILE);
 configTransaction?.set('config', config);
 configTransaction?.end();
 
-if (!config.runner) throw new Error('CONFIG - runner config missing!');
+if (!config.service) throw new Error('CONFIG - service config missing!');
 
-const watcher = chokidar.watch(`${utils.unixPathFrom(config.runner!.inputDir)}/*.pdf`, {
+const watcher = chokidar.watch(`${utils.unixPathFrom(config.service!.inputDir)}/*.pdf`, {
   followSymlinks: false,
   depth: 0
 });
@@ -36,7 +36,7 @@ async function run(filepath: string, stat?: Stats) {
   fileChangeTransaction?.set('filepath', filepath);
 
   try {
-    await convert(filepath, false, config.runner?.outputDir as string, config, fileChangeTransaction);
+    await convert(filepath, false, config.service?.outputDir as string, config, fileChangeTransaction);
   } catch (err) {
     await archiveFile(filepath, fileChangeTransaction);
     throw err;
@@ -47,9 +47,9 @@ async function run(filepath: string, stat?: Stats) {
 }
 
 async function archiveFile(filepath: string, transaction?: TraceIt.Transaction) {
-  if (config.runner?.archiveDir) {
+  if (config.service?.archiveDir) {
     const archiveTransaction = transaction?.startChild('archive');
-    await fsPromises.rename(path.resolve(filepath), path.resolve(config.runner?.archiveDir as string, path.basename(filepath)));
+    await fsPromises.rename(path.resolve(filepath), path.resolve(config.service?.archiveDir as string, path.basename(filepath)));
     archiveTransaction?.end();
   }
 }
