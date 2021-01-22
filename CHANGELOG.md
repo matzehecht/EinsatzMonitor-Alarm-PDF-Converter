@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.1.4...v1.2.0) (2021-01-22)
+
+
+### Features
+
+* **installer:** besserer Windows Installer ([83cf402](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/83cf40292b2127d1cf649f719c974c9f10af22bf))
+
 ## [1.1.4](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.1.3...v1.1.4) (2021-01-19)
 
 
