@@ -35,6 +35,39 @@ Das Installationsskript für Linux lädt auch ein Deinstallationsskript herunter
 
 ### VERWENDUNG
 
+#### Dienst
+
+Der Dienst verwendet eine Konfigurationsdatei, die im Arbeitsverzeichnis abgelegt wird und den Namen `emapc.conf.yml` hat. Der Installer legt das Arbeitsverzeichnis auf `/usr/local/emapc/` bzw. `C:\Program Files\EMAPC` fest. Der Installer lädt außerdem eine Standardkonfiguration.  
+Die Konfiguration wird [unten](#konfiguration) erklärt.
+
+> **HINWEIS:** Da emapc Standard-Betriebssystem-Dienste verwendet, können Standard-Betriebssystem-Tools verwendt werden, um diesen Dienst zu verwalten. Auf Windows kann der Dienstmanager verwendet werden. Auf Windows verwendet emapc nssm als Wrapper, so dass auch nssm-Befehle verwendet werden können. [Weitere Informationen](http://nssm.cc/). Der Installer enthält auch die ausführbare nssm-Datei (zu finden unter `/usr/local/emapc/` oder `C:\Program Files\EMAPC`).
+
+##### Verwendung mit dem Einsatzmonitor
+
+Für die Verwendung mit dem Einsatzmonitor müssen ein paar Einstellungen im Einsatzmonitor gemacht werden. Alle der folgenden Einstellungen befinden sich in den Auswertungs-Einstellungen (Menü unten links -> Auswertung).
+
+0. EinsatzMonitor-Alarm-PDF-Converter (EMAPC) und der Einsatzmonitor sollte schon installiert sein.
+1. Um die Alarme über E-Mail zu empfangen muss unter E-Mail der entsprechende Mail-Server eingerichtet werden. Zusätzlich müssen "Download Anhang" und "Nur Anhang" aktiviert werden und unter "Anhang Speicherort" der Ordner `C:\Program Files\EMAPC\input` angegeben werden.
+2. Als nächstes muss unter "File Überwachung" der Schalter umgelegt werden. Nun sollte der Einsatzmonitor neugestartet werden.
+3. Jetzt muss die Konfiguration von EMAPC angepasst werden. Notwendig ist hierbei lediglich die Anpassung des Ausgabeordners (`service -> output`). Dieser muss zu `/Users/<Nutzername>/Einsatz_Monitor/Text_Input/` geändert werden (Nutzername sollte der Nutzer des Einsatzmonitor sein).
+4. EMAPC gibt eine Textdatei mit einem festen Format (in der Konfiguration definiertem) aus. Dieses Format muss nun unter "Pattern" eingepflegt werden (Beispiel unten).
+5. Letztlich muss unter "AAO-Auswertung" der Separator ";" und das Pattern "{{FUNKRUFNAME}}" eingetragen werden.
+
+Pattern:
+
+```txt
+Meldebild:{{EINSATZSTICHWORT}}
+Ort:{{ORT}}
+Ortsteil:{{ORTSTEIL}}
+Straße:{{STRASSE}}
+Ortszusatz:{{ZUSATZFELD2:Zusatzinformation}}
+Sondersignal:{{ZUSATZFELD1:Sondersignal}}
+Bemerkung:{{ZUSATZFELD2:Bemerkung}}
+Stichwort 2:{{ZUSATZFELD1:Stichwort}}
+Stichwort:{{ZUSATZFELD3:Bemerkung}}
+Einsatzmittel:{{AAO}}
+```
+
 #### CLI
 
 `emapc --config konfigurationsDateiPfad eingabeDateiOderOrdner ausgabeDateiOderOrdner`
@@ -55,13 +88,6 @@ Das Installationsskript für Linux lädt auch ein Deinstallationsskript herunter
 
 - **--config** *<Pfad/zur/Konfiguration/Datei.json>*  
   Diesem Parameter sollte ein gültiger Pfad zu einer benutzerdefinierten Konfigurationsdatei folgen.  
-
-#### Dienst
-
-Der Dienst verwendet eine Konfigurationsdatei, die im Arbeitsverzeichnis abgelegt wird und den Namen `emapc.conf.yml` hat. Der Installer legt das Arbeitsverzeichnis auf `/usr/local/emapc/` bzw. `C:\Program Files\EMAPC` fest. Der Installer lädt außerdem eine Standardkonfiguration.  
-Die Konfiguration wird [unten](#konfiguration) erklärt.
-
-> **HINWEIS:** Da emapc Standard-Betriebssystem-Dienste verwendet, können Standard-Betriebssystem-Tools verwendt werden, um diesen Dienst zu verwalten. Auf Windows kann der Dienstmanager verwendet werden. Auf Windows verwendet emapc nssm als Wrapper, so dass auch nssm-Befehle verwendet werden können. [Weitere Informationen](http://nssm.cc/). Der Installer enthält auch die ausführbare nssm-Datei (zu finden unter `/usr/local/emapc/` oder `C:\Program Files\EMAPC`).
 
 ### Wie es funktioniert
 
