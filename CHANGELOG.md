@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.2.0...v1.2.1) (2021-01-23)
+
+
+### Bug Fixes
+
+* **installer:** removes security warning by signing installer ([2fb208a](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/2fb208a6ae299208cb2afe779a001e32a89ba66f))
+
 # [1.2.0](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.1.4...v1.2.0) (2021-01-22)
 
 
