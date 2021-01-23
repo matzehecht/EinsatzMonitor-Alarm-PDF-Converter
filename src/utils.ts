@@ -18,5 +18,5 @@ export function logInfo(...msg: string[]) {
 }
 
 export function unixPathFrom(oldPath: string) {
-  return oldPath.split(path.sep).join(path.posix.sep).slice(oldPath.indexOf(':') + 1);
+  return oldPath.split(path.sep).join(path.posix.sep);
 }
