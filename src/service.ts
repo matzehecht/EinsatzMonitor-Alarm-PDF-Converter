@@ -15,12 +15,7 @@ if (shouldTrace) TraceIt.init(adapter as LowDbAdapter);
 
 const CONFIG_FILE = path.join(utils.basePath, './emapc.conf.yml');
 
-const configTransaction = shouldTrace ? TraceIt.startTransaction('loadConfig') : undefined;
-configTransaction?.set('path', CONFIG_FILE);
-if (CONFIG_FILE && !existsSync(CONFIG_FILE)) throw new Error('config file does not exist');
-const config = loadConfig(CONFIG_FILE);
-configTransaction?.set('config', config);
-configTransaction?.end();
+let config = load(CONFIG_FILE);
 
 if (!config.service) throw new Error('CONFIG - service config missing!');
 
@@ -30,6 +25,27 @@ const watcher = chokidar.watch(`${utils.unixPathFrom(config.service!.inputDir)}/
 });
 
 watcher.on('add', run);
+
+const configWatcher = chokidar.watch(CONFIG_FILE, {
+  followSymlinks: false,
+  depth: 0
+});
+
+configWatcher.on('change', (path, stats) => {
+  if (stats) console.log(`File ${path} changed size to ${stats.size}`);
+  config = load(CONFIG_FILE);
+});
+
+function load(file: string) {
+  const configTransaction = shouldTrace ? TraceIt.startTransaction('loadConfig') : undefined;
+  configTransaction?.set('path', file);
+  if (file && !existsSync(file)) throw new Error('config file does not exist');
+  const config = loadConfig(file);
+  configTransaction?.set('config', config);
+  configTransaction?.end();
+  console.log('🚀 ~ file: service.ts ~ line 49 ~ load ~ config', config);
+  return config;
+}
 
 async function run(filepath: string, stat?: Stats) {
   const fileChangeTransaction = shouldTrace ? TraceIt.startTransaction('file change detected') : undefined;
