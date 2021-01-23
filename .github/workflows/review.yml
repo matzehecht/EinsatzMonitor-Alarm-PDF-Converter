@@ -4,7 +4,7 @@ on:
   pull_request:
     branches:
       - main
-      - release/**
+      - next
 
 jobs:
   build:
@@ -74,6 +74,12 @@ jobs:
         run: npx semantic-release --dry-run
       - id: gitVersion
         uses: ./.github/actions/get-git-head
+      - uses: actions/upload-artifact@v2
+        with:
+          name: published
+          path: dist
+          if-no-files-found: error
+          retention-days: 7
   compile:
     runs-on: ubuntu-latest
     name: Compile
@@ -115,7 +121,7 @@ jobs:
         run: npm ci
       - uses: actions/download-artifact@v2
         with:
-          name: built
+          name: published
           path: dist
       - uses: ./.github/actions/nexe-compile
         with:
@@ -153,6 +159,17 @@ jobs:
         with:
           name: emapc-service-windows-${{ matrix.arch }}.exe
           path: bin/service/windows
+      - name: Write key file
+        run: |
+          $bytes = [Convert]::FromBase64String("${{ secrets.PFX_CERTIFICATE }}")
+          [IO.File]::WriteAllBytes("emapc.pfx", $bytes)
+      - name: Sign binaries
+        run: |
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "emapc service" /t http://timestamp.globalsign.com/scripts/timstamp.dll /v bin/service/windows/emapc-service-windows-${{ matrix.arch }}.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "pdftotext" /t http://timestamp.globalsign.com/scripts/timstamp.dll /v lib/pdftotext/win/pdftotext32.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "pdftotext" /t http://timestamp.globalsign.com/scripts/timstamp.dll /v lib/pdftotext/win/pdftotext64.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "nssm" /t http://timestamp.globalsign.com/scripts/timstamp.dll /v lib/nssm/nssm32.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "nssm" /t http://timestamp.globalsign.com/scripts/timstamp.dll /v lib/nssm/nssm64.exe
       - name: Setup wix toolset
         uses: ./.github/actions/setup-wix-toolset
       - name: Preprocess and Compile WXS
@@ -161,12 +178,8 @@ jobs:
           ARCH: ${{ matrix.arch }}
       - name: Link and Bundle wixobj
         run: light.exe -ext WixUtilExtension "WindowsServiceInstaller.wixobj" -out emapc-windows-service-installer-${{ matrix.arch }}.msi
-      - name: Write key file
-        run: |
-          $bytes = [Convert]::FromBase64String("${{ secrets.PFX_CERTIFICATE }}")
-          [IO.File]::WriteAllBytes("emapc.pfx", $bytes)
       - name: Sign installer
-        run: lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /d "${{ secrets.PFX_CERTIFICATE_NAME }}" /t http://timestamp.globalsign.com/scripts/timstamp.dll /v emapc-windows-service-installer-${{ matrix.arch }}.msi
+        run: lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "EinsatzMonitor Alarm PDF Converter" /t http://timestamp.globalsign.com/scripts/timstamp.dll /v emapc-windows-service-installer-${{ matrix.arch }}.msi
       - uses: actions/upload-artifact@v2
         with:
           name: emapc-windows-service-installer-${{ matrix.arch }}.msi
