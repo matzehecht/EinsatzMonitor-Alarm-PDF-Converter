@@ -155,7 +155,7 @@ output:
 ```
 
 Zuletzt: der Dienst-Abschnitt.  
-Er gibt ein Eingabeverzeichnis, das Ausgabeverzeichnis und ein optionales Archivierungsverzeichnis an. Wenn letzteres angegeben wird: emapc verschiebt die Eingabedatei nach der Verarbeitung in das Archivverzeichnis.
+Er gibt ein Eingabeverzeichnis, das Ausgabeverzeichnis und ein optionales Archivierungsverzeichnis an. Wenn letzteres angegeben wird: emapc verschiebt die Eingabedatei nach der Verarbeitung in das Archivverzeichnis.  
 *Beispiel:*
 
 ```yaml
@@ -164,3 +164,9 @@ service:
   archiveDir: ./archive/
   outputDir: ./output/
 ```
+
+EMAPC unterstützt auf Windows momentan nur Ordner auf dem Windows-Laufwerk (typischerweise `C:\`). Diese können in folgenden Formaten angegeben werden:
+
+- `/emapc/`
+- `C:\emapc\`
+- `\emapc\`
