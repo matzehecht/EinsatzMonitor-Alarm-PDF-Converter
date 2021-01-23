@@ -191,7 +191,7 @@ service:
   outputDir: ./output/
 ```
 
-EMAPC unterstützt auf Windows momentan nur Ordner auf dem Windows-Laufwerk (typischerweise `C:\`). Diese können in folgenden Formaten angegeben werden:
+Unter Windows können Pfade in folgenden Formaten angegeben werden:
 
 - `/emapc/`
 - `C:\emapc\`

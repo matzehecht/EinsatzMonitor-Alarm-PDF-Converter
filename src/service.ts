@@ -43,7 +43,6 @@ function load(file: string) {
   const config = loadConfig(file);
   configTransaction?.set('config', config);
   configTransaction?.end();
-  console.log('🚀 ~ file: service.ts ~ line 49 ~ load ~ config', config);
   return config;
 }
 
