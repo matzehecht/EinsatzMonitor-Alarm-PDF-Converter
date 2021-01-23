@@ -15,7 +15,7 @@ jobs:
       - name: Cache node modules
         uses: actions/cache@v2
         env:
-          cache-name: cache-node-modules
+          cache-name: cache-node-modules-build
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
@@ -52,7 +52,7 @@ jobs:
       - name: Cache node modules
         uses: actions/cache@v2
         env:
-          cache-name: cache-node-modules
+          cache-name: cache-node-modules-publish
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
@@ -98,7 +98,7 @@ jobs:
       - name: Cache node modules
         uses: actions/cache@v2
         env:
-          cache-name: cache-node-modules
+          cache-name: cache-node-modules-compile
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
@@ -161,6 +161,12 @@ jobs:
           ARCH: ${{ matrix.arch }}
       - name: Link and Bundle wixobj
         run: light.exe -ext WixUtilExtension "WindowsServiceInstaller.wixobj" -out emapc-windows-service-installer-${{ matrix.arch }}.msi
+      - name: Write key file
+        run: |
+          $bytes = [Convert]::FromBase64String("${{ secrets.PFX_CERTIFICATE }}")
+          [IO.File]::WriteAllBytes("emapc.pfx", $bytes)
+      - name: Sign installer
+        run: lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /d "${{ secrets.PFX_CERTIFICATE_NAME }}" /t http://timestamp.globalsign.com/scripts/timstamp.dll /v emapc-windows-service-installer-${{ matrix.arch }}.msi
       - uses: actions/upload-artifact@v2
         with:
           name: emapc-windows-service-installer-${{ matrix.arch }}.msi

@@ -19,9 +19,7 @@
     <MajorUpgrade DowngradeErrorMessage="A newer version of EMAPC is already installed."
       Schedule="afterInstallExecute" />
 
-    <Media Id="1"
-      Cabinet="setup.cab"
-      EmbedCab="yes" />
+    <MediaTemplate EmbedCab="yes" />
 
     <?if $(sys.BUILDARCH)="x86"?>
     <?define ProgramFiles="ProgramFilesFolder"?>
