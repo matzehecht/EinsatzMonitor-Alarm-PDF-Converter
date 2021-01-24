@@ -1,9 +1,6 @@
-import * as fs from 'fs';
 import * as path from 'path';
 
-// Make log dir
-if (!fs.existsSync('./logs')) fs.mkdirSync('./logs');
-export const LOG_PATH = `${path.resolve('./logs')}/${new Date().toISOString().replace(/^(.*)T.*/, '$1')}.log`;
+export const LOG_PATH = path.resolve('./service.log');
 
 export const INTERNAL_ERROR = `An internal error occured!
 Please check the log file for more information!
