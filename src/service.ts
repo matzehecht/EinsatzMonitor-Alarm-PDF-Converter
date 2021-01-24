@@ -5,65 +5,75 @@ import * as TraceIt from 'trace-it';
 import { LowDbAdapter } from '@trace-it/lowdb-adapter';
 
 import { convert } from '.';
-import { load as loadConfig } from './config';
+import * as Config from './config';
 import * as utils from './utils';
 
 const shouldTrace = Boolean(process.env.SHOULD_TRACE) || false;
 
-const adapter = shouldTrace ? new LowDbAdapter({ dbName: path.join(utils.basePath , './tmp/perf.json') }) : undefined;
+const adapter = shouldTrace ? new LowDbAdapter({ dbName: path.join(utils.basePath, './tmp/perf.json') }) : undefined;
 if (shouldTrace) TraceIt.init(adapter as LowDbAdapter);
 
 const CONFIG_FILE = path.join(utils.basePath, './emapc.conf.yml');
 
-let config = load(CONFIG_FILE);
+let watcher: chokidar.FSWatcher | undefined;
 
-if (!config.service) throw new Error('CONFIG - service config missing!');
+Config.get().subscribe(async (config) => {
+  await watcher?.close();
+  if (config) {
+    const { input, output, service } = config as Config.Config;
+    if (!service) {
+      console.error(`[${new Date().toISOString()}] CONFIG ERROR \ndata should have property 'service'`);
+    } else {
+      watcher = chokidar.watch(`${utils.unixPathFrom(service.inputDir)}/*.pdf`, {
+        followSymlinks: false,
+        depth: 0
+      });
 
-const watcher = chokidar.watch(`${utils.unixPathFrom(config.service!.inputDir)}/*.pdf`, {
-  followSymlinks: false,
-  depth: 0
+      watcher.on('add', run(input, output, service));
+    }
+  }
 });
 
-watcher.on('add', run);
+chokidar
+  .watch(CONFIG_FILE, {
+    followSymlinks: false,
+    depth: 0
+  })
+  .on('change', async (path, stats) => {
+    load(CONFIG_FILE);
+  });
 
-const configWatcher = chokidar.watch(CONFIG_FILE, {
-  followSymlinks: false,
-  depth: 0
-});
-
-configWatcher.on('change', (path, stats) => {
-  config = load(CONFIG_FILE);
-});
+load(CONFIG_FILE);
 
 function load(file: string) {
   const configTransaction = shouldTrace ? TraceIt.startTransaction('loadConfig') : undefined;
   configTransaction?.set('path', file);
   if (file && !existsSync(file)) throw new Error('config file does not exist');
-  const config = loadConfig(file);
+  const config = Config.load(file);
   configTransaction?.set('config', config);
   configTransaction?.end();
   return config;
 }
 
-async function run(filepath: string, stat?: Stats) {
+const run = (inputConfig: Config.Input, outputConfig: Config.Output, serviceConfig: Config.Service) => async (filepath: string, stat?: Stats) => {
   const fileChangeTransaction = shouldTrace ? TraceIt.startTransaction('file change detected') : undefined;
   fileChangeTransaction?.set('filepath', filepath);
 
   try {
-    await convert(filepath, false, config.service?.outputDir as string, config, fileChangeTransaction);
+    await convert(filepath, false, serviceConfig.outputDir as string, inputConfig, outputConfig, fileChangeTransaction);
   } catch (err) {
-    await archiveFile(filepath, fileChangeTransaction);
+    await archive(filepath, fileChangeTransaction, serviceConfig.archiveDir);
     throw err;
   }
 
-  await archiveFile(filepath, fileChangeTransaction);
+  await archive(filepath, fileChangeTransaction, serviceConfig.archiveDir);
   fileChangeTransaction?.end();
-}
+};
 
-async function archiveFile(filepath: string, transaction?: TraceIt.Transaction) {
-  if (config.service?.archiveDir) {
+const archive = async (filepath: string, transaction?: TraceIt.Transaction, archiveDir?: string) => {
+  if (archiveDir) {
     const archiveTransaction = transaction?.startChild('archive');
-    await fsPromises.rename(path.resolve(filepath), path.resolve(config.service?.archiveDir as string, path.basename(filepath)));
+    await fsPromises.rename(path.resolve(filepath), path.resolve(archiveDir, path.basename(filepath)));
     archiveTransaction?.end();
   }
-}
+};

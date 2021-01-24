@@ -1,12 +1,13 @@
-import { createValidator } from '@typeonly/validator';
 import { existsSync, statSync } from 'fs';
 import * as path from 'path';
 import * as YAML from 'yamljs';
+import * as Ajv from 'ajv';
+import { Observable, Subject } from 'rxjs';
 
 import * as utils from '../utils';
 import {
   Config,
-  service,
+  Service,
   Input,
   SectionType,
   Section,
@@ -20,35 +21,45 @@ import {
   ValueIndexKey
 } from './config';
 
-export { Config, service, Input, SectionType, Section, Output, Key, BaseKey, KeyValueKey, TableKey, ListByWordKey, ValueByWordKey, ValueIndexKey };
+export { Config, Service, Input, SectionType, Section, Output, Key, BaseKey, KeyValueKey, TableKey, ListByWordKey, ValueByWordKey, ValueIndexKey };
 
-export function load(configPath: string): Config {
-  const config = YAML.load(configPath) as Config;
+const config = new Subject<Config>();
+const ajv = new Ajv({
+  logger: {
+    log: console.log.bind(console),
+    warn: console.warn.bind(console),
+    error: console.error.bind(console)
+  },
+})
 
-  const validator = createValidator({
-    bundle: require('./config-types.to.json')
+export function get(): Observable<Config> {
+  return config.asObservable();
+}
+
+export function load(configPath: string): void {
+  YAML.load(configPath, (loadedConfig: Config) => {
+    const validate = ajv.compile(require('./schema.json'));
+
+    if (!validate(loadedConfig)) {
+      console.error(`[${new Date().toISOString()}] CONFIG ERROR\n${ajv.errorsText(validate.errors)}`);
+      config.next();
+    } else {
+      utils.logInfo('CONFIG', 'validated config successfully!');
+
+      if (loadedConfig.service?.inputDir && (!existsSync(loadedConfig.service.inputDir) || !statSync(loadedConfig.service.inputDir).isDirectory()))
+        throw new Error('input dir does not exist');
+      if (loadedConfig.service?.outputDir && (!existsSync(loadedConfig.service.outputDir) || !statSync(loadedConfig.service.outputDir).isDirectory()))
+        throw new Error('output dir does not exist');
+      if (loadedConfig.service?.archiveDir && (!existsSync(loadedConfig.service.archiveDir) || !statSync(loadedConfig.service.archiveDir).isDirectory()))
+        throw new Error('archive dir does not exist');
+
+      if (loadedConfig.service) {
+        loadedConfig.service.inputDir = path.resolve(loadedConfig.service.inputDir);
+        loadedConfig.service.outputDir = path.resolve(loadedConfig.service.outputDir);
+        loadedConfig.service.archiveDir = loadedConfig.service.archiveDir && path.resolve(loadedConfig.service.archiveDir);
+      }
+
+      config.next(loadedConfig);
+    }
   });
-
-  const result = validator.validate('Config', config);
-
-  if (!result.valid) {
-    throw new Error('VALIDATION: ' + result.error);
-  } else {
-    utils.logInfo('CONFIG', 'validated config successfully!');
-  }
-
-  if (config.service?.inputDir && (!existsSync(config.service.inputDir) || !statSync(config.service.inputDir).isDirectory()))
-    throw new Error('input dir does not exist');
-  if (config.service?.outputDir && (!existsSync(config.service.outputDir) || !statSync(config.service.outputDir).isDirectory()))
-    throw new Error('output dir does not exist');
-  if (config.service?.archiveDir && (!existsSync(config.service.archiveDir) || !statSync(config.service.archiveDir).isDirectory()))
-    throw new Error('archive dir does not exist');
-
-  if (config.service) {
-    config.service.inputDir = path.resolve(config.service.inputDir);
-    config.service.outputDir = path.resolve(config.service.outputDir);
-    config.service.archiveDir = config.service.archiveDir && path.resolve(config.service.archiveDir);
-  }
-
-  return config;
 }
