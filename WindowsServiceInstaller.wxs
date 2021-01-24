@@ -255,27 +255,6 @@
 
         </Directory>
       </Directory>
-
-      <Directory Id="WINDOWSVOLUME" />
     </Directory>
-
-    <CustomAction Id="CopyToNewLocation"
-      ExeCommand='cmd /c IF EXIST "emapc\emapc.conf.yml" (COPY /y "emapc\emapc.conf.yml" "[INSTALLFOLDER]")'
-      Directory="WINDOWSVOLUME"
-      Impersonate="no"
-      Execute="deferred" />
-
-    <CustomAction Id="UninstallOld"
-      ExeCommand='cmd /c IF EXIST "emapc\uninstall-win64.ps1" (powershell -ExecutionPolicy Bypass -File emapc\uninstall-win64.ps1)'
-      Directory="WINDOWSVOLUME"
-      Impersonate="no"
-      Execute="deferred" />
-
-    <InstallExecuteSequence>
-      <Custom Action="CopyToNewLocation"
-        Before="InstallFinalize"> NOT Installed </Custom>
-      <Custom Action="UninstallOld"
-        After="CopyToNewLocation"> NOT Installed </Custom>
-    </InstallExecuteSequence>
   </Product>
 </Wix>
