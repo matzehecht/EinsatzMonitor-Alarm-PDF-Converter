@@ -23,4 +23,4 @@ runs:
   steps:
     - name: Install wix toolset
       shell: bash
-      run: npx nexe -i dist/${{ inputs.entrypoint }}.js -o bin/${{ inputs.entrypoint }}/${{ inputs.os }}/emapc-${{ inputs.entrypoint }}-${{ inputs.os }}-${{ inputs.arch }} -t ${{ inputs.os }}-${{ inputs.arch }}-${{ inputs.node-version }} -n emapc
+      run: npx nexe@3.3.7 -i dist/${{ inputs.entrypoint }}.js -o bin/${{ inputs.entrypoint }}/${{ inputs.os }}/emapc-${{ inputs.entrypoint }}-${{ inputs.os }}-${{ inputs.arch }} -t ${{ inputs.os }}-${{ inputs.arch }}-${{ inputs.node-version }} -n emapc
