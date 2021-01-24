@@ -32,7 +32,6 @@ const configWatcher = chokidar.watch(CONFIG_FILE, {
 });
 
 configWatcher.on('change', (path, stats) => {
-  if (stats) console.log(`File ${path} changed size to ${stats.size}`);
   config = load(CONFIG_FILE);
 });
 
