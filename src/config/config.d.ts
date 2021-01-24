@@ -1,10 +1,10 @@
 export interface Config {
   input: Input;
   output: Output;
-  service?: service;
+  service?: Service;
 }
 
-export interface service {
+export interface Service {
   inputDir: string;
   outputDir: string;
   archiveDir?: string;

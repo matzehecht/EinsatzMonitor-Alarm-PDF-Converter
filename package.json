@@ -5,8 +5,9 @@
   "main": "dist/index.js",
   "scripts": {
     "prebuild": "eslint --fix",
-    "build": "tsc && npm run typeonly",
-    "typeonly": "typeonly --bundle dist/config/config-types.to.json src/config/config.d.ts",
+    "build": "tsc && npm run jsonSchemaCompilation",
+    "jsonSchemaCompilation": "typescript-json-schema src/config/config.d.ts --required --defaultProps --strictNullChecks Config -o dist/config/schema.json",
+    "jsonSchemaCompilation:dev": "typescript-json-schema src/config/config.d.ts --required --defaultProps --strictNullChecks Config -o src/config/schema.json",
     "semantic-release": "semantic-release",
     "start": "dist/cli.js"
   },
@@ -33,13 +34,14 @@
     "nexe": "^3.3.7",
     "semantic-release": "^17.3.7",
     "ts-node": "^9.0.0",
-    "typeonly": "^0.4.2",
-    "typescript": "^4.0.2"
+    "typescript": "^4.0.2",
+    "typescript-json-schema": "^0.48.0"
   },
   "dependencies": {
     "@trace-it/lowdb-adapter": "^1.0.0",
-    "@typeonly/validator": "^0.5.1",
+    "ajv": "^6.12.6",
     "chokidar": "^3.4.2",
+    "rxjs": "^6.6.3",
     "trace-it": "^1.0.0",
     "yamljs": "^0.3.0"
   },

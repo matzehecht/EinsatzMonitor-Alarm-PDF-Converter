@@ -2,15 +2,23 @@
 import * as CONST from './const';
 import * as fs from 'fs';
 import * as path from 'path';
+import { first } from 'rxjs/operators';
 import * as utils from './utils';
 import { convert } from '.';
-import { load as loadConfig } from './config';
+import { load as loadConfig, get as getConfig } from './config';
 
 const { configFile, inputFileOrDir, isInputDir, outputFileOrDir } = parseArgs(process.argv);
 
-const config = loadConfig(configFile);
-
-convert(inputFileOrDir, isInputDir, outputFileOrDir, config);
+getConfig()
+.pipe(first())
+  .subscribe((config) => {
+    if (config) {
+      convert(inputFileOrDir, isInputDir, outputFileOrDir, config.input, config.output);
+    } else {
+      process.exit(1);
+    }
+  });
+loadConfig(configFile);
 
 function parseArgs(argv: string[]) {
   if (argv.find((a) => ['--help', '-help', 'help', '--h', '-h', 'h', '--?', '-?', '?'].includes(a))) {
