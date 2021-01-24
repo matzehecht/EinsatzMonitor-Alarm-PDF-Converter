@@ -1,5 +1,5 @@
 import * as TraceIt from 'trace-it';
-import * as fs from 'fs';
+import { createWriteStream, existsSync, promises as fs } from 'fs';
 import * as os from 'os';
 import { promisify } from 'util';
 import * as child from 'child_process';
@@ -9,7 +9,7 @@ import * as Extractor from './extractor';
 import * as utils from './utils';
 import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
 
-export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, inputConfig: Input, outputConfig: Output, parentTransaction?: TraceIt.Transaction) {
+export async function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, inputConfig: Input, outputConfig: Output, parentTransaction?: TraceIt.Transaction) {
   const transaction = parentTransaction?.startChild('convert');
 
   const proms: Promise<void>[] = [];
@@ -18,6 +18,10 @@ export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileO
     const fileChild = transaction?.startChild('file');
     const fnWithoutExt = path.basename(inputFileOrDir, '.pdf');
     const outputFile = path.extname(outputFileOrDir) === '' ? path.join(outputFileOrDir, `${fnWithoutExt}.txt`) : outputFileOrDir;
+    
+    if (!existsSync(path.dirname(outputFile)) || !(await fs.stat(path.dirname(outputFile))).isDirectory()) {
+      await fs.mkdir(path.dirname(outputFile));
+    }
 
     if (path.extname(inputFileOrDir) !== '.pdf') {
       utils.logInfo('INPUT', `skipping the file ${path.resolve(inputFileOrDir)} as it is not a pdf file!`);
@@ -28,7 +32,11 @@ export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileO
     }
     fileChild?.end();
   } else {
-    const files = fs.readdirSync(inputFileOrDir, { withFileTypes: true });
+    const files = await fs.readdir(inputFileOrDir, { withFileTypes: true });
+    
+    if (!existsSync(outputFileOrDir) || !(await fs.stat(outputFileOrDir)).isDirectory()) {
+      await fs.mkdir(outputFileOrDir);
+    }
 
     files.every((file) => {
       const fileChild = transaction?.startChild('file');
@@ -73,7 +81,7 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
     extractChild?.end();
 
     const writeChild = transaction?.startChild('write');
-    const writer = fs.createWriteStream(outputFile);
+    const writer = createWriteStream(outputFile);
 
     const separator = outputConfig.separator || ';';
     const keyValueSeparator = outputConfig.keyValueSeparator || ': ';
@@ -177,7 +185,7 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
 
     writer.close();
   } catch (err) {
-    const errWriter = fs.createWriteStream(outputFile);
+    const errWriter = createWriteStream(outputFile);
     errWriter.write(raw);
     errWriter.close();
     throw err;

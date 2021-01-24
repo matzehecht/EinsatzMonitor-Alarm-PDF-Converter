@@ -31,7 +31,7 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
-      - name: Use Node.js 14
+      - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
           node-version: 15
@@ -100,7 +100,7 @@ jobs:
     if: ${{ needs.publish.outputs.tag }}
     strategy:
       matrix:
-        os: [mac, windows, linux]
+        os: [windows, linux]
         arch: [x86, x64]
         type: [service, cli]
         include:
@@ -108,11 +108,6 @@ jobs:
             node: 12.9.1
           - os: linux
             node: 12.16.2
-          - os: mac
-            node: 12.16.2
-        exclude:
-          - os: mac
-            arch: x86
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -127,7 +122,7 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
-      - name: Use Node.js 14
+      - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
           node-version: 15
@@ -138,6 +133,7 @@ jobs:
           name: published
           path: dist
       - uses: ./.github/actions/nexe-compile
+        name: Compile ${{ matrix.type }} for ${{ matrix.os }} ${{ matrix.arch }}
         with:
           os: ${{ matrix.os }}
           arch: ${{ matrix.arch }}

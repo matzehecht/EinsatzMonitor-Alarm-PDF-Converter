@@ -1,5 +1,5 @@
 import * as chokidar from 'chokidar';
-import { Stats, promises as fsPromises, existsSync } from 'fs';
+import { Stats, promises as fs, existsSync } from 'fs';
 import * as path from 'path';
 import * as TraceIt from 'trace-it';
 import { LowDbAdapter } from '@trace-it/lowdb-adapter';
@@ -22,7 +22,7 @@ Config.get().subscribe(async (config) => {
   if (config) {
     const { input, output, service } = config as Config.Config;
     if (!service) {
-      console.error(`[${new Date().toISOString()}] CONFIG ERROR \ndata should have property 'service'`);
+      console.error(`[${new Date().toISOString()}] CONFIG ERROR - data should have property 'service'`);
     } else {
       watcher = chokidar.watch(`${utils.unixPathFrom(service.inputDir)}/*.pdf`, {
         followSymlinks: false,
@@ -72,8 +72,12 @@ const run = (inputConfig: Config.Input, outputConfig: Config.Output, serviceConf
 
 const archive = async (filepath: string, transaction?: TraceIt.Transaction, archiveDir?: string) => {
   if (archiveDir) {
+    if (!existsSync(archiveDir) || !(await fs.stat(archiveDir)).isDirectory()) {
+      await fs.mkdir(archiveDir);
+    }
+    
     const archiveTransaction = transaction?.startChild('archive');
-    await fsPromises.rename(path.resolve(filepath), path.resolve(archiveDir, path.basename(filepath)));
+    await fs.rename(path.resolve(filepath), path.resolve(archiveDir, path.basename(filepath)));
     archiveTransaction?.end();
   }
 };
