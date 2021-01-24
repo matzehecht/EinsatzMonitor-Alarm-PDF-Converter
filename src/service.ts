@@ -16,6 +16,7 @@ if (shouldTrace) TraceIt.init(adapter as LowDbAdapter);
 const CONFIG_FILE = path.join(utils.basePath, './emapc.conf.yml');
 
 let watcher: chokidar.FSWatcher | undefined;
+let folderWatcher: chokidar.FSWatcher | undefined;
 
 Config.get().subscribe(async (config) => {
   await watcher?.close();
@@ -24,6 +25,18 @@ Config.get().subscribe(async (config) => {
     if (!service) {
       console.error(`[${new Date().toISOString()}] CONFIG ERROR - data should have property 'service'`);
     } else {
+      if (!existsSync(service.inputDir) || !(await fs.stat(service.inputDir)).isDirectory()) {
+        await fs.mkdir(service.inputDir);
+      }
+
+      folderWatcher = chokidar.watch(path.dirname(service.inputDir), {
+        followSymlinks: false,
+        depth: 0
+      });
+      folderWatcher.on('unlinkDir', (path) => {
+        if (path === service.inputDir) utils.alert('Eingabe ordner gelöscht!', 'error', true);
+      });
+
       watcher = chokidar.watch(`${utils.unixPathFrom(service.inputDir)}/*.pdf`, {
         followSymlinks: false,
         depth: 0
@@ -75,7 +88,7 @@ const archive = async (filepath: string, transaction?: TraceIt.Transaction, arch
     if (!existsSync(archiveDir) || !(await fs.stat(archiveDir)).isDirectory()) {
       await fs.mkdir(archiveDir);
     }
-    
+
     const archiveTransaction = transaction?.startChild('archive');
     await fs.rename(path.resolve(filepath), path.resolve(archiveDir, path.basename(filepath)));
     archiveTransaction?.end();
