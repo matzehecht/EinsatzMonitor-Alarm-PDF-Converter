@@ -1,12 +1,12 @@
-import { Config, SectionType } from './config';
+import { Input, SectionType } from './config';
 import * as TraceIt from 'trace-it';
 
 const WELL_KNOWN_KEYS = ['Datum'];
 
-export function extract(raw: string, config: Config, parentTransaction?: TraceIt.Transaction): Parsed {
+export function extract(raw: string, inputConfig: Input, parentTransaction?: TraceIt.Transaction): Parsed {
   const rawArray = raw.split(/\r?\n/);
 
-  const exInTextKeys = config.input.inTextKeys.reduce((prev, inTextKey) => {
+  const exInTextKeys = inputConfig.inTextKeys.reduce((prev, inTextKey) => {
     const indexes: number[] = [];
     const extracted = rawArray.reduce((extractedPrev, line, i) => {
       if (line.includes(inTextKey)) {
@@ -25,7 +25,7 @@ export function extract(raw: string, config: Config, parentTransaction?: TraceIt
     inText: exInTextKeys
   };
 
-  const sections = config.input.sections;
+  const sections = inputConfig.sections;
 
   Object.entries(sections).forEach((section) => (extractedSection[section[0]] = extractSection(rawArray, section)));
   return extractedSection;

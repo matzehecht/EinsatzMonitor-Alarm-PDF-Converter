@@ -3,16 +3,16 @@ import * as fs from 'fs';
 import * as os from 'os';
 import { promisify } from 'util';
 import * as child from 'child_process';
-import { Config, Key } from './config';
+import { Input, Output, Key } from './config';
 import * as path from 'path';
 import * as Extractor from './extractor';
 import * as utils from './utils';
 import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
 
-export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config, parentTransaction?: TraceIt.Transaction) {
+export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, inputConfig: Input, outputConfig: Output, parentTransaction?: TraceIt.Transaction) {
   const transaction = parentTransaction?.startChild('convert');
 
-  const prems: Promise<void>[] = [];
+  const proms: Promise<void>[] = [];
 
   if (!isInputDir) {
     const fileChild = transaction?.startChild('file');
@@ -24,7 +24,7 @@ export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileO
     } else {
       utils.logInfo('INPUT', `processing ${path.resolve(inputFileOrDir)}!`);
 
-      prems.push(run(config, inputFileOrDir, outputFile, fileChild));
+      proms.push(run(inputConfig, outputConfig, inputFileOrDir, outputFile, fileChild));
     }
     fileChild?.end();
   } else {
@@ -40,7 +40,7 @@ export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileO
       } else {
         utils.logInfo('INPUT', `processing ${path.resolve(filename)}!`);
 
-        prems.push(run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild));
+        proms.push(run(inputConfig, outputConfig, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild));
       }
       fileChild?.end();
       return true;
@@ -48,7 +48,7 @@ export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileO
   }
 
   transaction?.end();
-  return Promise.all(prems);
+  return Promise.all(proms);
 }
 
 function toWriteString(text: string) {
@@ -59,7 +59,7 @@ function joinSafe(array: string[], separator?: string): string {
   return array.map((cur: string) => (!separator ? cur : cur.replace(RegExp(separator, 'gi'), separator === ';' ? ',' : ';'))).join(separator);
 }
 
-async function run(config: Config, inputFile: string, outputFile: string, transaction?: TraceIt.Transaction) {
+async function run(inputConfig: Input, outputConfig: Output, inputFile: string, outputFile: string, transaction?: TraceIt.Transaction) {
   const pdftotext = getBinary();
   const pdftotextArgs = ['-simple', inputFile, '-'];
   utils.logInfo('Read pdf', `command: ${pdftotext}, args: ${pdftotextArgs}`);
@@ -69,15 +69,15 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
 
   try {
     const extractChild = transaction?.startChild('extract');
-    const output = Extractor.extract(raw, config, extractChild);
+    const output = Extractor.extract(raw, inputConfig, extractChild);
     extractChild?.end();
 
     const writeChild = transaction?.startChild('write');
     const writer = fs.createWriteStream(outputFile);
 
-    const separator = config.output.separator || ';';
-    const keyValueSeparator = config.output.keyValueSeparator || ': ';
-    const outputKeys = config.output.keys;
+    const separator = outputConfig.separator || ';';
+    const keyValueSeparator = outputConfig.keyValueSeparator || ': ';
+    const outputKeys = outputConfig.keys;
 
     Object.entries(outputKeys).every(([key, keyConfig]: [string, Key]) => {
       if (!output[keyConfig.inputSection]) {
