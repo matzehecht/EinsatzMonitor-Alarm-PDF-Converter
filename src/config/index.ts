@@ -1,5 +1,4 @@
 import { promises as fs } from 'fs';
-import { existsSync } from 'fs';
 import * as path from 'path';
 import * as YAML from 'js-yaml';
 import * as Ajv from 'ajv';
@@ -66,12 +65,6 @@ export async function load(configPath: string): Promise<void> {
     config.next();
   } else {
     utils.logInfo('CONFIG', 'validated config successfully!');
-
-    if (loadedConfig.service?.inputDir && (!existsSync(loadedConfig.service.inputDir) || !(await fs.stat(loadedConfig.service.inputDir)).isDirectory())) {
-      console.error(`[${new Date().toISOString()}] CONFIG ERROR - input dir does not exist`);
-      config.next();
-      return;
-    }
 
     if (loadedConfig.service) {
       loadedConfig.service.inputDir = path.resolve(loadedConfig.service.inputDir);
