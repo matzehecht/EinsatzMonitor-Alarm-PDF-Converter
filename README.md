@@ -23,13 +23,19 @@ Wenn du noch etwas anderes zu diesem Projekt sagen willst: Erstelle ein Issue un
 
 ### INSTALLATION
 
-Das Tool kann auf der [Release-Seite](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases) heruntergeladen werden.  
-Dort kann die Binärdateien und Installationsskripte für jedes Release gefunden werden (in der Dropdown-Liste Assets). Emapc unterstützt Linux (32-Bit [x86] und 64-Bit [x64]), Windows (32-Bit [x86] und 64-Bit [x64]) und Mac (64-Bit).  
-Für jede unterstützte Architektur gibt es das Kommandozeilen-Tool (cli-tool) und die Dienst-Binärdatei.  
-Erstere wird zur einmaligen Verarbeitung der Eingabe verwendet. Wenn das Tool alle Eingaben verarbeitet hat, wird es beendet.  
-Das zweite läuft, bis es händisch gestoppt wird. Es überwacht das angegebene Verzeichnis und verarbeitet jede Datei, die in das Verzeichnis gelegt wird.
+EMAPC kann als Kommandozeilentool (cli-tool) oder als Dienst (service) betrieben werden.
+Ersteres wird zur einmaligen Verarbeitung der Eingabe verwendet. Der Dienst hingegen läuft, bis es explizit gestoppt wird. Er überwacht das angegebene Verzeichnis und verarbeitet jede Datei, die in das Verzeichnis gelegt wird.
 
-Auf der Release-Seite befinden sich auch ein Installationsprogramm für Windows und Linux (32-Bit und 64-Bit). In dem Installationsprogramm für Windows (.msi-Datei) sind alle Abhängigkeiten enthalten. Beim Ausführen des Skripts werden diese im Installationsordner (`C:\Program Files\EMAPC`) abgelegt. Hierzu gehört auch die Konfigurationsdatei (`C:\Program Files\EMAPC\emapc.conf.yml`). Die Beispielkonfigurationsdatei (`C:\Program Files\EMAPC\example.conf.yml`) sollte nicht verändert werden um bei updates die neue Standardkonfiguration zu erhalten. Weiter wird der `Einsatzmonitor-Alarm-PDF-Converter`-Dienst in den Windows Diensten installiert und kann hier gestoppt un gestartet werden (zu finden unter: `Win + R` -> services.msc -> `ENTER`). Dieser Dienst startet nach Neustarts oder Crashes des Computers automatisch. EMAPC kann in den Windows `Programme und Features` deinstalliert werden. (Der Windows Installer unterstützt zur Zeit nur den Dienst, nicht das Kommandozeilentool).
+**Downloads:**
+
+- Windows Dienst Installer [64-bit](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/latest/download/emapc-windows-service-installer-x64.msi)
+- Windows Dienst Installer [32-bit](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/latest/download/emapc-windows-service-installer-x86.msi)
+- Linux Installer (cli & Dienst) [64-bit](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/latest/download/emapc-installer-linuxx64.sh)
+- Linux Installer (cli & Dienst) [32-bit](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/latest/download/emapc-installer-linuxx86.sh)
+- Weitere Downloads (wie die Binärdateien können auf der [Releaseseite](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/latest) gefunden werden)
+
+Emapc unterstützt Linux (32-Bit [x86] und 64-Bit [x64]) und Windows (32-Bit [x86] und 64-Bit [x64]).  
+In dem Installationsprogramm für Windows (.msi-Datei) sind alle Abhängigkeiten enthalten. Beim Ausführen des Skripts werden diese im Installationsordner (`C:\Program Files\EMAPC`) abgelegt. Hierzu gehört auch die Konfigurationsdatei (`C:\Program Files\EMAPC\emapc.conf.yml`). Die Beispielkonfigurationsdatei (`C:\Program Files\EMAPC\example.conf.yml`) sollte nicht verändert werden um bei updates die neue Standardkonfiguration zu erhalten. Weiter wird der `Einsatzmonitor Alarm PDF Converter`-Dienst in den Windows Diensten installiert und kann hier gestoppt und gestartet werden (zu finden unter: `Win + R` -> services.msc -> `ENTER`). Dieser Dienst startet nach Neustarts oder Crashes des Computers automatisch. EMAPC kann in den Windows `Programme und Features` deinstalliert werden. (Der Windows Installer unterstützt zur Zeit nur den Dienst, nicht das Kommandozeilentool).
 
 Das Installationsskript für Linux lädt auch ein Deinstallationsskript herunter. Es befindet sich ebenfalls in `/usr/local/emapc`. Das Skript deinstalliert und entfernt alle Komponenten des Kommandozeilen-Tools und des Dienstes.
 
