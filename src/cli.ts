@@ -2,23 +2,24 @@
 import * as CONST from './const';
 import * as fs from 'fs';
 import * as path from 'path';
-import { first } from 'rxjs/operators';
 import * as utils from './utils';
 import { convert } from '.';
-import { load as loadConfig, get as getConfig } from './config';
+import { load as loadConfig } from './config';
 
-const { configFile, inputFileOrDir, isInputDir, outputFileOrDir } = parseArgs(process.argv);
+run();
 
-getConfig()
-.pipe(first())
-  .subscribe((config) => {
-    if (config) {
-      convert(inputFileOrDir, isInputDir, outputFileOrDir, config.input, config.output);
-    } else {
-      process.exit(1);
-    }
-  });
-loadConfig(configFile);
+async function run() {
+  
+  const { configFile, inputFileOrDir, isInputDir, outputFileOrDir } = parseArgs(process.argv);
+  
+  const config = await loadConfig(configFile);
+  
+  if (config) {
+    await convert(inputFileOrDir, isInputDir, outputFileOrDir, config.input, config.output);
+  } else {
+    process.exit(1);
+  }
+}
 
 function parseArgs(argv: string[]) {
   if (argv.find((a) => ['--help', '-help', 'help', '--h', '-h', 'h', '--?', '-?', '?'].includes(a))) {

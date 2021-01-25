@@ -16,7 +16,7 @@ export function alert(message: string, severity: 'info' | 'warn' | 'error', show
   console.log(`[${new Date().toISOString()}] ${severity.toUpperCase()} ${message}`);
   if (process.platform === 'win32' && showWindowsUI) {
     child.exec(
-      `PowerShell -Command "Add-Type -AssemblyName PresentationFramework;[System.Windows.MessageBox]::Show('${message}','EinsatzMonitor Alarm PDF Converter','Ok','${
+      `PowerShell -Command "Add-Type -AssemblyName PresentationFramework;[System.Windows.MessageBox]::Show('${message.replace('\n', '\\n')}','EinsatzMonitor Alarm PDF Converter','Ok','${
         severity === 'info' ? 'Information' : severity === 'warn' ? 'Warning' : 'Error'
       }')"`
     );

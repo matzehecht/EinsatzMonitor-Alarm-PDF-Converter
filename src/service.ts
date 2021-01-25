@@ -18,32 +18,31 @@ const CONFIG_FILE = path.join(utils.basePath, './emapc.conf.yml');
 let watcher: chokidar.FSWatcher | undefined;
 let folderWatcher: chokidar.FSWatcher | undefined;
 
-Config.get().subscribe(async (config) => {
+Config.getObservable().subscribe(async (config) => {
   await watcher?.close();
   if (config) {
     const { input, output, service } = config as Config.Config;
-    if (!service) {
-      console.error(`[${new Date().toISOString()}] CONFIG ERROR - data should have property 'service'`);
-    } else {
-      if (!existsSync(service.inputDir) || !(await fs.stat(service.inputDir)).isDirectory()) {
-        await fs.mkdir(service.inputDir);
-      }
 
-      folderWatcher = chokidar.watch(path.dirname(service.inputDir), {
-        followSymlinks: false,
-        depth: 0
-      });
-      folderWatcher.on('unlinkDir', (path) => {
-        if (path === service.inputDir) utils.alert('Eingabe ordner gelöscht!', 'error', true);
-      });
+    if (!service) throw new Error('service not given - ERROR that can not be reached!');
 
-      watcher = chokidar.watch(`${utils.unixPathFrom(service.inputDir)}/*.pdf`, {
-        followSymlinks: false,
-        depth: 0
-      });
-
-      watcher.on('add', run(input, output, service));
+    if (!existsSync(service.inputDir) || !(await fs.stat(service.inputDir)).isDirectory()) {
+      await fs.mkdir(service.inputDir);
     }
+
+    folderWatcher = chokidar.watch(path.dirname(service.inputDir), {
+      followSymlinks: false,
+      depth: 0
+    });
+    folderWatcher.on('unlinkDir', (path) => {
+      if (path === service.inputDir) utils.alert('Eingabe ordner gelöscht!', 'error', true);
+    });
+
+    watcher = chokidar.watch(`${utils.unixPathFrom(service.inputDir)}/*.pdf`, {
+      followSymlinks: false,
+      depth: 0
+    });
+
+    watcher.on('add', processFiles(input, output, service));
   }
 });
 
@@ -58,17 +57,22 @@ chokidar
 
 load(CONFIG_FILE);
 
-function load(file: string) {
+async function load(file: string) {
   const configTransaction = shouldTrace ? TraceIt.startTransaction('loadConfig') : undefined;
   configTransaction?.set('path', file);
-  if (file && !existsSync(file)) throw new Error('config file does not exist');
-  const config = Config.load(file);
-  configTransaction?.set('config', config);
+  try {
+    if (file && !existsSync(file)) {throw new Error('config file does not exist');}
+    await Config.load(file, true);
+  } catch (e) {
+    console.error('ERROR while loading config! Will try again after config change is detected!');
+    if (e instanceof Error) {
+      console.error(e.message);
+    }
+  }
   configTransaction?.end();
-  return config;
 }
 
-const run = (inputConfig: Config.Input, outputConfig: Config.Output, serviceConfig: Config.Service) => async (filepath: string, stat?: Stats) => {
+const processFiles = (inputConfig: Config.Input, outputConfig: Config.Output, serviceConfig: Config.Service) => async (filepath: string, stat?: Stats) => {
   const fileChangeTransaction = shouldTrace ? TraceIt.startTransaction('file change detected') : undefined;
   fileChangeTransaction?.set('filepath', filepath);
 
