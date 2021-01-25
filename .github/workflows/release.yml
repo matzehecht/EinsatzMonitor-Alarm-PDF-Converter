@@ -204,7 +204,7 @@ jobs:
       - id: gitVersion
         name: Get version
         run: |
-          echo "::set-output name=version::$($(echo ${{ needs.publish.outputs.tag }}) -replace 'v', '')"
+          echo "::set-output name=version::$($(echo ${{ needs.publish.outputs.tag }}) -replace 'v([0-9]+\.[0-9]+\.[0-9]+).*', '$1')"
       - name: Preprocess and Compile WXS
         run: candle.exe -ext WixUtilExtension -dVersion="${{ steps.gitVersion.outputs.version }}" -arch ${{ matrix.arch }} "WindowsServiceInstaller.wxs" -out WindowsServiceInstaller.wixobj
       - name: Link and Bundle wixobj
