@@ -1,3 +1,12 @@
+## [1.2.2-next.1](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.2.1...v1.2.2-next.1) (2021-01-26)
+
+
+### Bug Fixes
+
+* meldung über grafische Oberfläche wenn der Eingabeordner gelöscht wird ([33b59a3](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/33b59a3346e4ba345ba3b4c1463bc67016523420))
+* **config:** der Dienst lädt nach einer Konfigurationsänderung neu ([967c7cd](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/967c7cd97c6d2fccca0ea69b23044fd42d2d050b))
+* **config:** unterstützt windows pfade besser ([51a827d](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/51a827d16cff60f1904571972eb5a130cda3fee6))
+
 ## [1.2.2-next.1](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.2.1...v1.2.2-next.1) (2021-01-25)
 
 
