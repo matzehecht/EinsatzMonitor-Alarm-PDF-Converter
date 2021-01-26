@@ -39,7 +39,11 @@ Config.getObservable().subscribe(async (config) => {
 
     watcher = chokidar.watch(`${utils.unixPathFrom(service.inputDir)}/*.pdf`, {
       followSymlinks: false,
-      depth: 0
+      depth: 0,
+      awaitWriteFinish: {
+        stabilityThreshold: 2000,
+        pollInterval: 100
+      }
     });
 
     watcher.on('add', processFiles(input, output, service));
@@ -49,7 +53,11 @@ Config.getObservable().subscribe(async (config) => {
 chokidar
   .watch(CONFIG_FILE, {
     followSymlinks: false,
-    depth: 0
+    depth: 0,
+    awaitWriteFinish: {
+      stabilityThreshold: 500,
+      pollInterval: 50
+    }
   })
   .on('change', async (path, stats) => {
     load(CONFIG_FILE);
@@ -61,7 +69,9 @@ async function load(file: string) {
   const configTransaction = shouldTrace ? TraceIt.startTransaction('loadConfig') : undefined;
   configTransaction?.set('path', file);
   try {
-    if (file && !existsSync(file)) {throw new Error('config file does not exist');}
+    if (file && !existsSync(file)) {
+      throw new Error('config file does not exist');
+    }
     await Config.load(file, true);
   } catch (e) {
     console.error('ERROR while loading config! Will try again after config change is detected!');
