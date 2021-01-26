@@ -85,7 +85,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   compile:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     name: Compile
     needs: [build, publish]
     strategy:
@@ -96,8 +96,10 @@ jobs:
         include:
           - os: windows
             node: 12.9.1
+            runner: windows-latest
           - os: linux
             node: 12.16.2
+            runner: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -195,7 +197,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          persist-credentials: false
       - id: gitVersion
         uses: ./.github/actions/get-git-head
       - name: Make installer
@@ -212,3 +213,102 @@ jobs:
           path: install-linuxx86.sh
           if-no-files-found: error
           retention-days: 7
+  testWindowsService:
+    runs-on: windows-latest
+    name: Test windows service
+    needs: [buildWinInstaller]
+    steps:
+      - name: Fix git checkout line endings
+        run: git config --global core.autocrlf true
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v2
+        with:
+          name: emapc-windows-service-installer-x64.msi
+      - name: Install service
+        run: Start-Process msiexec.exe -Wait -ArgumentList "/I $PWD\emapc-windows-service-installer-x64.msi /passive /qn"
+      - name: Copy input
+        run: |
+          Copy-Item ".\test\input\*" -Destination "$([environment]::getfolderpath('programfiles'))\EMAPC\input" -Recurse
+          Start-Sleep -Seconds 30
+      - name: Compare outputs test 1
+        uses: ./.github/actions/pwsh-folder-compare
+        with:
+          expectedFolderPath: ".\\test\\expectedOutput\\test1"
+          actualFolderPath: "$([environment]::getfolderpath('programfiles'))\\EMAPC\\output"
+      - name: Clear output
+        run: Remove-Item "$([environment]::getfolderpath('programfiles'))\EMAPC\output\*" -Force
+      - name: Compare archive to input
+        uses: ./.github/actions/pwsh-folder-compare
+        with:
+          expectedFolderPath: ".\\test\\input"
+          actualFolderPath: "$([environment]::getfolderpath('programfiles'))\\EMAPC\\archive"
+      - name: Clear archive
+        run: Remove-Item "$([environment]::getfolderpath('programfiles'))\EMAPC\archive\*" -Force
+      - name: Modify config
+        run: |
+          $configFilePath = "$([environment]::getfolderpath('programfiles'))/EMAPC/emapc.conf.yml"
+          [System.Collections.ArrayList]$originalContent = (Get-Content $configFilePath)
+          $originalContent.removeRange(9, 5)
+          $originalContent | Out-File -encoding utf8 $configFilePath
+          
+          Start-Sleep -Seconds 30
+          
+          if (((Get-Service "EMAPC").Status) -ne "Running")
+          {
+            
+            Get-Content $configFilePath
+            Write-Host ""
+            Write-Host "service.log"
+            Get-Content "$([environment]::getfolderpath('programfiles'))/EMAPC/service.log" -Tail 5
+            Write-Host ""
+            Write-Host "service-error.log"
+            Get-Content "$([environment]::getfolderpath('programfiles'))/EMAPC/service-error.log" -Tail 5
+            
+            Write-Host "Service not running after config change"
+            exit 1
+          }
+      - name: Copy input
+        run: |
+          Copy-Item ".\test\input\*" -Destination "$([environment]::getfolderpath('programfiles'))\EMAPC\input" -Recurse
+          Start-Sleep -Seconds 30
+      - name: Compare outputs test 2
+        uses: ./.github/actions/pwsh-folder-compare
+        with:
+          expectedFolderPath: ".\\test\\expectedOutput\\test2"
+          actualFolderPath: "$([environment]::getfolderpath('programfiles'))\\EMAPC\\output"
+      - name: Clear output
+        run: Remove-Item "$([environment]::getfolderpath('programfiles'))\EMAPC\output\*" -Force
+      - name: Modify config a lot
+        run: |
+          $configFilePath = "$([environment]::getfolderpath('programfiles'))/EMAPC/emapc.conf.yml"
+          [System.Collections.ArrayList]$originalContent = (Get-Content $configFilePath)
+          $originalContent.removeRange(0, 57)
+          $originalContent | Out-File -encoding utf8 $configFilePath
+          
+          Start-Sleep -Seconds 30
+          
+          if (((Get-Service "EMAPC").Status) -ne "Stopped")
+          {
+            Get-Content $configFilePath
+            Write-Host ""
+            Write-Host "service.log"
+            Get-Content "$([environment]::getfolderpath('programfiles'))/EMAPC/service.log" -Tail 5
+            Write-Host ""
+            Write-Host "service-error.log"
+            Get-Content "$([environment]::getfolderpath('programfiles'))/EMAPC/service-error.log" -Tail 5
+            
+            Write-Host "Service did not stop on huge configuration change"
+            exit 1
+          }
+      - name: Uninstall service
+        run: |
+          Start-Process msiexec.exe -Wait -ArgumentList "/X $PWD\emapc-windows-service-installer-x64.msi /passive /qn"
+          
+          If ( (Test-Path -Path "$([environment]::getfolderpath('programfiles'))/EMAPC") -Or (Get-Service "EMAPC" -ErrorAction SilentlyContinue) )
+          {
+            Write-Host "Service did not properly uninstall"
+            exit 1
+          }
