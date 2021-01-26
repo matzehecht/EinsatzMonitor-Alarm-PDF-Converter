@@ -48,9 +48,10 @@ export function getObservable(): Observable<Config> {
 export async function load(configPath: string, shouldHaveService?: boolean): Promise<Config> {
   let buffer = await fs.readFile(configPath);
 
-  // Check if the buffer seems like a valid read. If not retry to read the file for max 50 times.
-  // On windows the readFile sometimes returned a empty buffer.
-  for (let i = 0; i < 50 && !isValidRead(buffer.byteLength, oldFileSize); i++) {
+  // Check if the buffer seems like a valid read. If not retry to read the file for max 5 times.
+  // On windows the readFile sometimes returned a empty buffer. This issue was fixed with awaitWriteFinish options of chokidar.
+  // (chokidar fired before the file was written) I kept that workaround to be sure.
+  for (let i = 0; i < 5 && !isValidRead(buffer.byteLength, oldFileSize); i++) {
     buffer = await fs.readFile(configPath);
   }
 
