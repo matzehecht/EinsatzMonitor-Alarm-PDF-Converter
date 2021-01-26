@@ -1,0 +1,41 @@
+name: Pwsh folder file compare
+author: matzehecht
+description: This action compares the files of two folders by name and length and prints the not matching lines.
+inputs:
+  expectedFolderPath:
+    description: 'Path of the expected folder'
+    required: true
+  actualFolderPath:
+    description: 'Path of the actual folder'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Compare
+      shell: powershell
+      run: |
+        $expectedFolderItems = Get-ChildItem "${{ inputs.expectedFolderPath }}"
+        $actualFolderItems = Get-ChildItem "${{ inputs.actualFolderPath }}"
+        
+        $AllDiffs = Compare-Object $expectedFolderItems $actualFolderItems -Property Name, Length | Where-Object {$_.SideIndicator -eq "<="} | Select-Object Name
+        
+        if ( $AllDiffs.count -ne 0 )
+        {
+          Write-Host "Output not matching expected output"
+          
+          foreach($diffFile in $AllDiffs) {
+            Write-Host "-----------------------------------"
+            Write-Host $diffFile
+            
+            $objects = @{ 
+              ReferenceObject = (Get-Content -Path "${{ inputs.expectedFolderPath }}\$diffFile")
+              DifferenceObject = (Get-Content -Path "${{ inputs.actualFolderPath }}\$diffFile")
+            }
+            
+            $diff = Compare-Object @objects
+            
+            Write-Host "$($diff | Select-Object SideIndicator) $($diff | Select-Object InputObject)"
+          }
+          
+          exit 1
+        }

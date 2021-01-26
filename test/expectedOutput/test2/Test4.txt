@@ -1,0 +1,9 @@
+Ort: Deutschland,Muster [00000]
+Ortsteil: Hausen
+Straße: Straße 1
+Ortszusatz: 
+Sondersignal: Mit Sondersignal
+Bemerkung: 
+Stichwort 2: 
+Stichwort: - -
+Einsatzmittel: Muster Vollalarm Nacht;Muster 1-01;Muster 1-02;Muster 2-00;Muster 2-01;Muster 2-02;Muster B1 Nacht
