@@ -28,8 +28,8 @@ runs:
             Write-Host $diffFile
             
             $objects = @{ 
-              ReferenceObject = (Get-Content -Path "${{ inputs.expectedFolderPath }}\$diffFile")
-              DifferenceObject = (Get-Content -Path "${{ inputs.actualFolderPath }}\$diffFile")
+              ReferenceObject = (Get-Content -Path "${{ inputs.expectedFolderPath }}\$($diffFile.Name)")
+              DifferenceObject = (Get-Content -Path "${{ inputs.actualFolderPath }}\$($diffFile.Name)")
             }
             
             $diff = Compare-Object @objects
