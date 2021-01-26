@@ -34,7 +34,7 @@ runs:
             
             $diff = Compare-Object @objects
             
-            Write-Host "$($diff | Select-Object SideIndicator) $($diff | Select-Object InputObject)"
+            Write-Host "$($diff.SideIndicator) $($diff.InputObject)"
           }
           
           exit 1
