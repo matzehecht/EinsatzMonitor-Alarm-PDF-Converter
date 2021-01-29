@@ -74,13 +74,13 @@ export async function load(configPath: string, shouldHaveService?: boolean): Pro
   const validate = ajv.compile(require('./schema.json'));
 
   if (!validate(loadedConfig)) {
-    throw new Error(`[${new Date().toISOString()}] CONFIG ERROR - ${ajv.errorsText(validate.errors)}`);
+    throw new ConfigError(ajv.errorsText(validate.errors));
   } else {
-    utils.logInfo('CONFIG', 'validated config successfully!');
+    utils.alert('CONFIG - validated config successfully!', 'info');
 
     if (shouldHaveService) {
       if (!loadedConfig.service) {
-        throw new Error(`[${new Date().toISOString()}] CONFIG ERROR - data should have property 'service'`);
+        throw new ConfigError('data should have property "service"');
       }
       loadedConfig.service.inputDir = path.resolve(loadedConfig.service.inputDir);
       loadedConfig.service.outputDir = path.resolve(loadedConfig.service.outputDir);
@@ -91,4 +91,11 @@ export async function load(configPath: string, shouldHaveService?: boolean): Pro
   }
 
   return loadedConfig;
+}
+
+export class ConfigError extends Error {
+  constructor(m: string) {
+      super('CONFIG - ' + m);
+      Object.setPrototypeOf(this, ConfigError.prototype);
+  }
 }
