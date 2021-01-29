@@ -9,7 +9,14 @@ import * as Extractor from './extractor';
 import * as utils from './utils';
 import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
 
-export async function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, inputConfig: Input, outputConfig: Output, parentTransaction?: TraceIt.Transaction) {
+export async function convert(
+  inputFileOrDir: string,
+  isInputDir: boolean,
+  outputFileOrDir: string,
+  inputConfig: Input,
+  outputConfig: Output,
+  parentTransaction?: TraceIt.Transaction
+) {
   const transaction = parentTransaction?.startChild('convert');
 
   const proms: Promise<void>[] = [];
@@ -18,7 +25,7 @@ export async function convert(inputFileOrDir: string, isInputDir: boolean, outpu
     const fileChild = transaction?.startChild('file');
     const fnWithoutExt = path.basename(inputFileOrDir, '.pdf');
     const outputFile = path.extname(outputFileOrDir) === '' ? path.join(outputFileOrDir, `${fnWithoutExt}.txt`) : outputFileOrDir;
-    
+
     if (!existsSync(path.dirname(outputFile)) || !(await fs.stat(path.dirname(outputFile))).isDirectory()) {
       await fs.mkdir(path.dirname(outputFile));
     }
@@ -33,7 +40,7 @@ export async function convert(inputFileOrDir: string, isInputDir: boolean, outpu
     fileChild?.end();
   } else {
     const files = await fs.readdir(inputFileOrDir, { withFileTypes: true });
-    
+
     if (!existsSync(outputFileOrDir) || !(await fs.stat(outputFileOrDir)).isDirectory()) {
       await fs.mkdir(outputFileOrDir);
     }
@@ -75,13 +82,14 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
   const raw = (await promisify(child.execFile)(pdftotext, pdftotextArgs, { encoding: 'latin1' })).stdout;
   readChild?.end();
 
+  const writer = createWriteStream(outputFile);
+
   try {
     const extractChild = transaction?.startChild('extract');
     const output = Extractor.extract(raw, inputConfig, extractChild);
     extractChild?.end();
 
     const writeChild = transaction?.startChild('write');
-    const writer = createWriteStream(outputFile);
 
     const separator = outputConfig.separator || ';';
     const keyValueSeparator = outputConfig.keyValueSeparator || ': ';
@@ -183,11 +191,10 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
     });
     writeChild?.end();
 
-    writer.close();
+    writer.end();
   } catch (err) {
-    const errWriter = createWriteStream(outputFile);
-    errWriter.write(raw);
-    errWriter.close();
+    await promisify(writer.close);
+    await fs.writeFile(outputFile, raw);
     throw err;
   }
 }
@@ -226,7 +233,7 @@ function getBinary() {
 
 export class OutputError extends Error {
   constructor(m: string) {
-      super('OUTPUT - ' + m);
-      Object.setPrototypeOf(this, OutputError.prototype);
+    super('OUTPUT - ' + m);
+    Object.setPrototypeOf(this, OutputError.prototype);
   }
 }
