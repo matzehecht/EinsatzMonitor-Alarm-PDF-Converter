@@ -9,15 +9,21 @@ import { load as loadConfig } from './config';
 run();
 
 async function run() {
-  
   const { configFile, inputFileOrDir, isInputDir, outputFileOrDir } = parseArgs(process.argv);
-  
-  const config = await loadConfig(configFile);
-  
-  if (config) {
-    await convert(inputFileOrDir, isInputDir, outputFileOrDir, config.input, config.output);
-  } else {
-    process.exit(1);
+
+  try {
+    const config = await loadConfig(configFile);
+
+    if (config) {
+      await convert(inputFileOrDir, isInputDir, outputFileOrDir, config.input, config.output);
+    } else {
+      process.exit(1);
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error(err.name, err.message);
+      process.exit(1);
+    }
   }
 }
 
