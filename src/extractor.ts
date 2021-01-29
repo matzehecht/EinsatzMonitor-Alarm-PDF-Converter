@@ -72,28 +72,29 @@ function extractTable(rawArray: string[]): ParsedTableSectionRow[] {
 
   const columns = columnIndexes?.map((i) => rawArray[0].substring(i).split(/\s\s/)[0]);
 
-  if (!columnIndexes || !columns) throw new Error('No columns found in Table');
+  if (columnIndexes && columns) {
+    if (columnIndexes[0] !== 0) {
+      columnIndexes.unshift(0);
+      columns.unshift('');
+    }
 
-  if (columnIndexes[0] !== 0) {
-    columnIndexes.unshift(0);
-    columns.unshift('');
-  }
+    const rows = rawArray.slice(1).map((line) => {
+      const row = {} as ParsedTableSectionRow;
 
-  const rows = rawArray.slice(1).map((line) => {
-    const row = {} as ParsedTableSectionRow;
+      columnIndexes?.forEach((columnIndex, i) => {
+        row[columns[i]] = line
+          .slice(minNull(columnIndex - 2))
+          .trim()
+          .split(/\s\s/)[0]
+          .trim();
+      });
 
-    columnIndexes?.forEach((columnIndex, i) => {
-      row[columns[i]] = line
-        .slice(minNull(columnIndex - 2))
-        .trim()
-        .split(/\s\s/)[0]
-        .trim();
+      return row;
     });
 
-    return row;
-  });
-
-  return rows;
+    return rows;
+  }
+  return [];
 }
 
 function minNull(input: number) {
@@ -107,13 +108,12 @@ function extractKeyVal(rawArray: string[]): ParsedKVSection {
     const key = line.split(/\s\s/)[0];
     const trimmedKey = key.trim();
     if (trimmedKey !== '') {
-      
       if (!line.slice(key.length).trim()) {
         // If value pf key is empty
         prev[trimmedKey] = '';
         return prev;
       }
-      
+
       const indexValue = line.slice(key.length).search(/\S/) + key.length;
       const value = line.slice(indexValue).split(/\s\s/)[0];
 
@@ -131,21 +131,13 @@ function extractKeyVal(rawArray: string[]): ParsedKVSection {
       } else if (restString.startsWith(trimmedKey)) {
         const restKey = restString.match(RegExp(`^${trimmedKey}([^a-zA-Z0-9][a-zA-Z0-9]*)?`))?.[0];
         if (restKey === trimmedKey) {
-          extracted[trimmedKey] +=
-            ' ' +
-            restString
-              .replace(trimmedKey, '')
-              .split(/\s\s/)[0]
-              .trim();
+          extracted[trimmedKey] += ' ' + restString.replace(trimmedKey, '').split(/\s\s/)[0].trim();
         } else if (restKey) {
-          prev[restKey] = restString
-            .replace(restKey, '')
-            .split(/\s\s/)[0]
-            .trim();
+          prev[restKey] = restString.replace(restKey, '').split(/\s\s/)[0].trim();
         }
       }
 
-      linesWithoutHeading.slice(indexLine + 1).every(lineBelow => {
+      linesWithoutHeading.slice(indexLine + 1).every((lineBelow) => {
         if (!lineBelow.startsWith('     ')) return false;
         prev[trimmedKey] += ' ' + lineBelow.slice(indexValue).split(/\s\s/)[0].trim();
         return true;

@@ -89,7 +89,7 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
 
     Object.entries(outputKeys).every(([key, keyConfig]: [string, Key]) => {
       if (!output[keyConfig.inputSection]) {
-        throw new Error(`OUTPUT - section ${keyConfig.inputSection} not configured in input`);
+        throw new OutputError(`section ${keyConfig.inputSection} not configured in input`);
       }
 
       const sectionValues = output[keyConfig.inputSection];
@@ -114,7 +114,7 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
             const values = row ? Object.values(row) : undefined;
             const curatedValues = values?.slice(1).filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter))) || [];
 
-            if (keyConfig.required && curatedValues.length === 0) throw new Error(`OUTPUT - key ${key} is required but empty`);
+            if (keyConfig.required && curatedValues.length === 0) throw new OutputError(`key ${key} is required but empty`);
 
             writer.write(
               toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(curatedValues, separator)}${thisKeyConfig.suffix || ''}`)
@@ -129,7 +129,7 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
             .map((row) => Object.values(row)[thisKeyConfig.index + 1])
             .filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter)));
 
-          if (keyConfig.required && values.length === 0) throw new Error(`OUTPUT - key ${key} is required but empty`);
+          if (keyConfig.required && values.length === 0) throw new OutputError(`key ${key} is required but empty`);
 
           writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${values.join(' ')}${thisKeyConfig.suffix || ''}`));
           return true;
@@ -140,7 +140,7 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
           const row = sectionValues[thisKeyConfig.rowIndex];
           const value = Object.values(row)[thisKeyConfig.columnIndex].trim();
 
-          if (keyConfig.required && value.length === 0) throw new Error(`OUTPUT - key ${key} is required but empty`);
+          if (keyConfig.required && value.length === 0) throw new OutputError(`key ${key} is required but empty`);
 
           if (thisKeyConfig.filter && value.match(RegExp(thisKeyConfig.filter))) {
             writer.write(toWriteString(`${key}${keyValueSeparator}`));
@@ -150,12 +150,12 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
             return true;
           }
         } else {
-          throw new Error(`OUTPUT - key ${key} should be configured as Table Key`);
+          throw new OutputError(`key ${key} should be configured as Table Key`);
         }
       } else if (Object.keys(sectionValues).length !== 0) {
         // is keyValue section
         if (!('inputKeyWords' in keyConfig)) {
-          throw new Error(`OUTPUT - key ${key} should has inputKeyWords as it is a key value key`);
+          throw new OutputError(`key ${key} should has inputKeyWords as it is a key value key`);
         }
         const thisKeyConfig = keyConfig as KeyValueKey;
 
@@ -168,14 +168,14 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
           }, '')
           .trim();
 
-        if (keyConfig.required && value.length === 0) throw new Error(`OUTPUT - key ${key} is required but empty`);
+        if (keyConfig.required && value.length === 0) throw new OutputError(`key ${key} is required but empty`);
 
         writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${value}${thisKeyConfig.suffix || ''}`));
         return true;
       } else {
         writer.write(toWriteString(`${key}${keyValueSeparator}`));
 
-        if (keyConfig.required) throw new Error(`OUTPUT - key ${key} is required but empty`);
+        if (keyConfig.required) throw new OutputError(`key ${key} is required but empty`);
 
         utils.logInfo('OUTPUT', 'empty key', key);
         return true;
@@ -222,4 +222,11 @@ function getBinary() {
   }
 
   return path.join(utils.basePath, `./lib/pdftotext/${pathToScript}/${script}`);
+}
+
+export class OutputError extends Error {
+  constructor(m: string) {
+      super('OUTPUT - ' + m);
+      Object.setPrototypeOf(this, OutputError.prototype);
+  }
 }

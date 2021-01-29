@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as TraceIt from 'trace-it';
 import { LowDbAdapter } from '@trace-it/lowdb-adapter';
 
-import { convert } from '.';
+import { convert, OutputError } from '.';
 import * as Config from './config';
 import * as utils from './utils';
 
@@ -23,7 +23,7 @@ Config.getObservable().subscribe(async (config) => {
   if (config) {
     const { input, output, service } = config as Config.Config;
 
-    if (!service) throw new Error('service not given - ERROR that can not be reached!');
+    if (!service) return console.error('service not given - ERROR that can not be reached!');
 
     if (!existsSync(service.inputDir) || !(await fs.stat(service.inputDir)).isDirectory()) {
       await fs.mkdir(service.inputDir);
@@ -70,12 +70,14 @@ async function load(file: string) {
   configTransaction?.set('path', file);
   try {
     if (file && !existsSync(file)) {
-      throw new Error('config file does not exist');
+      return utils.alert('config file does not exist', 'error');
     }
     await Config.load(file, true);
   } catch (e) {
-    console.error('ERROR while loading config! Will try again after config change is detected!');
-    if (e instanceof Error) {
+    utils.alert('ERROR while loading config! Will try again after config change is detected!', 'error');
+    if (e instanceof Config.ConfigError) {
+      utils.alert(e.message, 'warn');
+    } else if (e instanceof Error) {
       console.error(e.message);
     }
   }
@@ -90,7 +92,12 @@ const processFiles = (inputConfig: Config.Input, outputConfig: Config.Output, se
     await convert(filepath, false, serviceConfig.outputDir as string, inputConfig, outputConfig, fileChangeTransaction);
   } catch (err) {
     await archive(filepath, fileChangeTransaction, serviceConfig.archiveDir);
-    throw err;
+    if (err instanceof OutputError) {
+      utils.alert(err.message, 'warn');
+    } else if (err instanceof Error) {
+      // ? Maybe add telemetry here?
+      console.error(err.name, err.message);
+    }
   }
 
   await archive(filepath, fileChangeTransaction, serviceConfig.archiveDir);
