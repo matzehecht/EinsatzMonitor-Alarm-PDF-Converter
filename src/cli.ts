@@ -21,7 +21,7 @@ async function run() {
     }
   } catch (err) {
     if (err instanceof Error) {
-      console.error(err.name, err.message);
+      utils.alert(err.message, 'warn');
       process.exit(1);
     }
   }
