@@ -1,6 +1,12 @@
 #!/bin/bash
 
 function cleanup() {  
+  if [ "$1" == "local" ]
+  then
+    echo "pausing..."
+    read
+  fi
+  
   rm emapc.conf.yml
   mv emapc.conf.testbkp.yml emapc.conf.yml || true
 
@@ -35,8 +41,14 @@ mkdir $input
 
 find $expectedinput -maxdepth 1 -type f -exec cp {} $input \;
 
-node dist/service.js &
-servicePID=$!
+if [ "$1" == "local" ]
+then
+  node dist/service.js &
+  servicePID=$!
+else
+  emapc-service
+  servicePID=$!
+fi
 
 echo "running service with pid $servicePID"
 
@@ -63,7 +75,7 @@ then
   echo "test1 failing"
   echo "-------------------------------------------------------------"
   echo $diff
-  cleanup
+  cleanup "$1"
   exit 1
 fi
 
@@ -75,7 +87,7 @@ then
   echo "test1 archive failing"
   echo "-------------------------------------------------------------"
   echo $diffArchive
-  cleanup
+  cleanup "$1"
   exit 1
 fi
 
@@ -87,8 +99,14 @@ sed -i '10,14d' emapc.conf.yml
 sed -ri 's/^(.*)required: true$/\1default: ein standard wert/' emapc.conf.yml
 sed -ri 's/^((.*)inputKeyWord: EM)$/\1\n\2default: ["Muster", "Max"]/' emapc.conf.yml
 
-node dist/service.js &
-servicePID=$!
+if [ "$1" == "local" ]
+then
+  node dist/service.js &
+  servicePID=$!
+else
+  emapc-service
+  servicePID=$!
+fi
 
 echo "running service with pid $servicePID"
 
@@ -115,7 +133,7 @@ then
   echo "test2 failing"
   echo "-------------------------------------------------------------"
   echo $diff
-  cleanup
+  cleanup "$1"
   exit 1
 fi
 
@@ -127,10 +145,10 @@ then
   echo "test2 archive failing"
   echo "-------------------------------------------------------------"
   echo $diffArchive
-  cleanup
+  cleanup "$1"
   exit 1
 fi
 
 echo "test successfull"
 
-cleanup
+cleanup "$1"

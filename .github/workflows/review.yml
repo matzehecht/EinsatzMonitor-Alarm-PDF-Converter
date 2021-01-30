@@ -429,3 +429,43 @@ jobs:
             Write-Host "Service did not properly uninstall"
             exit 1
           }
+  testLinuxService:
+    runs-on: ubuntu-latest
+    name: Test Linux setvice
+    needs: [buildLinuxInstaller]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v2
+        with:
+          name: emapc-service-linux-x64
+          path: emapc-service
+      - name: make service executable
+        run: chmod +x emapc-service
+      - name: make test executable
+        run: chmod +x test/linuxtests.sh
+      - name: Cache pdftotext
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-pdftotext-linux-test
+        with:
+          path: xpdf-tools-linux-4.03.tar.gz
+          key: ${{ matrix.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ matrix.os }}-build-${{ env.cache-name }}
+            ${{ matrix.os }}-build-
+            ${{ matrix.os }}-
+      - name: Download pdftotext linux
+        run: |
+          if [ ! -f xpdf-tools-linux-4.03.tar.gz ]; then
+            curl https://dl.xpdfreader.com/xpdf-tools-linux-4.03.tar.gz -o xpdf-tools-linux-4.03.tar.gz
+          fi
+          tar -xvzf xpdf-tools-linux-4.03.tar.gz
+      - name: Copy pdftotext
+        run: |
+          mkdir "lib/pdftotext/linux" --parents
+          cp xpdf-tools-linux-4.03/bin64/pdftotext lib/pdftotext/linux/pdftotext64
+      - name: test
+        run: ./test/linuxtests.sh
