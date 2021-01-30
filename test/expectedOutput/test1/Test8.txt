@@ -1,0 +1,10 @@
+Meldebild: B Gebäude Wohnung
+Ort: Deutschland,Muster [00000]
+Ortsteil: Hausen
+Straße: Musterstraße 1
+Ortszusatz: 
+Sondersignal: Mit Sondersignal
+Bemerkung: 
+Stichwort 2: F B2 5 Gruppen
+Stichwort: Stichwort
+Einsatzmittel: Muster 1/11;Muster AG1;Muster AG2

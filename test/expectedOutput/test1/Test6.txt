@@ -1,0 +1,32 @@
+                                     ALARM ALARM ALARM
+
+                                                                    Leitstelle
+                                                                    Musterstraße 12, 00000 Muster
+                                                                    Tel: 00000/0000-0
+                                                                    Fax: 00000/0000-000
+                                                                    E-Mail: leit@stelle.de
+
+Einsatzanlass
+                 Mit Sondersignal
+Stichwort        - -                                                Stichwort 2 F TH2 1 Gruppe
+
+Einsatzort
+Ort              Muster (bei Hausen) [00000]
+Ortsteil         Stadt
+Straße           Hausenweg
+
+Einsatzstatus    Zeit
+unerledigt       25.01.2021 00:00:00
+alarmiert        25.01.2021 00:00:00
+
+EM                         alarmiert       Wache ab        EOrt an             ZOrt ab          Ende
+Muster T TH2               00:00:00        --:--:--        --:--:--            --:--:--         --:--:--
+Muster 1/00                00:00:00        --:--:--        --:--:--            --:--:--         --:--:--
+Muster 1/42                00:00:00        --:--:--        --:--:--            --:--:--         --:--:--
+
+Eskalationsstufe
+
+gedruckt am 25.Januar 2021 00:00
+
+                 -                                  1                                       -
+
