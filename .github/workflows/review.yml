@@ -382,6 +382,11 @@ jobs:
             Write-Host "Service not running after config change"
             exit 1
           }
+          
+          (Get-Content $configFilePath) `
+            -replace '^(.*)required: true$', '$1default: ein standard wert' `
+            -replace '^((.*)inputKeyWord: EM)', "`$1`r`n`$2default: ['Muster', 'Max']" |
+          Out-File -encoding utf8  $configFilePath
       - name: Copy input
         run: |
           Copy-Item ".\test\input\*" -Destination "$([environment]::getfolderpath('programfiles'))\EMAPC\input" -Recurse
