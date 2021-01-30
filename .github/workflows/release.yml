@@ -304,13 +304,18 @@ jobs:
         run: |
           $bytes = [Convert]::FromBase64String("${{ secrets.PFX_CERTIFICATE }}")
           [IO.File]::WriteAllBytes("emapc.pfx", $bytes)
-      # - name: Sign binaries
-      #   run: |
-      #     lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "emapc service" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v bin/service/windows/emapc-service-windows-${{ matrix.arch }}.exe
-      #     lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "pdftotext" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/pdftotext/win/pdftotext32.exe
-      #     lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "pdftotext" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/pdftotext/win/pdftotext64.exe
-      #     lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "nssm" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/nssm/nssm32.exe
-      #     lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "nssm" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/nssm/nssm64.exe
+      - name: Sign binaries
+        if: ${{ matrix.arch == 'x64' }}
+        run: |
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "emapc service" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v bin/service/windows/emapc-service-windows-${{ matrix.arch }}.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "pdftotext" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/pdftotext/win/pdftotext64.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "nssm" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/nssm/nssm64.exe
+      - name: Sign binaries
+        if: ${{ matrix.arch == 'x86' }}
+        run: |
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "emapc service" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v bin/service/windows/emapc-service-windows-${{ matrix.arch }}.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "pdftotext" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/pdftotext/win/pdftotext32.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "nssm" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/nssm/nssm32.exe
       - name: Setup wix toolset
         uses: ./.github/actions/setup-wix-toolset
       - id: gitVersion
@@ -321,8 +326,8 @@ jobs:
         run: candle.exe -ext WixUtilExtension -dVersion="${{ steps.gitVersion.outputs.version }}" -arch ${{ matrix.arch }} "WindowsServiceInstaller.wxs" -out WindowsServiceInstaller.wixobj
       - name: Link and Bundle wixobj
         run: light.exe -ext WixUtilExtension "WindowsServiceInstaller.wixobj" -out emapc-windows-service-installer-${{ matrix.arch }}.msi
-      # - name: Sign installer
-      #   run: lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "EinsatzMonitor Alarm PDF Converter" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v emapc-windows-service-installer-${{ matrix.arch }}.msi
+      - name: Sign installer
+        run: lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "EinsatzMonitor Alarm PDF Converter" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v emapc-windows-service-installer-${{ matrix.arch }}.msi
       - name: Upload windows installer
         uses: svenstaro/upload-release-action@v2
         with:
