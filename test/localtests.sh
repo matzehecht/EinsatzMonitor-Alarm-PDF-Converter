@@ -45,8 +45,7 @@ echo "starting test 1 at $startTime"
 
 echo "testing $numberTestFiles files"
 
-# while [ "$(ls $output | wc -l)" -lt $numberTestFiles ] && [$(($(date +%s) - $startTime)) -lt "60"]
-while (( $(ls $output | wc -l) < $numberTestFiles )) && (( $(( $(date +%s) - $startTime)) < 60 ))
+while (( $(ls $output | wc -l) < $numberTestFiles )) && (( $(( $(date +%s) - $startTime)) < 40 ))
 do
   currentCount=$(ls $output | wc -l)
   echo "running  $(( $(date +%s) - $startTime)) secs"
@@ -68,7 +67,6 @@ then
   exit 1
 fi
 
-
 diffArchive=$(diff $expectedinput $archive)
 diffCode=$?
 
@@ -86,6 +84,8 @@ find $output -maxdepth 1 -type f -exec rm {} \;
 find $expectedinput -maxdepth 1 -type f -exec cp {} $input \;
 
 sed -i '10,14d' emapc.conf.yml
+sed -ri 's/^(.*)required: true$/\1default: ein standard wert/' emapc.conf.yml
+sed -ri 's/^((.*)inputKeyWord: EM)$/\1\n\2default: ["Muster", "Max"]/' emapc.conf.yml
 
 node dist/service.js &
 servicePID=$!
@@ -97,8 +97,7 @@ echo "starting test 1 at $startTime"
 
 echo "testing $numberTestFiles files"
 
-# while [ "$(ls $output | wc -l)" -lt $numberTestFiles ] && [$(($(date +%s) - $startTime)) -lt "60"]
-while (( $(ls $output | wc -l) < $numberTestFiles )) && (( $(( $(date +%s) - $startTime)) < 60 ))
+while (( $(ls $output | wc -l) < $numberTestFiles )) && (( $(( $(date +%s) - $startTime)) < 40 ))
 do
   currentCount=$(ls $output | wc -l)
   echo "running  $(( $(date +%s) - $startTime)) secs"
@@ -116,13 +115,9 @@ then
   echo "test2 failing"
   echo "-------------------------------------------------------------"
   echo $diff
-  
-  read
-  
   cleanup
   exit 1
 fi
-
 
 diffArchive=$(diff $expectedinput $archive)
 diffCode=$?
