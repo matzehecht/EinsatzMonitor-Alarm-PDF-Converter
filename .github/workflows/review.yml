@@ -436,14 +436,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - uses: actions/download-artifact@v2
         with:
           name: emapc-service-linux-x64
-          path: emapc-service
-      - name: make service executable
-        run: chmod +x emapc-service
+      - name: prepare service executable
+        run: mv emapc-service-linux-x64 emapc-service && chmod +x emapc-service
       - name: make test executable
         run: chmod +x test/linuxtests.sh
       - name: Cache pdftotext

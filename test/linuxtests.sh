@@ -46,7 +46,7 @@ then
   node dist/service.js &
   servicePID=$!
 else
-  emapc-service
+  ./emapc-service
   servicePID=$!
 fi
 
@@ -57,7 +57,7 @@ echo "starting test 1 at $startTime"
 
 echo "testing $numberTestFiles files"
 
-while (( $(ls $output | wc -l) < $numberTestFiles )) && (( $(( $(date +%s) - $startTime)) < 40 ))
+while (( $(ls $output | wc -l) < $numberTestFiles )) && (( $(( $(date +%s) - $startTime)) < 30 ))
 do
   currentCount=$(ls $output | wc -l)
   echo "running  $(( $(date +%s) - $startTime)) secs"
@@ -104,7 +104,7 @@ then
   node dist/service.js &
   servicePID=$!
 else
-  emapc-service
+  ./emapc-service
   servicePID=$!
 fi
 
@@ -115,7 +115,7 @@ echo "starting test 1 at $startTime"
 
 echo "testing $numberTestFiles files"
 
-while (( $(ls $output | wc -l) < $numberTestFiles )) && (( $(( $(date +%s) - $startTime)) < 40 ))
+while (( $(ls $output | wc -l) < $numberTestFiles )) && (( $(( $(date +%s) - $startTime)) < 30 ))
 do
   currentCount=$(ls $output | wc -l)
   echo "running  $(( $(date +%s) - $startTime)) secs"
