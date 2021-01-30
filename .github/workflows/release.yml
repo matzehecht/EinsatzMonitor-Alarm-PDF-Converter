@@ -132,6 +132,64 @@ jobs:
         with:
           name: published
           path: dist
+      - name: Cache pdftotext
+        uses: actions/cache@v2
+        if: ${{ matrix.os == 'windows' }}
+        env:
+          cache-name: cache-pdftotext-windows
+        with:
+          path: xpdf-tools-win-4.03.zip
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Download pdftotext
+        if: ${{ matrix.os == 'windows' }}
+        run: |
+          if(!(Test-Path -Path "xpdf-tools-win-4.03.zip")) {
+            Invoke-WebRequest -Uri "https://dl.xpdfreader.com/xpdf-tools-win-4.03.zip" -OutFile "xpdf-tools-win-4.03.zip"
+          }
+          Expand-Archive -Path xpdf-tools-win-4.03.zip
+      - name: Copy pdftotext
+        if: ${{ matrix.os == 'windows' && matrix.arch == 'x64' }}
+        run: |
+          New-Item -path "lib\pdftotext\win" -type directory
+          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin64\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext64.exe"
+      - name: Copy pdftotext
+        if: ${{ matrix.os == 'windows' && matrix.arch == 'x86' }}
+        run: |
+          New-Item -path "lib\pdftotext\win" -type directory
+          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin32\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext32.exe"
+      - name: Cache pdftotext
+        if: ${{ matrix.os == 'linux' }}
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-pdftotext-linux
+        with:
+          path: xpdf-tools-linux-4.03.tar.gz
+          key: ${{ matrix.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ matrix.os }}-build-${{ env.cache-name }}
+            ${{ matrix.os }}-build-
+            ${{ matrix.os }}-
+      - name: Download pdftotext linux
+        if: ${{ matrix.os == 'linux' }}
+        run: |
+          if [ ! -f /tmp/foo.txt ]; then
+            curl https://dl.xpdfreader.com/xpdf-tools-linux-4.03.tar.gz -o xpdf-tools-linux-4.03.tar.gz
+            tar -xvzf xpdf-tools-linux-4.03.tar.gz
+          fi
+      - name: Copy pdftotext
+        if: ${{ matrix.os == 'linux' && matrix.arch == 'x64' }}
+        run: |
+          mkdir "lib/pdftotext/linux" --parents
+          cp xpdf-tools-linux-4.03/bin64/pdftotext lib/pdftotext/linux/pdftotext64
+      - name: Copy pdftotext
+        if: ${{ matrix.os == 'linux' && matrix.arch == 'x86' }}
+        run: |
+          mkdir "lib/pdftotext/linux" --parents
+          cp xpdf-tools-linux-4.03/bin32/pdftotext lib/pdftotext/linux/pdftotext32
       - uses: ./.github/actions/nexe-compile
         name: Compile ${{ matrix.type }} for ${{ matrix.os }} ${{ matrix.arch }}
         with:
@@ -188,6 +246,60 @@ jobs:
         with:
           name: emapc-service-windows-${{ matrix.arch }}.exe
           path: bin/service/windows
+      - name: Cache nssm
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-nssm
+        with:
+          path: nssm-2.24.zip
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Download nssm
+        run: |
+          if(!(Test-Path -Path "nssm-2.24.zip")) {
+            Invoke-WebRequest -Uri "https://nssm.cc/release/nssm-2.24.zip" -OutFile "nssm-2.24.zip"
+          }
+          Expand-Archive -Path .\nssm-2.24.zip
+      - name: Copy nssm
+        if: ${{ matrix.arch == 'x64' }}
+        run: |
+          New-Item -path "lib\nssm" -type directory
+          Copy-Item "nssm-2.24\nssm-2.24\win64\nssm.exe" -Destination "lib\nssm\nssm64.exe"
+      - name: Copy nssm
+        if: ${{ matrix.arch == 'x86' }}
+        run: |
+          New-Item -path "lib\nssm" -type directory
+          Copy-Item "nssm-2.24\nssm-2.24\win32\nssm.exe" -Destination "lib\nssm\nssm32.exe"
+      - name: Cache pdftotext
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-pdftotext-windows
+        with:
+          path: xpdf-tools-win-4.03.zip
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Download pdftotext
+        run: |
+          if(!(Test-Path -Path "xpdf-tools-win-4.03.zip")) {
+            Invoke-WebRequest -Uri "https://dl.xpdfreader.com/xpdf-tools-win-4.03.zip" -OutFile "xpdf-tools-win-4.03.zip"
+          }
+          Expand-Archive -Path .\xpdf-tools-win-4.03.zip
+      - name: Copy pdftotext
+        if: ${{ matrix.arch == 'x64' }}
+        run: |
+          New-Item -path "lib\pdftotext\win" -type directory
+          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin64\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext64.exe"
+      - name: Copy pdftotext
+        if: ${{ matrix.arch == 'x86' }}
+        run: |
+          New-Item -path "lib\pdftotext\win" -type directory
+          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin32\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext32.exe"
       - name: Write key file
         run: |
           $bytes = [Convert]::FromBase64String("${{ secrets.PFX_CERTIFICATE }}")
