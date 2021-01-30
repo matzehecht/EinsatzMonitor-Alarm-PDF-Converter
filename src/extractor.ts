@@ -108,18 +108,25 @@ function extractKeyVal(rawArray: string[]): ParsedKVSection {
     const key = line.split(/\s\s/)[0];
     const trimmedKey = key.trim();
     if (trimmedKey !== '') {
-      if (!line.slice(key.length).trim()) {
-        // If value pf key is empty
+      const lineWithoutKey = line.slice(key.length);
+      // If value in this line is empty
+      if (!lineWithoutKey.trim()) {
         prev[trimmedKey] = '';
         return prev;
       }
-
-      const indexValue = line.slice(key.length).search(/\S/) + key.length;
+      
+      const indexValue = lineWithoutKey.search(/\S/) + key.length;
       const value = line.slice(indexValue).split(/\s\s/)[0];
+      
+      // if the value starts with a lot white spaces (empty value but date on the right)
+      // skip to the stuff with rest string and well known keys.
+      if (indexValue - key.length < 25) {
+        prev[trimmedKey] = value.trim();
+      }
 
-      prev[trimmedKey] = value.trim();
-
-      const endIndexValue = indexValue + value.length;
+      // if the value starts with a lot white spaces (see if clause above)
+      // start the rest string on kex.length
+      const endIndexValue = (indexValue - key.length < 25 ? indexValue + value.length : key.length);
       const restString = line.slice(endIndexValue).trim();
 
       const isWellKnown = WELL_KNOWN_KEYS.find((k) => restString.startsWith(k));

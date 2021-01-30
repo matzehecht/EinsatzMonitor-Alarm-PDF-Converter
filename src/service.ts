@@ -91,7 +91,6 @@ const processFiles = (inputConfig: Config.Input, outputConfig: Config.Output, se
   try {
     await convert(filepath, false, serviceConfig.outputDir as string, inputConfig, outputConfig, fileChangeTransaction);
   } catch (err) {
-    await archive(filepath, fileChangeTransaction, serviceConfig.archiveDir);
     if (err instanceof OutputError) {
       utils.alert(err.message, 'warn');
     } else if (err instanceof Error) {
