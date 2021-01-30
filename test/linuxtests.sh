@@ -46,7 +46,7 @@ then
   node dist/service.js &
   servicePID=$!
 else
-  ./emapc-service
+  ./emapc-service &
   servicePID=$!
 fi
 
@@ -104,7 +104,7 @@ then
   node dist/service.js &
   servicePID=$!
 else
-  ./emapc-service
+  ./emapc-service &
   servicePID=$!
 fi
 
