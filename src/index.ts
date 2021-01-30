@@ -1,13 +1,14 @@
 import * as TraceIt from 'trace-it';
-import { createWriteStream, existsSync, promises as fs } from 'fs';
+import { existsSync, promises as fs } from 'fs';
 import * as os from 'os';
 import { promisify } from 'util';
 import * as child from 'child_process';
-import { Input, Output, Key } from './config';
+import { Input, Output } from './config';
 import * as path from 'path';
 import * as Extractor from './extractor';
 import * as utils from './utils';
 import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
+import { Writable } from 'stream';
 
 export async function convert(
   inputFileOrDir: string,
@@ -58,7 +59,7 @@ export async function convert(
         proms.push(run(inputConfig, outputConfig, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild));
       }
       fileChild?.end();
-      return true;
+      // return true;
     });
   }
 
@@ -82,20 +83,21 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
   const raw = (await promisify(child.execFile)(pdftotext, pdftotextArgs, { encoding: 'latin1' })).stdout;
   readChild?.end();
 
-  const writer = createWriteStream(outputFile);
-
   try {
     const extractChild = transaction?.startChild('extract');
     const output = Extractor.extract(raw, inputConfig, extractChild);
     extractChild?.end();
 
     const writeChild = transaction?.startChild('write');
+    const writer = new Writer();
 
     const separator = outputConfig.separator || ';';
     const keyValueSeparator = outputConfig.keyValueSeparator || ': ';
     const outputKeys = outputConfig.keys;
 
-    Object.entries(outputKeys).every(([key, keyConfig]: [string, Key]) => {
+    const entries = Object.entries(outputKeys);
+
+    for (const [key, keyConfig] of entries) {
       if (!output[keyConfig.inputSection]) {
         throw new OutputError(`section ${keyConfig.inputSection} not configured in input`);
       }
@@ -116,28 +118,24 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
               });
 
             if (keyConfig.required && values.length === 0) throw new OutputError(`key ${key} is required but empty`);
-            
-            const valueToWrite = values.length !== 0 ? values : (keyConfig.default ? keyConfig.default : []);
 
-            writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(valueToWrite, separator)}${thisKeyConfig.suffix || ''}`));
-            return true;
+            const valueToWrite = values.length !== 0 ? values : keyConfig.default ? keyConfig.default : [];
+
+            writer.write(
+              toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(valueToWrite, separator)}${thisKeyConfig.suffix || ''}`)
+            );
           } else {
             const row = sectionValues.find((row) => Object.values(row)[0] === thisKeyConfig.inputKeyWord);
             const values = row ? Object.values(row) : undefined;
             const curatedValues = values?.slice(1).filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter))) || [];
 
             if (keyConfig.required && curatedValues.length === 0) throw new OutputError(`key ${key} is required but empty`);
-            
-            const valueToWrite = curatedValues.length !== 0 ? curatedValues : (keyConfig.default ? keyConfig.default : []);
+
+            const valueToWrite = curatedValues.length !== 0 ? curatedValues : keyConfig.default ? keyConfig.default : [];
 
             writer.write(
-              toWriteString(
-                `${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(valueToWrite, separator)}${
-                  thisKeyConfig.suffix || ''
-                }`
-              )
+              toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(valueToWrite, separator)}${thisKeyConfig.suffix || ''}`)
             );
-            return true;
           }
         } else if ('index' in keyConfig) {
           // is ValueByWordKey
@@ -148,15 +146,10 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
             .filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter)));
 
           if (keyConfig.required && values.length === 0) throw new OutputError(`key ${key} is required but empty`);
-            
-          const valueToWrite = values.length !== 0 ? values.join(' ') : (keyConfig.default ? keyConfig.default : '');
 
-          writer.write(
-            toWriteString(
-              `${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${valueToWrite}${thisKeyConfig.suffix || ''}`
-            )
-          );
-          return true;
+          const valueToWrite = values.length !== 0 ? values.join(' ') : keyConfig.default ? keyConfig.default : '';
+
+          writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${valueToWrite}${thisKeyConfig.suffix || ''}`));
         } else if ('rowIndex' in keyConfig) {
           // is ValueIndexKey
           const thisKeyConfig = keyConfig as ValueIndexKey;
@@ -168,12 +161,10 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
 
           if (thisKeyConfig.filter && value.match(RegExp(thisKeyConfig.filter))) {
             writer.write(toWriteString(`${key}${keyValueSeparator}`));
-            return true;
           } else {
             writer.write(
               toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${value || keyConfig.default || ''}${thisKeyConfig.suffix || ''}`)
             );
-            return true;
           }
         } else {
           throw new OutputError(`key ${key} should be configured as Table Key`);
@@ -197,21 +188,18 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
         if (keyConfig.required && value.length === 0) throw new OutputError(`key ${key} is required but empty`);
 
         writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${value || keyConfig.default || ''}${thisKeyConfig.suffix || ''}`));
-        return true;
       } else {
         writer.write(toWriteString(`${key}${keyValueSeparator}${keyConfig.default || ''}`));
 
         if (keyConfig.required) throw new OutputError(`key ${key} is required but empty`);
 
         utils.logInfo('OUTPUT', 'empty key', key);
-        return true;
       }
-    });
-    writeChild?.end();
+    }
 
-    writer.end();
+    writeChild?.end();
+    await fs.writeFile(outputFile, writer.toString());
   } catch (err) {
-    await promisify(writer.close);
     await fs.writeFile(outputFile, raw);
     throw err;
   }
@@ -253,5 +241,16 @@ export class OutputError extends Error {
   constructor(m: string) {
     super('OUTPUT - ' + m);
     Object.setPrototypeOf(this, OutputError.prototype);
+  }
+}
+
+class Writer extends Writable {
+  private data: string = '';
+  _write(chunk: string, enc: string, cb: () => void) {
+    this.data += chunk;
+    cb();
+  }
+  toString() {
+    return this.data;
   }
 }
