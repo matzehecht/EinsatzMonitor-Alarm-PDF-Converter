@@ -1,0 +1,9 @@
+Ort: Deutschland,Muster (bei Hausen) [00000]
+Ortsteil: Stadt
+Straße: Hausenweg
+Ortszusatz: 
+Sondersignal: Mit Sondersignal
+Bemerkung: 
+Stichwort 2: F TH2 1 Gruppe
+Stichwort: - -
+Einsatzmittel: Muster T TH2;Muster 1/42
