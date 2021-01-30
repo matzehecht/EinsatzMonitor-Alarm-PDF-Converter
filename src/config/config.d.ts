@@ -33,8 +33,6 @@ export type Key = KeyValueKey | TableKey;
 
 export interface BaseKey {
   inputSection: string | 'inText';
-  // ? maybe it would be better to make the input section required than the keys?
-  // ? That would be an major release and cause less flexibility than decaring it on key level.
   required?: boolean;
   prefix?: string;
   suffix?: string;
@@ -43,6 +41,7 @@ export interface BaseKey {
 
 export interface KeyValueKey extends BaseKey {
   inputKeyWords: string[];
+  default?: string;
 }
 
 export type TableKey = ListByWordKey | ValueByWordKey | ValueIndexKey;
@@ -50,14 +49,17 @@ export type TableKey = ListByWordKey | ValueByWordKey | ValueIndexKey;
 export interface ListByWordKey extends BaseKey {
   type: 'column' | 'row';
   inputKeyWord: string;
+  default?: string[];
 }
 
 export interface ValueByWordKey extends BaseKey {
   inputKeyWords: string[];
   index: number;
+  default?: string;
 }
 
 export interface ValueIndexKey extends BaseKey {
   rowIndex: number;
   columnIndex: number;
+  default?: string;
 }

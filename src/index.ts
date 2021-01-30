@@ -115,7 +115,11 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
                 return !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter));
               });
 
-            writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(values, separator)}${thisKeyConfig.suffix || ''}`));
+            if (keyConfig.required && values.length === 0) throw new OutputError(`key ${key} is required but empty`);
+            
+            const valueToWrite = values.length !== 0 ? values : (keyConfig.default ? keyConfig.default : []);
+
+            writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(valueToWrite, separator)}${thisKeyConfig.suffix || ''}`));
             return true;
           } else {
             const row = sectionValues.find((row) => Object.values(row)[0] === thisKeyConfig.inputKeyWord);
@@ -123,9 +127,15 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
             const curatedValues = values?.slice(1).filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter))) || [];
 
             if (keyConfig.required && curatedValues.length === 0) throw new OutputError(`key ${key} is required but empty`);
+            
+            const valueToWrite = curatedValues.length !== 0 ? curatedValues : (keyConfig.default ? keyConfig.default : []);
 
             writer.write(
-              toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(curatedValues, separator)}${thisKeyConfig.suffix || ''}`)
+              toWriteString(
+                `${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(valueToWrite, separator)}${
+                  thisKeyConfig.suffix || ''
+                }`
+              )
             );
             return true;
           }
@@ -138,8 +148,14 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
             .filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter)));
 
           if (keyConfig.required && values.length === 0) throw new OutputError(`key ${key} is required but empty`);
+            
+          const valueToWrite = values.length !== 0 ? values.join(' ') : (keyConfig.default ? keyConfig.default : '');
 
-          writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${values.join(' ')}${thisKeyConfig.suffix || ''}`));
+          writer.write(
+            toWriteString(
+              `${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${valueToWrite}${thisKeyConfig.suffix || ''}`
+            )
+          );
           return true;
         } else if ('rowIndex' in keyConfig) {
           // is ValueIndexKey
@@ -154,7 +170,9 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
             writer.write(toWriteString(`${key}${keyValueSeparator}`));
             return true;
           } else {
-            writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${value}${thisKeyConfig.suffix || ''}`));
+            writer.write(
+              toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${value || keyConfig.default || ''}${thisKeyConfig.suffix || ''}`)
+            );
             return true;
           }
         } else {
@@ -178,10 +196,10 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
 
         if (keyConfig.required && value.length === 0) throw new OutputError(`key ${key} is required but empty`);
 
-        writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${value}${thisKeyConfig.suffix || ''}`));
+        writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${value || keyConfig.default || ''}${thisKeyConfig.suffix || ''}`));
         return true;
       } else {
-        writer.write(toWriteString(`${key}${keyValueSeparator}`));
+        writer.write(toWriteString(`${key}${keyValueSeparator}${keyConfig.default || ''}`));
 
         if (keyConfig.required) throw new OutputError(`key ${key} is required but empty`);
 
