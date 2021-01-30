@@ -1,3 +1,16 @@
+# [1.3.0-next.1](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.2.2-next.1...v1.3.0-next.1) (2021-01-30)
+
+
+### Bug Fixes
+
+* behebt Probleme mit der geschriebenen Datei im Fallback modus ([aa0cf4c](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/aa0cf4ca9b0572b12b2e832a82311d8be818bcea))
+* fixt rest string wenn value leer ist ([0a2ada0](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/0a2ada0ef9c07e851dea7c3acf0cdf0f87a1f4e4))
+
+
+### Features
+
+* es können nun standartwerte angegeben werden ([70730ed](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/commit/70730edfe43729df102a15f6ef307683c3744d89))
+
 ## [1.2.2-next.1](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/compare/v1.2.1...v1.2.2-next.1) (2021-01-26)
 
 
