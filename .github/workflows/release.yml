@@ -381,6 +381,8 @@ jobs:
     if: ${{ contains(github.ref, 'main') }}
     needs: ["publish","buildLinuxInstaller", "buildWinInstaller"]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
           name: install-linuxx64.sh
@@ -393,8 +395,6 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: emapc-windows-service-installer-x64.msi
-      - name: Checkout
-        uses: actions/checkout@v2
       - uses: actions/checkout@v2
         with:
           repository: 'matzehecht/hecht.space'
@@ -409,6 +409,5 @@ jobs:
           slug: 'emapc'
           version: ${{ needs.publish.outputs.tag }}
           page: 'README.md'
-          languages: '.de,'
+          languages: 'de,en'
           assets: 'emapc-windows-service-installer-x64.msi,emapc-windows-service-installer-x86.msi,install-linuxx64.sh,install-linuxx86.sh'
-          tokeen: ${{ secrets.PUBLISH_TOKEN }}
