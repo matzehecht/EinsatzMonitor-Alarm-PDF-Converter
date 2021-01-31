@@ -94,10 +94,9 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   compile:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     name: Compile
     needs: [build, publish]
-    if: ${{ needs.publish.outputs.tag }}
     strategy:
       matrix:
         os: [windows, linux]
@@ -106,8 +105,10 @@ jobs:
         include:
           - os: windows
             node: 12.9.1
+            runner: windows-latest
           - os: linux
             node: 12.16.2
+            runner: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -162,8 +163,8 @@ jobs:
           New-Item -path "lib\pdftotext\win" -type directory
           Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin32\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext32.exe"
       - name: Cache pdftotext
-        if: ${{ matrix.os == 'linux' }}
         uses: actions/cache@v2
+        if: ${{ matrix.os == 'linux' }}
         env:
           cache-name: cache-pdftotext-linux
         with:
@@ -176,10 +177,10 @@ jobs:
       - name: Download pdftotext linux
         if: ${{ matrix.os == 'linux' }}
         run: |
-          if [ ! -f /tmp/foo.txt ]; then
+          if [ ! -f xpdf-tools-linux-4.03.tar.gz ]; then
             curl https://dl.xpdfreader.com/xpdf-tools-linux-4.03.tar.gz -o xpdf-tools-linux-4.03.tar.gz
-            tar -xvzf xpdf-tools-linux-4.03.tar.gz
           fi
+          tar -xvzf xpdf-tools-linux-4.03.tar.gz
       - name: Copy pdftotext
         if: ${{ matrix.os == 'linux' && matrix.arch == 'x64' }}
         run: |
