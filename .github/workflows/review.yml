@@ -124,6 +124,64 @@ jobs:
         with:
           name: published
           path: dist
+      - name: Cache pdftotext
+        uses: actions/cache@v2
+        if: ${{ matrix.os == 'windows' }}
+        env:
+          cache-name: cache-pdftotext-windows
+        with:
+          path: xpdf-tools-win-4.03.zip
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Download pdftotext
+        if: ${{ matrix.os == 'windows' }}
+        run: |
+          if(!(Test-Path -Path "xpdf-tools-win-4.03.zip")) {
+            Invoke-WebRequest -Uri "https://dl.xpdfreader.com/xpdf-tools-win-4.03.zip" -OutFile "xpdf-tools-win-4.03.zip"
+          }
+          Expand-Archive -Path xpdf-tools-win-4.03.zip
+      - name: Copy pdftotext
+        if: ${{ matrix.os == 'windows' && matrix.arch == 'x64' }}
+        run: |
+          New-Item -path "lib\pdftotext\win" -type directory
+          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin64\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext64.exe"
+      - name: Copy pdftotext
+        if: ${{ matrix.os == 'windows' && matrix.arch == 'x86' }}
+        run: |
+          New-Item -path "lib\pdftotext\win" -type directory
+          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin32\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext32.exe"
+      - name: Cache pdftotext
+        uses: actions/cache@v2
+        if: ${{ matrix.os == 'linux' }}
+        env:
+          cache-name: cache-pdftotext-linux
+        with:
+          path: xpdf-tools-linux-4.03.tar.gz
+          key: ${{ matrix.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ matrix.os }}-build-${{ env.cache-name }}
+            ${{ matrix.os }}-build-
+            ${{ matrix.os }}-
+      - name: Download pdftotext linux
+        if: ${{ matrix.os == 'linux' }}
+        run: |
+          if [ ! -f xpdf-tools-linux-4.03.tar.gz ]; then
+            curl https://dl.xpdfreader.com/xpdf-tools-linux-4.03.tar.gz -o xpdf-tools-linux-4.03.tar.gz
+          fi
+          tar -xvzf xpdf-tools-linux-4.03.tar.gz
+      - name: Copy pdftotext
+        if: ${{ matrix.os == 'linux' && matrix.arch == 'x64' }}
+        run: |
+          mkdir "lib/pdftotext/linux" --parents
+          cp xpdf-tools-linux-4.03/bin64/pdftotext lib/pdftotext/linux/pdftotext64
+      - name: Copy pdftotext
+        if: ${{ matrix.os == 'linux' && matrix.arch == 'x86' }}
+        run: |
+          mkdir "lib/pdftotext/linux" --parents
+          cp xpdf-tools-linux-4.03/bin32/pdftotext lib/pdftotext/linux/pdftotext32
       - uses: ./.github/actions/nexe-compile
         name: Compile ${{ matrix.type }} for ${{ matrix.os }} ${{ matrix.arch }}
         with:
@@ -161,17 +219,76 @@ jobs:
         with:
           name: emapc-service-windows-${{ matrix.arch }}.exe
           path: bin/service/windows
+      - name: Cache nssm
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-nssm
+        with:
+          path: nssm-2.24.zip
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Download nssm
+        run: |
+          if(!(Test-Path -Path "nssm-2.24.zip")) {
+            Invoke-WebRequest -Uri "https://nssm.cc/release/nssm-2.24.zip" -OutFile "nssm-2.24.zip"
+          }
+          Expand-Archive -Path .\nssm-2.24.zip
+      - name: Copy nssm
+        if: ${{ matrix.arch == 'x64' }}
+        run: |
+          New-Item -path "lib\nssm" -type directory
+          Copy-Item "nssm-2.24\nssm-2.24\win64\nssm.exe" -Destination "lib\nssm\nssm64.exe"
+      - name: Copy nssm
+        if: ${{ matrix.arch == 'x86' }}
+        run: |
+          New-Item -path "lib\nssm" -type directory
+          Copy-Item "nssm-2.24\nssm-2.24\win32\nssm.exe" -Destination "lib\nssm\nssm32.exe"
+      - name: Cache pdftotext
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-pdftotext-windows
+        with:
+          path: xpdf-tools-win-4.03.zip
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Download pdftotext
+        run: |
+          if(!(Test-Path -Path "xpdf-tools-win-4.03.zip")) {
+            Invoke-WebRequest -Uri "https://dl.xpdfreader.com/xpdf-tools-win-4.03.zip" -OutFile "xpdf-tools-win-4.03.zip"
+          }
+          Expand-Archive -Path .\xpdf-tools-win-4.03.zip
+      - name: Copy pdftotext
+        if: ${{ matrix.arch == 'x64' }}
+        run: |
+          New-Item -path "lib\pdftotext\win" -type directory
+          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin64\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext64.exe"
+      - name: Copy pdftotext
+        if: ${{ matrix.arch == 'x86' }}
+        run: |
+          New-Item -path "lib\pdftotext\win" -type directory
+          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin32\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext32.exe"
       - name: Write key file
         run: |
           $bytes = [Convert]::FromBase64String("${{ secrets.PFX_CERTIFICATE }}")
           [IO.File]::WriteAllBytes("emapc.pfx", $bytes)
-      # - name: Sign binaries
-      #   run: |
-      #     lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "emapc service" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v bin/service/windows/emapc-service-windows-${{ matrix.arch }}.exe
-      #     lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "pdftotext" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/pdftotext/win/pdftotext32.exe
-      #     lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "pdftotext" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/pdftotext/win/pdftotext64.exe
-      #     lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "nssm" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/nssm/nssm32.exe
-      #     lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "nssm" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/nssm/nssm64.exe
+      - name: Sign binaries
+        if: ${{ matrix.arch == 'x64' }}
+        run: |
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "emapc service" /t "${{ secrets.PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v bin/service/windows/emapc-service-windows-${{ matrix.arch }}.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "pdftotext" /t "${{ secrets.PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/pdftotext/win/pdftotext64.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "nssm" /t "${{ secrets.PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/nssm/nssm64.exe
+      - name: Sign binaries
+        if: ${{ matrix.arch == 'x86' }}
+        run: |
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "emapc service" /t "${{ secrets.PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v bin/service/windows/emapc-service-windows-${{ matrix.arch }}.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "pdftotext" /t "${{ secrets.PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/pdftotext/win/pdftotext32.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "nssm" /t "${{ secrets.PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/nssm/nssm32.exe
       - name: Setup wix toolset
         uses: ./.github/actions/setup-wix-toolset
       - name: Preprocess and Compile WXS
@@ -180,8 +297,8 @@ jobs:
           ARCH: ${{ matrix.arch }}
       - name: Link and Bundle wixobj
         run: light.exe -ext WixUtilExtension "WindowsServiceInstaller.wixobj" -out emapc-windows-service-installer-${{ matrix.arch }}.msi
-      # - name: Sign installer
-      #   run: lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "EinsatzMonitor Alarm PDF Converter" /t "${{ secrets.PFX_CERTIFICATE_PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v emapc-windows-service-installer-${{ matrix.arch }}.msi
+      - name: Sign installer
+        run: lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "EinsatzMonitor Alarm PDF Converter" /t "${{ secrets.PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v emapc-windows-service-installer-${{ matrix.arch }}.msi
       - uses: actions/upload-artifact@v2
         with:
           name: emapc-windows-service-installer-${{ matrix.arch }}.msi
@@ -317,3 +434,40 @@ jobs:
             Write-Host "Service did not properly uninstall"
             exit 1
           }
+  testLinuxService:
+    runs-on: ubuntu-latest
+    name: Test Linux setvice
+    needs: [buildLinuxInstaller]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: emapc-service-linux-x64
+      - name: prepare service executable
+        run: mv emapc-service-linux-x64 emapc-service && chmod +x emapc-service
+      - name: make test executable
+        run: chmod +x test/linuxtests.sh
+      - name: Cache pdftotext
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-pdftotext-linux-test
+        with:
+          path: xpdf-tools-linux-4.03.tar.gz
+          key: ${{ matrix.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ matrix.os }}-build-${{ env.cache-name }}
+            ${{ matrix.os }}-build-
+            ${{ matrix.os }}-
+      - name: Download pdftotext linux
+        run: |
+          if [ ! -f xpdf-tools-linux-4.03.tar.gz ]; then
+            curl https://dl.xpdfreader.com/xpdf-tools-linux-4.03.tar.gz -o xpdf-tools-linux-4.03.tar.gz
+          fi
+          tar -xvzf xpdf-tools-linux-4.03.tar.gz
+      - name: Copy pdftotext
+        run: |
+          mkdir "lib/pdftotext/linux" --parents
+          cp xpdf-tools-linux-4.03/bin64/pdftotext lib/pdftotext/linux/pdftotext64
+      - name: test
+        run: ./test/linuxtests.sh

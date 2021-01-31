@@ -112,3 +112,7 @@ tmp
 
 install-*
 emapc.conf.yml
+
+lib
+!lib/signtool.exe
+!lib/uninstaller
