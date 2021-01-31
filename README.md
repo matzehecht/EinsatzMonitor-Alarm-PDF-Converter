@@ -28,10 +28,10 @@ Ersteres wird zur einmaligen Verarbeitung der Eingabe verwendet. Der Dienst hing
 
 **Downloads:**
 
-- Windows Dienst Installer [64-bit](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/latest/download/emapc-windows-service-installer-x64.msi)<!-- #ASSET#1 -->
-- Windows Dienst Installer [32-bit](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/latest/download/emapc-windows-service-installer-x86.msi)<!-- #ASSET#2 -->
-- Linux Installer (cli & Dienst) [64-bit](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/latest/download/emapc-installer-linuxx64.sh)<!-- #ASSET#3 -->
-- Linux Installer (cli & Dienst) [32-bit](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/latest/download/emapc-installer-linuxx86.sh)<!-- #ASSET#4 -->
+- Windows Dienst Installer [64-bit](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/latest/download/emapc-windows-service-installer-x64.msi)<!-- #ASSET#0 -->
+- Windows Dienst Installer [32-bit](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/latest/download/emapc-windows-service-installer-x86.msi)<!-- #ASSET#1 -->
+- Linux Installer (cli & Dienst) [64-bit](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/latest/download/emapc-installer-linuxx64.sh)<!-- #ASSET#2 -->
+- Linux Installer (cli & Dienst) [32-bit](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/latest/download/emapc-installer-linuxx86.sh)<!-- #ASSET#3 -->
 - Weitere Downloads (wie die Binärdateien können auf der [Releaseseite](https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/releases/latest) gefunden werden)
 
 Emapc unterstützt Linux (32-Bit [x86] und 64-Bit [x64]) und Windows (32-Bit [x86] und 64-Bit [x64]).  
