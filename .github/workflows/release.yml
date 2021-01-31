@@ -56,7 +56,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
           persist-credentials: false
       - name: Cache node modules
         uses: actions/cache@v2
@@ -241,8 +240,6 @@ jobs:
         run: git config --global core.autocrlf input
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - uses: actions/download-artifact@v2
         with:
           name: emapc-service-windows-${{ matrix.arch }}.exe
@@ -336,6 +333,12 @@ jobs:
           file: emapc-windows-service-installer-${{ matrix.arch }}.msi
           asset_name: emapc-windows-service-installer-${{ matrix.arch }}.msi
           tag: ${{ needs.publish.outputs.tag }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: emapc-windows-service-installer-${{ matrix.arch }}.msi
+          path: emapc-windows-service-installer-${{ matrix.arch }}.msi
+          if-no-files-found: error
+          retention-days: 7
   buildLinuxInstaller:
     runs-on: ubuntu-latest
     name: Build Linux Installer
@@ -344,9 +347,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          persist-credentials: false
       - name: Make installer
         run: ./makeInstaller.sh ${{ needs.publish.outputs.sha }} ${{ needs.publish.outputs.tag }}
       - name: Upload linux installer x64
@@ -363,3 +363,52 @@ jobs:
           file: install-linuxx86.sh
           asset_name: emapc-installer-linuxx86.sh
           tag: ${{ needs.publish.outputs.tag }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: install-linuxx64.sh
+          path: install-linuxx64.sh
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@v2
+        with:
+          name: install-linuxx86.sh
+          path: install-linuxx86.sh
+          if-no-files-found: error
+          retention-days: 7
+  publishToHechtSpace:
+    runs-on: ubuntu-latest
+    name: Publish to hecht.space
+    if: ${{ contains(github.ref, 'main') }}
+    needs: ["publish","buildLinuxInstaller", "buildWinInstaller"]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: install-linuxx64.sh
+      - uses: actions/download-artifact@v2
+        with:
+          name: install-linuxx86.sh
+      - uses: actions/download-artifact@v2
+        with:
+          name: emapc-windows-service-installer-x86.msi
+      - uses: actions/download-artifact@v2
+        with:
+          name: emapc-windows-service-installer-x64.msi
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+        with:
+          repository: 'matzehecht/hecht.space'
+          ref: 'main'
+          token: ${{ secrets.PUBLISH_TOKEN }}
+          path: 'hechtspace'
+          clean: 'false'
+          lfs: true
+      - name: Run the private action
+        uses: ./hechtspace/.github/actions/publish-project
+        with:
+          slug: 'emapc'
+          version: ${{ needs.publish.outputs.tag }}
+          page: 'README.md'
+          languages: '.de,'
+          assets: 'emapc-windows-service-installer-x64.msi,emapc-windows-service-installer-x86.msi,install-linuxx64.sh,install-linuxx86.sh'
+          tokeen: ${{ secrets.PUBLISH_TOKEN }}
