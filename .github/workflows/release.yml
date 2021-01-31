@@ -409,5 +409,4 @@ jobs:
           slug: 'emapc'
           version: ${{ needs.publish.outputs.tag }}
           page: 'README.md'
-          languages: 'de,en'
           assets: 'emapc-windows-service-installer-x64.msi,emapc-windows-service-installer-x86.msi,install-linuxx64.sh,install-linuxx86.sh'
