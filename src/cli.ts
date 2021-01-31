@@ -6,11 +6,26 @@ import * as utils from './utils';
 import { convert } from '.';
 import { load as loadConfig } from './config';
 
-const { configFile, inputFileOrDir, isInputDir, outputFileOrDir } = parseArgs(process.argv);
+run();
 
-const config = loadConfig(configFile);
+async function run() {
+  const { configFile, inputFileOrDir, isInputDir, outputFileOrDir } = parseArgs(process.argv);
 
-convert(inputFileOrDir, isInputDir, outputFileOrDir, config);
+  try {
+    const config = await loadConfig(configFile);
+
+    if (config) {
+      await convert(inputFileOrDir, isInputDir, outputFileOrDir, config.input, config.output);
+    } else {
+      process.exit(1);
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      utils.alert(err.message, 'warn');
+      process.exit(1);
+    }
+  }
+}
 
 function parseArgs(argv: string[]) {
   if (argv.find((a) => ['--help', '-help', 'help', '--h', '-h', 'h', '--?', '-?', '?'].includes(a))) {

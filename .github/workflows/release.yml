@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - next
     paths-ignore:
       - 'CHANGELOG.md'
       - 'README.md'
@@ -30,10 +31,10 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
-      - name: Use Node.js 14
+      - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 15
       - name: Install dependencies
         run: npm ci
       - name: build
@@ -55,7 +56,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
           persist-credentials: false
       - name: Cache node modules
         uses: actions/cache@v2
@@ -72,9 +72,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 15
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --only=dev
+      - uses: actions/download-artifact@v2
+        with:
+          name: built
+          path: dist
       - name: Release
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -82,25 +86,28 @@ jobs:
         run: npx semantic-release
       - id: gitVersion
         uses: ./.github/actions/get-git-head
+      - uses: actions/upload-artifact@v2
+        with:
+          name: published
+          path: dist
+          if-no-files-found: error
+          retention-days: 7
   compile:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     name: Compile
     needs: [build, publish]
     strategy:
       matrix:
-        os: [mac, windows, linux]
+        os: [windows, linux]
         arch: [x86, x64]
         type: [service, cli]
         include:
           - os: windows
             node: 12.9.1
+            runner: windows-latest
           - os: linux
             node: 12.16.2
-          - os: mac
-            node: 12.16.2
-        exclude:
-          - os: mac
-            arch: x86
+            runner: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -115,17 +122,76 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
-      - name: Use Node.js 14
+      - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 15
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --production
       - uses: actions/download-artifact@v2
         with:
-          name: built
+          name: published
           path: dist
+      - name: Cache pdftotext
+        uses: actions/cache@v2
+        if: ${{ matrix.os == 'windows' }}
+        env:
+          cache-name: cache-pdftotext-windows
+        with:
+          path: xpdf-tools-win-4.03.zip
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Download pdftotext
+        if: ${{ matrix.os == 'windows' }}
+        run: |
+          if(!(Test-Path -Path "xpdf-tools-win-4.03.zip")) {
+            Invoke-WebRequest -Uri "https://dl.xpdfreader.com/xpdf-tools-win-4.03.zip" -OutFile "xpdf-tools-win-4.03.zip"
+          }
+          Expand-Archive -Path xpdf-tools-win-4.03.zip
+      - name: Copy pdftotext
+        if: ${{ matrix.os == 'windows' && matrix.arch == 'x64' }}
+        run: |
+          New-Item -path "lib\pdftotext\win" -type directory
+          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin64\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext64.exe"
+      - name: Copy pdftotext
+        if: ${{ matrix.os == 'windows' && matrix.arch == 'x86' }}
+        run: |
+          New-Item -path "lib\pdftotext\win" -type directory
+          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin32\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext32.exe"
+      - name: Cache pdftotext
+        uses: actions/cache@v2
+        if: ${{ matrix.os == 'linux' }}
+        env:
+          cache-name: cache-pdftotext-linux
+        with:
+          path: xpdf-tools-linux-4.03.tar.gz
+          key: ${{ matrix.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ matrix.os }}-build-${{ env.cache-name }}
+            ${{ matrix.os }}-build-
+            ${{ matrix.os }}-
+      - name: Download pdftotext linux
+        if: ${{ matrix.os == 'linux' }}
+        run: |
+          if [ ! -f xpdf-tools-linux-4.03.tar.gz ]; then
+            curl https://dl.xpdfreader.com/xpdf-tools-linux-4.03.tar.gz -o xpdf-tools-linux-4.03.tar.gz
+          fi
+          tar -xvzf xpdf-tools-linux-4.03.tar.gz
+      - name: Copy pdftotext
+        if: ${{ matrix.os == 'linux' && matrix.arch == 'x64' }}
+        run: |
+          mkdir "lib/pdftotext/linux" --parents
+          cp xpdf-tools-linux-4.03/bin64/pdftotext lib/pdftotext/linux/pdftotext64
+      - name: Copy pdftotext
+        if: ${{ matrix.os == 'linux' && matrix.arch == 'x86' }}
+        run: |
+          mkdir "lib/pdftotext/linux" --parents
+          cp xpdf-tools-linux-4.03/bin32/pdftotext lib/pdftotext/linux/pdftotext32
       - uses: ./.github/actions/nexe-compile
+        name: Compile ${{ matrix.type }} for ${{ matrix.os }} ${{ matrix.arch }}
         with:
           os: ${{ matrix.os }}
           arch: ${{ matrix.arch }}
@@ -164,6 +230,7 @@ jobs:
   buildWinInstaller:
     runs-on: windows-latest
     name: Build Windows Installer
+    if: ${{ needs.publish.outputs.tag }}
     needs: [compile, publish]
     strategy:
       matrix:
@@ -173,28 +240,92 @@ jobs:
         run: git config --global core.autocrlf input
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - uses: actions/download-artifact@v2
         with:
           name: emapc-service-windows-${{ matrix.arch }}.exe
           path: bin/service/windows
+      - name: Cache nssm
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-nssm
+        with:
+          path: nssm-2.24.zip
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Download nssm
+        run: |
+          if(!(Test-Path -Path "nssm-2.24.zip")) {
+            Invoke-WebRequest -Uri "https://nssm.cc/release/nssm-2.24.zip" -OutFile "nssm-2.24.zip"
+          }
+          Expand-Archive -Path .\nssm-2.24.zip
+      - name: Copy nssm
+        if: ${{ matrix.arch == 'x64' }}
+        run: |
+          New-Item -path "lib\nssm" -type directory
+          Copy-Item "nssm-2.24\nssm-2.24\win64\nssm.exe" -Destination "lib\nssm\nssm64.exe"
+      - name: Copy nssm
+        if: ${{ matrix.arch == 'x86' }}
+        run: |
+          New-Item -path "lib\nssm" -type directory
+          Copy-Item "nssm-2.24\nssm-2.24\win32\nssm.exe" -Destination "lib\nssm\nssm32.exe"
+      - name: Cache pdftotext
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-pdftotext-windows
+        with:
+          path: xpdf-tools-win-4.03.zip
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Download pdftotext
+        run: |
+          if(!(Test-Path -Path "xpdf-tools-win-4.03.zip")) {
+            Invoke-WebRequest -Uri "https://dl.xpdfreader.com/xpdf-tools-win-4.03.zip" -OutFile "xpdf-tools-win-4.03.zip"
+          }
+          Expand-Archive -Path .\xpdf-tools-win-4.03.zip
+      - name: Copy pdftotext
+        if: ${{ matrix.arch == 'x64' }}
+        run: |
+          New-Item -path "lib\pdftotext\win" -type directory
+          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin64\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext64.exe"
+      - name: Copy pdftotext
+        if: ${{ matrix.arch == 'x86' }}
+        run: |
+          New-Item -path "lib\pdftotext\win" -type directory
+          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin32\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext32.exe"
+      - name: Write key file
+        run: |
+          $bytes = [Convert]::FromBase64String("${{ secrets.PFX_CERTIFICATE }}")
+          [IO.File]::WriteAllBytes("emapc.pfx", $bytes)
+      - name: Sign binaries
+        if: ${{ matrix.arch == 'x64' }}
+        run: |
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "emapc service" /t "${{ secrets.PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v bin/service/windows/emapc-service-windows-${{ matrix.arch }}.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "pdftotext" /t "${{ secrets.PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/pdftotext/win/pdftotext64.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "nssm" /t "${{ secrets.PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/nssm/nssm64.exe
+      - name: Sign binaries
+        if: ${{ matrix.arch == 'x86' }}
+        run: |
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "emapc service" /t "${{ secrets.PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v bin/service/windows/emapc-service-windows-${{ matrix.arch }}.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "pdftotext" /t "${{ secrets.PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/pdftotext/win/pdftotext32.exe
+          lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "nssm" /t "${{ secrets.PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v lib/nssm/nssm32.exe
       - name: Setup wix toolset
         uses: ./.github/actions/setup-wix-toolset
       - id: gitVersion
         name: Get version
         run: |
-          echo "::set-output name=version::$($(echo ${{ needs.publish.outputs.tag }}) -replace 'v', '')"
+          echo "::set-output name=version::$($(echo ${{ needs.publish.outputs.tag }}) -replace 'v([0-9]+\.[0-9]+\.[0-9]+).*', '$1')"
       - name: Preprocess and Compile WXS
         run: candle.exe -ext WixUtilExtension -dVersion="${{ steps.gitVersion.outputs.version }}" -arch ${{ matrix.arch }} "WindowsServiceInstaller.wxs" -out WindowsServiceInstaller.wixobj
       - name: Link and Bundle wixobj
         run: light.exe -ext WixUtilExtension "WindowsServiceInstaller.wixobj" -out emapc-windows-service-installer-${{ matrix.arch }}.msi
-      - name: Write key file
-        run: |
-          $bytes = [Convert]::FromBase64String("${{ secrets.PFX_CERTIFICATE }}")
-          [IO.File]::WriteAllBytes("emapc.pfx", $bytes)
       - name: Sign installer
-        run: lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /d "${{ secrets.PFX_CERTIFICATE_NAME }}" /t http://timestamp.globalsign.com/scripts/timstamp.dll /v emapc-windows-service-installer-${{ matrix.arch }}.msi
+        run: lib/signtool.exe sign /f emapc.pfx /p "${{ secrets.PFX_CERTIFICATE_PWD }}" /sha1 "${{ secrets.PFX_CERTIFICATE_SHA1 }}" /fd sha256 /d "EinsatzMonitor Alarm PDF Converter" /t "${{ secrets.PFX_CERTIFICATE_TIMESTAMP_SERVER }}" /v emapc-windows-service-installer-${{ matrix.arch }}.msi
       - name: Upload windows installer
         uses: svenstaro/upload-release-action@v2
         with:
@@ -202,16 +333,20 @@ jobs:
           file: emapc-windows-service-installer-${{ matrix.arch }}.msi
           asset_name: emapc-windows-service-installer-${{ matrix.arch }}.msi
           tag: ${{ needs.publish.outputs.tag }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: emapc-windows-service-installer-${{ matrix.arch }}.msi
+          path: emapc-windows-service-installer-${{ matrix.arch }}.msi
+          if-no-files-found: error
+          retention-days: 7
   buildLinuxInstaller:
     runs-on: ubuntu-latest
     name: Build Linux Installer
+    if: ${{ needs.publish.outputs.tag }}
     needs: [compile, publish]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          persist-credentials: false
       - name: Make installer
         run: ./makeInstaller.sh ${{ needs.publish.outputs.sha }} ${{ needs.publish.outputs.tag }}
       - name: Upload linux installer x64
@@ -228,3 +363,52 @@ jobs:
           file: install-linuxx86.sh
           asset_name: emapc-installer-linuxx86.sh
           tag: ${{ needs.publish.outputs.tag }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: install-linuxx64.sh
+          path: install-linuxx64.sh
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@v2
+        with:
+          name: install-linuxx86.sh
+          path: install-linuxx86.sh
+          if-no-files-found: error
+          retention-days: 7
+  publishToHechtSpace:
+    runs-on: ubuntu-latest
+    name: Publish to hecht.space
+    if: ${{ contains(github.ref, 'main') }}
+    needs: ["publish","buildLinuxInstaller", "buildWinInstaller"]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: install-linuxx64.sh
+      - uses: actions/download-artifact@v2
+        with:
+          name: install-linuxx86.sh
+      - uses: actions/download-artifact@v2
+        with:
+          name: emapc-windows-service-installer-x86.msi
+      - uses: actions/download-artifact@v2
+        with:
+          name: emapc-windows-service-installer-x64.msi
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+        with:
+          repository: 'matzehecht/hecht.space'
+          ref: 'main'
+          token: ${{ secrets.PUBLISH_TOKEN }}
+          path: 'hechtspace'
+          clean: 'false'
+          lfs: true
+      - name: Run the private action
+        uses: ./hechtspace/.github/actions/publish-project
+        with:
+          slug: 'emapc'
+          version: ${{ needs.publish.outputs.tag }}
+          page: 'README.md'
+          languages: '.de,'
+          assets: 'emapc-windows-service-installer-x64.msi,emapc-windows-service-installer-x86.msi,install-linuxx64.sh,install-linuxx86.sh'
+          tokeen: ${{ secrets.PUBLISH_TOKEN }}

@@ -49,7 +49,6 @@
       <ComponentGroupRef Id="Config" />
       <ComponentRef Id="Archive" />
       <ComponentRef Id="Input" />
-      <ComponentRef Id="Logs" />
       <ComponentRef Id="Output" />
       <ComponentRef Id="INSTALLFOLDER" />
     </Feature>
@@ -115,7 +114,7 @@
               Description="This is a service for running the emapc."
               Start="auto"
               ErrorControl="normal"
-              Vital= "yes" />
+              Vital="yes" />
 
             <RegistryKey Root="HKLM"
               Key="SYSTEM\CurrentControlSet\Services\$(var.ServiceName)\Parameters">
@@ -139,6 +138,9 @@
                 Type="expandable" />
               <RegistryKey Key="AppExit">
                 <RegistryValue Value="Restart"
+                  Type="string" />
+                <RegistryValue Name="100"
+                  Value="Exit"
                   Type="string" />
               </RegistryKey>
             </RegistryKey>
@@ -225,20 +227,6 @@
             </Directory>
           </Directory>
 
-          <Directory Id="Logs"
-            Name="logs">
-            <Component Id="Logs"
-              Guid="8C024E41-2318-403D-B126-7686A0CD0441">
-              <CreateFolder Directory="Logs">
-                <util:PermissionEx User="Users"
-                  GenericAll="yes" />
-              </CreateFolder>
-              <RemoveFile Id='Logs'
-                On='uninstall'
-                Name='*' />
-            </Component>
-          </Directory>
-
           <Directory Id="Output"
             Name="output">
             <Component Id="Output"
@@ -255,27 +243,6 @@
 
         </Directory>
       </Directory>
-
-      <Directory Id="WINDOWSVOLUME" />
     </Directory>
-
-    <CustomAction Id="CopyToNewLocation"
-      ExeCommand='cmd /c IF EXIST "emapc\emapc.conf.yml" (COPY /y "emapc\emapc.conf.yml" "[INSTALLFOLDER]")'
-      Directory="WINDOWSVOLUME"
-      Impersonate="no"
-      Execute="deferred" />
-
-    <CustomAction Id="UninstallOld"
-      ExeCommand='cmd /c IF EXIST "emapc\uninstall-win64.ps1" (powershell -ExecutionPolicy Bypass -File emapc\uninstall-win64.ps1)'
-      Directory="WINDOWSVOLUME"
-      Impersonate="no"
-      Execute="deferred" />
-
-    <InstallExecuteSequence>
-      <Custom Action="CopyToNewLocation"
-        Before="InstallFinalize"> NOT Installed </Custom>
-      <Custom Action="UninstallOld"
-        After="CopyToNewLocation"> NOT Installed </Custom>
-    </InstallExecuteSequence>
   </Product>
 </Wix>

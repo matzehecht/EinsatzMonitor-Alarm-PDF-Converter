@@ -1,34 +1,50 @@
 import * as TraceIt from 'trace-it';
-import * as fs from 'fs';
+import { existsSync, promises as fs } from 'fs';
 import * as os from 'os';
 import { promisify } from 'util';
 import * as child from 'child_process';
-import { Config, Key } from './config';
+import { Input, Output } from './config';
 import * as path from 'path';
 import * as Extractor from './extractor';
 import * as utils from './utils';
 import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
+import { Writable } from 'stream';
 
-export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, config: Config, parentTransaction?: TraceIt.Transaction) {
+export async function convert(
+  inputFileOrDir: string,
+  isInputDir: boolean,
+  outputFileOrDir: string,
+  inputConfig: Input,
+  outputConfig: Output,
+  parentTransaction?: TraceIt.Transaction
+) {
   const transaction = parentTransaction?.startChild('convert');
 
-  const prems: Promise<void>[] = [];
+  const proms: Promise<void>[] = [];
 
   if (!isInputDir) {
     const fileChild = transaction?.startChild('file');
     const fnWithoutExt = path.basename(inputFileOrDir, '.pdf');
     const outputFile = path.extname(outputFileOrDir) === '' ? path.join(outputFileOrDir, `${fnWithoutExt}.txt`) : outputFileOrDir;
 
+    if (!existsSync(path.dirname(outputFile)) || !(await fs.stat(path.dirname(outputFile))).isDirectory()) {
+      await fs.mkdir(path.dirname(outputFile));
+    }
+
     if (path.extname(inputFileOrDir) !== '.pdf') {
       utils.logInfo('INPUT', `skipping the file ${path.resolve(inputFileOrDir)} as it is not a pdf file!`);
     } else {
       utils.logInfo('INPUT', `processing ${path.resolve(inputFileOrDir)}!`);
 
-      prems.push(run(config, inputFileOrDir, outputFile, fileChild));
+      proms.push(run(inputConfig, outputConfig, inputFileOrDir, outputFile, fileChild));
     }
     fileChild?.end();
   } else {
-    const files = fs.readdirSync(inputFileOrDir, { withFileTypes: true });
+    const files = await fs.readdir(inputFileOrDir, { withFileTypes: true });
+
+    if (!existsSync(outputFileOrDir) || !(await fs.stat(outputFileOrDir)).isDirectory()) {
+      await fs.mkdir(outputFileOrDir);
+    }
 
     files.every((file) => {
       const fileChild = transaction?.startChild('file');
@@ -40,15 +56,15 @@ export function convert(inputFileOrDir: string, isInputDir: boolean, outputFileO
       } else {
         utils.logInfo('INPUT', `processing ${path.resolve(filename)}!`);
 
-        prems.push(run(config, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild));
+        proms.push(run(inputConfig, outputConfig, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild));
       }
       fileChild?.end();
-      return true;
+      // return true;
     });
   }
 
   transaction?.end();
-  return Promise.all(prems);
+  return Promise.all(proms);
 }
 
 function toWriteString(text: string) {
@@ -59,7 +75,7 @@ function joinSafe(array: string[], separator?: string): string {
   return array.map((cur: string) => (!separator ? cur : cur.replace(RegExp(separator, 'gi'), separator === ';' ? ',' : ';'))).join(separator);
 }
 
-async function run(config: Config, inputFile: string, outputFile: string, transaction?: TraceIt.Transaction) {
+async function run(inputConfig: Input, outputConfig: Output, inputFile: string, outputFile: string, transaction?: TraceIt.Transaction) {
   const pdftotext = getBinary();
   const pdftotextArgs = ['-simple', inputFile, '-'];
   utils.logInfo('Read pdf', `command: ${pdftotext}, args: ${pdftotextArgs}`);
@@ -69,19 +85,21 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
 
   try {
     const extractChild = transaction?.startChild('extract');
-    const output = Extractor.extract(raw, config, extractChild);
+    const output = Extractor.extract(raw, inputConfig, extractChild);
     extractChild?.end();
 
     const writeChild = transaction?.startChild('write');
-    const writer = fs.createWriteStream(outputFile);
+    const writer = new Writer();
 
-    const separator = config.output.separator || ';';
-    const keyValueSeparator = config.output.keyValueSeparator || ': ';
-    const outputKeys = config.output.keys;
+    const separator = outputConfig.separator || ';';
+    const keyValueSeparator = outputConfig.keyValueSeparator || ': ';
+    const outputKeys = outputConfig.keys;
 
-    Object.entries(outputKeys).every(([key, keyConfig]: [string, Key]) => {
+    const entries = Object.entries(outputKeys);
+
+    for (const [key, keyConfig] of entries) {
       if (!output[keyConfig.inputSection]) {
-        throw new Error(`OUTPUT - section ${keyConfig.inputSection} not configured in input`);
+        throw new OutputError(`section ${keyConfig.inputSection} not configured in input`);
       }
 
       const sectionValues = output[keyConfig.inputSection];
@@ -99,19 +117,25 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
                 return !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter));
               });
 
-            writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(values, separator)}${thisKeyConfig.suffix || ''}`));
-            return true;
+            if (keyConfig.required && values.length === 0) throw new OutputError(`key ${key} is required but empty`);
+
+            const valueToWrite = values.length !== 0 ? values : keyConfig.default ? keyConfig.default : [];
+
+            writer.write(
+              toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(valueToWrite, separator)}${thisKeyConfig.suffix || ''}`)
+            );
           } else {
             const row = sectionValues.find((row) => Object.values(row)[0] === thisKeyConfig.inputKeyWord);
             const values = row ? Object.values(row) : undefined;
             const curatedValues = values?.slice(1).filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter))) || [];
 
-            if (keyConfig.required && curatedValues.length === 0) throw new Error(`OUTPUT - key ${key} is required but empty`);
+            if (keyConfig.required && curatedValues.length === 0) throw new OutputError(`key ${key} is required but empty`);
+
+            const valueToWrite = curatedValues.length !== 0 ? curatedValues : keyConfig.default ? keyConfig.default : [];
 
             writer.write(
-              toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(curatedValues, separator)}${thisKeyConfig.suffix || ''}`)
+              toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${joinSafe(valueToWrite, separator)}${thisKeyConfig.suffix || ''}`)
             );
-            return true;
           }
         } else if ('index' in keyConfig) {
           // is ValueByWordKey
@@ -121,10 +145,11 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
             .map((row) => Object.values(row)[thisKeyConfig.index + 1])
             .filter((value) => !thisKeyConfig.filter || !value.match(RegExp(thisKeyConfig.filter)));
 
-          if (keyConfig.required && values.length === 0) throw new Error(`OUTPUT - key ${key} is required but empty`);
+          if (keyConfig.required && values.length === 0) throw new OutputError(`key ${key} is required but empty`);
 
-          writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${values.join(' ')}${thisKeyConfig.suffix || ''}`));
-          return true;
+          const valueToWrite = values.length !== 0 ? values.join(' ') : keyConfig.default ? keyConfig.default : '';
+
+          writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${valueToWrite}${thisKeyConfig.suffix || ''}`));
         } else if ('rowIndex' in keyConfig) {
           // is ValueIndexKey
           const thisKeyConfig = keyConfig as ValueIndexKey;
@@ -132,22 +157,22 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
           const row = sectionValues[thisKeyConfig.rowIndex];
           const value = Object.values(row)[thisKeyConfig.columnIndex].trim();
 
-          if (keyConfig.required && value.length === 0) throw new Error(`OUTPUT - key ${key} is required but empty`);
+          if (keyConfig.required && value.length === 0) throw new OutputError(`key ${key} is required but empty`);
 
           if (thisKeyConfig.filter && value.match(RegExp(thisKeyConfig.filter))) {
             writer.write(toWriteString(`${key}${keyValueSeparator}`));
-            return true;
           } else {
-            writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${value}${thisKeyConfig.suffix || ''}`));
-            return true;
+            writer.write(
+              toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${value || keyConfig.default || ''}${thisKeyConfig.suffix || ''}`)
+            );
           }
         } else {
-          throw new Error(`OUTPUT - key ${key} should be configured as Table Key`);
+          throw new OutputError(`key ${key} should be configured as Table Key`);
         }
       } else if (Object.keys(sectionValues).length !== 0) {
         // is keyValue section
         if (!('inputKeyWords' in keyConfig)) {
-          throw new Error(`OUTPUT - key ${key} should has inputKeyWords as it is a key value key`);
+          throw new OutputError(`key ${key} should has inputKeyWords as it is a key value key`);
         }
         const thisKeyConfig = keyConfig as KeyValueKey;
 
@@ -160,26 +185,22 @@ async function run(config: Config, inputFile: string, outputFile: string, transa
           }, '')
           .trim();
 
-        if (keyConfig.required && value.length === 0) throw new Error(`OUTPUT - key ${key} is required but empty`);
+        if (keyConfig.required && value.length === 0) throw new OutputError(`key ${key} is required but empty`);
 
-        writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${value}${thisKeyConfig.suffix || ''}`));
-        return true;
+        writer.write(toWriteString(`${key}${keyValueSeparator}${thisKeyConfig.prefix || ''}${value || keyConfig.default || ''}${thisKeyConfig.suffix || ''}`));
       } else {
-        writer.write(toWriteString(`${key}${keyValueSeparator}`));
+        writer.write(toWriteString(`${key}${keyValueSeparator}${keyConfig.default || ''}`));
 
-        if (keyConfig.required) throw new Error(`OUTPUT - key ${key} is required but empty`);
+        if (keyConfig.required) throw new OutputError(`key ${key} is required but empty`);
 
         utils.logInfo('OUTPUT', 'empty key', key);
-        return true;
       }
-    });
-    writeChild?.end();
+    }
 
-    writer.close();
+    writeChild?.end();
+    await fs.writeFile(outputFile, writer.toString());
   } catch (err) {
-    const errWriter = fs.createWriteStream(outputFile);
-    errWriter.write(raw);
-    errWriter.close();
+    await fs.writeFile(outputFile, raw);
     throw err;
   }
 }
@@ -214,4 +235,22 @@ function getBinary() {
   }
 
   return path.join(utils.basePath, `./lib/pdftotext/${pathToScript}/${script}`);
+}
+
+export class OutputError extends Error {
+  constructor(m: string) {
+    super('OUTPUT - ' + m);
+    Object.setPrototypeOf(this, OutputError.prototype);
+  }
+}
+
+class Writer extends Writable {
+  private data: string = '';
+  _write(chunk: string, enc: string, cb: () => void) {
+    this.data += chunk;
+    cb();
+  }
+  toString() {
+    return this.data;
+  }
 }

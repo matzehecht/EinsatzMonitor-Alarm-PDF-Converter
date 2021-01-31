@@ -104,11 +104,15 @@ dist
 .tern-port
 
 output
-input
+./input
 bin
-**/*.to.json
+**/schema.json
 
 tmp
 
 install-*
 emapc.conf.yml
+
+lib
+!lib/signtool.exe
+!lib/uninstaller

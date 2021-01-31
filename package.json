@@ -4,10 +4,10 @@
   "description": "The EMAPC (EinsatzMonitor-Alarm-PDF-Converter) provides a toolset to convert an incoming alarm PDF into a format that can be read by the EinsatzMonitor.",
   "main": "dist/index.js",
   "scripts": {
-    "prebuild": "eslint --fix && shx rm -rf dist",
-    "build": "tsc && npm run typeonly",
-    "postbuild": "shx chmod +x dist/cli.js",
-    "typeonly": "typeonly --bundle dist/config/config-types.to.json src/config/config.d.ts",
+    "prebuild": "eslint --fix",
+    "build": "tsc && npm run jsonSchemaCompilation",
+    "jsonSchemaCompilation": "typescript-json-schema src/config/config.d.ts --required --strictNullChecks Config -o dist/config/schema.json",
+    "jsonSchemaCompilation:dev": "typescript-json-schema src/config/config.d.ts --required --strictNullChecks Config -o src/config/schema.json",
     "semantic-release": "semantic-release",
     "start": "dist/cli.js"
   },
@@ -26,31 +26,29 @@
   },
   "homepage": "https://github.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter#readme",
   "devDependencies": {
-    "@semantic-release/changelog": "^5.0.1",
-    "@semantic-release/git": "^9.0.0",
-    "@trace-it/lowdb-adapter": "^1.0.0",
-    "@trace-it/types": "^2.0.0",
     "@types/node": "^14.6.4",
-    "@types/shelljs": "^0.8.8",
-    "@types/yamljs": "^0.2.31",
     "eslint": "^7.12.1",
     "nexe": "^3.3.7",
-    "semantic-release": "^17.3.1",
-    "shx": "^0.3.2",
-    "trace-it": "^1.0.0",
+    "semantic-release": "^17.3.7",
     "ts-node": "^9.0.0",
-    "typeonly": "^0.4.2",
-    "typescript": "^4.0.2"
+    "typescript": "^4.0.2",
+    "typescript-json-schema": "^0.48.0"
   },
   "dependencies": {
-    "@typeonly/validator": "^0.5.1",
-    "chokidar": "^3.4.2",
-    "shelljs": "^0.8.4",
-    "yamljs": "^0.3.0"
+    "@trace-it/lowdb-adapter": "^1.0.0",
+    "ajv": "^7.0.3",
+    "chokidar": "^3.5.1",
+    "rxjs": "^6.6.3",
+    "trace-it": "^1.0.0",
+    "yaml": "^1.10.0"
   },
   "release": {
     "branches": [
-      "main"
+      "main",
+      {
+        "name": "next",
+        "prerelease": true
+      }
     ],
     "plugins": [
       "@semantic-release/commit-analyzer",
@@ -61,16 +59,7 @@
           "npmPublish": false
         }
       ],
-      "@semantic-release/github",
-      "@semantic-release/changelog",
-      [
-        "@semantic-release/git",
-        {
-          "assets": [
-            "CHANGELOG.md"
-          ]
-        }
-      ]
+      "@semantic-release/github"
     ]
   }
 }

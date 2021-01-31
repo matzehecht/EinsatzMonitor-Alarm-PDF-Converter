@@ -1,0 +1,9 @@
+Ort: Deutschland,Muster [00000]
+Ortsteil: Hausen
+Straße: B200 Muster > Hausen
+Ortszusatz: 
+Sondersignal: Ohne Sondersignal
+Bemerkung: 
+Stichwort 2: F TH5 2 Trupp
+Stichwort: - -
+Einsatzmittel: Muster Kommandant

@@ -53,7 +53,7 @@ rm -rf /usr/local/emapc/${linux[uninstaller]}
 curl -L https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/lib/uninstaller/${linux[uninstaller]} -o /usr/local/emapc/${linux[uninstaller]}
 
 rm -rf /usr/local/emapc/lib/pdftotext/linux/${linux[lib]}
-curl -L https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/$gitHash/lib/pdftotext/linux/${linux[lib]} -o /usr/local/emapc/lib/pdftotext/linux/${linux[lib]}
+curl -L https://raw.githubusercontent.com/matzehecht/EinsatzMonitor-Alarm-PDF-Converter/001c5ab1155e1811ce36590dad7589fe3617dc3b/lib/pdftotext/linux/${linux[lib]} -o /usr/local/emapc/lib/pdftotext/linux/${linux[lib]}
 
 if [[ \"\$1\" == \"cli\" ]]; then
   rm -rf /usr/local/emapc/emapc-cli
