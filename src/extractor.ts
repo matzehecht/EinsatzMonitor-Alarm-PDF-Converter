@@ -1,9 +1,8 @@
 import { Input, SectionType } from './config';
-import * as TraceIt from 'trace-it';
 
 const WELL_KNOWN_KEYS = ['Datum'];
 
-export function extract(raw: string, inputConfig: Input, parentTransaction?: TraceIt.Transaction): Parsed {
+export function extract(raw: string, inputConfig: Input): Parsed {
   const rawArray = raw.split(/\r?\n/);
 
   const exInTextKeys = inputConfig.inTextKeys.reduce((prev, inTextKey) => {
@@ -114,10 +113,10 @@ function extractKeyVal(rawArray: string[]): ParsedKVSection {
         prev[trimmedKey] = '';
         return prev;
       }
-      
+
       const indexValue = lineWithoutKey.search(/\S/) + key.length;
       const value = line.slice(indexValue).split(/\s\s/)[0];
-      
+
       // if the value starts with a lot white spaces (empty value but date on the right)
       // skip to the stuff with rest string and well known keys.
       if (indexValue - key.length < 25) {
@@ -126,7 +125,7 @@ function extractKeyVal(rawArray: string[]): ParsedKVSection {
 
       // if the value starts with a lot white spaces (see if clause above)
       // start the rest string on kex.length
-      const endIndexValue = (indexValue - key.length < 25 ? indexValue + value.length : key.length);
+      const endIndexValue = indexValue - key.length < 25 ? indexValue + value.length : key.length;
       const restString = line.slice(endIndexValue).trim();
 
       const isWellKnown = WELL_KNOWN_KEYS.find((k) => restString.startsWith(k));

@@ -1,4 +1,3 @@
-import * as TraceIt from 'trace-it';
 import { existsSync, promises as fs } from 'fs';
 import * as os from 'os';
 import { promisify } from 'util';
@@ -10,20 +9,10 @@ import * as utils from './utils';
 import { KeyValueKey, ListByWordKey, ValueByWordKey, ValueIndexKey } from './config';
 import { Writable } from 'stream';
 
-export async function convert(
-  inputFileOrDir: string,
-  isInputDir: boolean,
-  outputFileOrDir: string,
-  inputConfig: Input,
-  outputConfig: Output,
-  parentTransaction?: TraceIt.Transaction
-) {
-  const transaction = parentTransaction?.startChild('convert');
-
+export async function convert(inputFileOrDir: string, isInputDir: boolean, outputFileOrDir: string, inputConfig: Input, outputConfig: Output) {
   const proms: Promise<void>[] = [];
 
   if (!isInputDir) {
-    const fileChild = transaction?.startChild('file');
     const fnWithoutExt = path.basename(inputFileOrDir, '.pdf');
     const outputFile = path.extname(outputFileOrDir) === '' ? path.join(outputFileOrDir, `${fnWithoutExt}.txt`) : outputFileOrDir;
 
@@ -36,9 +25,8 @@ export async function convert(
     } else {
       utils.logInfo('INPUT', `processing ${path.resolve(inputFileOrDir)}!`);
 
-      proms.push(run(inputConfig, outputConfig, inputFileOrDir, outputFile, fileChild));
+      proms.push(run(inputConfig, outputConfig, inputFileOrDir, outputFile));
     }
-    fileChild?.end();
   } else {
     const files = await fs.readdir(inputFileOrDir, { withFileTypes: true });
 
@@ -47,7 +35,6 @@ export async function convert(
     }
 
     files.every((file) => {
-      const fileChild = transaction?.startChild('file');
       const filename = file.name;
       const fnWithoutExt = path.basename(filename, path.extname(filename));
 
@@ -56,14 +43,12 @@ export async function convert(
       } else {
         utils.logInfo('INPUT', `processing ${path.resolve(filename)}!`);
 
-        proms.push(run(inputConfig, outputConfig, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild));
+        proms.push(run(inputConfig, outputConfig, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`)));
       }
-      fileChild?.end();
       // return true;
     });
   }
 
-  transaction?.end();
   return Promise.all(proms);
 }
 
@@ -75,20 +60,15 @@ function joinSafe(array: string[], separator?: string): string {
   return array.map((cur: string) => (!separator ? cur : cur.replace(RegExp(separator, 'gi'), separator === ';' ? ',' : ';'))).join(separator);
 }
 
-async function run(inputConfig: Input, outputConfig: Output, inputFile: string, outputFile: string, transaction?: TraceIt.Transaction) {
+async function run(inputConfig: Input, outputConfig: Output, inputFile: string, outputFile: string) {
   const pdftotext = getBinary();
   const pdftotextArgs = ['-simple', inputFile, '-'];
   utils.logInfo('Read pdf', `command: ${pdftotext}, args: ${pdftotextArgs}`);
-  const readChild = transaction?.startChild('read');
   const raw = (await promisify(child.execFile)(pdftotext, pdftotextArgs, { encoding: 'latin1' })).stdout;
-  readChild?.end();
 
   try {
-    const extractChild = transaction?.startChild('extract');
-    const output = Extractor.extract(raw, inputConfig, extractChild);
-    extractChild?.end();
+    const output = Extractor.extract(raw, inputConfig);
 
-    const writeChild = transaction?.startChild('write');
     const writer = new Writer();
 
     const separator = outputConfig.separator || ';';
@@ -197,7 +177,6 @@ async function run(inputConfig: Input, outputConfig: Output, inputFile: string, 
       }
     }
 
-    writeChild?.end();
     await fs.writeFile(outputFile, writer.toString());
   } catch (err) {
     await fs.writeFile(outputFile, raw);

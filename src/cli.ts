@@ -76,7 +76,11 @@ function parseArgs(argv: string[]) {
       utils.logInfo('OUTPUT', `Using given file name ${outputFileOrDir}`);
     }
   } catch (err) {
-    throwErr(err, true);
+    if (err instanceof Error) {
+      throwErr(err, true);
+    } else {
+      throwErr(new Error('unknown error'), true);
+    }
   }
   return {
     configFile,

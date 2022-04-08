@@ -35,11 +35,9 @@
     "typescript-json-schema": "^0.48.0"
   },
   "dependencies": {
-    "@trace-it/lowdb-adapter": "^1.0.0",
     "ajv": "^7.0.3",
     "chokidar": "^3.5.1",
     "rxjs": "^6.6.3",
-    "trace-it": "^1.0.0",
     "yaml": "^1.10.0"
   },
   "release": {
