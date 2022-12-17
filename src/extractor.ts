@@ -11,8 +11,9 @@ export function extract(raw: string, inputConfig: Input, parentTransaction?: Tra
     const extracted = rawArray.reduce((extractedPrev, line, i) => {
       if (line.includes(inTextKey)) {
         indexes.push(i);
-        const match = line.match(RegExp(`\\s\\s((\\S+\\s)*${inTextKey}(\\s\\S+)*)(\\s\\s)?`))?.[0].trim();
-        return `${extractedPrev} ${match}`;
+        const match = line.match(RegExp(`\\s\\s((\\S+\\s)*${inTextKey}(\\s\\S+)*)(\\s\\s)?`))?.[0];
+        rawArray[i] = line.replace(match || '', '');
+        return `${extractedPrev} ${match?.trim()}`;
       } else {
         return extractedPrev;
       }
@@ -72,11 +73,12 @@ function extractSubSections(slice: string[], sectionType: SectionType): ParsedSe
 }
 
 function extractTable(rawArray: string[]): ParsedTableSectionRow[] {
-  const columnIndexes = rawArray[0]
+  const trimmedRawArray = rawArray.slice(0, rawArray.indexOf(''));
+  const columnIndexes = trimmedRawArray[0]
     .match(/(\s\s|^)(\S)/g)
-    ?.reduce((prev, match) => prev.concat(rawArray[0].indexOf(match, prev[prev.length - 1]) + match.search(/\S/)), [] as number[]);
+    ?.reduce((prev, match) => prev.concat(trimmedRawArray[0].indexOf(match, prev[prev.length - 1]) + match.search(/\S/)), [] as number[]);
 
-  const columns = columnIndexes?.map((i) => rawArray[0].substring(i).split(/\s\s/)[0]);
+  const columns = columnIndexes?.map((i) => trimmedRawArray[0].substring(i).split(/\s\s/)[0]);
 
   if (columnIndexes && columns) {
     if (columnIndexes[0] !== 0) {
@@ -84,7 +86,7 @@ function extractTable(rawArray: string[]): ParsedTableSectionRow[] {
       columns.unshift('');
     }
 
-    const rows = rawArray.slice(1).map((line) => {
+    const rows = trimmedRawArray.slice(1).map((line) => {
       const row = {} as ParsedTableSectionRow;
 
       columnIndexes?.forEach((columnIndex, i) => {
@@ -151,7 +153,7 @@ function extractKeyVal(rawArray: string[]): ParsedKVSection {
       }
 
       linesWithoutHeading.slice(indexLine + 1).every((lineBelow) => {
-        if (!lineBelow.startsWith('     ')) return false;
+        if (lineBelow.trim().length === 0 || !lineBelow.startsWith('     ')) return false;
         prev[trimmedKey] += ' ' + lineBelow.slice(indexValue).split(/\s\s/)[0].trim();
         return true;
       });
