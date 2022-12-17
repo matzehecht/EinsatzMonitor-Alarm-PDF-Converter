@@ -11,12 +11,12 @@ export function extract(raw: string, inputConfig: Input, parentTransaction?: Tra
     const extracted = rawArray.reduce((extractedPrev, line, i) => {
       if (line.includes(inTextKey)) {
         indexes.push(i);
-        return [extractedPrev, line.trim()].join(' ');
+        const match = line.match(RegExp(`\\s\\s((\\S+\\s)*${inTextKey}(\\s\\S+)*)(\\s\\s)?`))?.[0].trim();
+        return `${extractedPrev} ${match}`;
       } else {
         return extractedPrev;
       }
     }, '');
-    indexes.forEach((i) => rawArray.splice(i, 1));
     prev[inTextKey] = extracted.trim();
     return prev;
   }, {} as ParsedKVSection);

@@ -59,7 +59,7 @@ export async function convert(
         proms.push(run(inputConfig, outputConfig, path.join(inputFileOrDir, filename), path.join(outputFileOrDir, `${fnWithoutExt}.txt`), fileChild));
       }
       fileChild?.end();
-      // return true;
+      return true;
     });
   }
 
