@@ -138,7 +138,7 @@ jobs:
         env:
           cache-name: cache-pdftotext-windows
         with:
-          path: xpdf-tools-win-4.03.zip
+          path: xpdf-tools-win-4.04.zip
           key: ${{ runner.os }}-build-${{ env.cache-name }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}
@@ -147,27 +147,27 @@ jobs:
       - name: Download pdftotext
         if: ${{ matrix.os == 'windows' }}
         run: |
-          if(!(Test-Path -Path "xpdf-tools-win-4.03.zip")) {
-            Invoke-WebRequest -Uri "https://dl.xpdfreader.com/xpdf-tools-win-4.03.zip" -OutFile "xpdf-tools-win-4.03.zip"
+          if(!(Test-Path -Path "xpdf-tools-win-4.04.zip")) {
+            Invoke-WebRequest -Uri "https://dl.xpdfreader.com/xpdf-tools-win-4.04.zip" -OutFile "xpdf-tools-win-4.04.zip"
           }
-          Expand-Archive -Path xpdf-tools-win-4.03.zip
+          Expand-Archive -Path xpdf-tools-win-4.04.zip
       - name: Copy pdftotext
         if: ${{ matrix.os == 'windows' && matrix.arch == 'x64' }}
         run: |
           New-Item -path "lib\pdftotext\win" -type directory
-          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin64\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext64.exe"
+          Copy-Item "xpdf-tools-win-4.04\xpdf-tools-win-4.04\bin64\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext64.exe"
       - name: Copy pdftotext
         if: ${{ matrix.os == 'windows' && matrix.arch == 'x86' }}
         run: |
           New-Item -path "lib\pdftotext\win" -type directory
-          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin32\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext32.exe"
+          Copy-Item "xpdf-tools-win-4.04\xpdf-tools-win-4.04\bin32\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext32.exe"
       - name: Cache pdftotext
         uses: actions/cache@v2
         if: ${{ matrix.os == 'linux' }}
         env:
           cache-name: cache-pdftotext-linux
         with:
-          path: xpdf-tools-linux-4.03.tar.gz
+          path: xpdf-tools-linux-4.04.tar.gz
           key: ${{ matrix.os }}-build-${{ env.cache-name }}
           restore-keys: |
             ${{ matrix.os }}-build-${{ env.cache-name }}
@@ -176,20 +176,20 @@ jobs:
       - name: Download pdftotext linux
         if: ${{ matrix.os == 'linux' }}
         run: |
-          if [ ! -f xpdf-tools-linux-4.03.tar.gz ]; then
-            curl https://dl.xpdfreader.com/xpdf-tools-linux-4.03.tar.gz -o xpdf-tools-linux-4.03.tar.gz
+          if [ ! -f xpdf-tools-linux-4.04.tar.gz ]; then
+            curl https://dl.xpdfreader.com/xpdf-tools-linux-4.04.tar.gz -o xpdf-tools-linux-4.04.tar.gz
           fi
-          tar -xvzf xpdf-tools-linux-4.03.tar.gz
+          tar -xvzf xpdf-tools-linux-4.04.tar.gz
       - name: Copy pdftotext
         if: ${{ matrix.os == 'linux' && matrix.arch == 'x64' }}
         run: |
           mkdir "lib/pdftotext/linux" --parents
-          cp xpdf-tools-linux-4.03/bin64/pdftotext lib/pdftotext/linux/pdftotext64
+          cp xpdf-tools-linux-4.04/bin64/pdftotext lib/pdftotext/linux/pdftotext64
       - name: Copy pdftotext
         if: ${{ matrix.os == 'linux' && matrix.arch == 'x86' }}
         run: |
           mkdir "lib/pdftotext/linux" --parents
-          cp xpdf-tools-linux-4.03/bin32/pdftotext lib/pdftotext/linux/pdftotext32
+          cp xpdf-tools-linux-4.04/bin32/pdftotext lib/pdftotext/linux/pdftotext32
       - uses: ./.github/actions/nexe-compile
         name: Compile ${{ matrix.type }} for ${{ matrix.os }} ${{ matrix.arch }}
         with:
@@ -276,7 +276,7 @@ jobs:
         env:
           cache-name: cache-pdftotext-windows
         with:
-          path: xpdf-tools-win-4.03.zip
+          path: xpdf-tools-win-4.04.zip
           key: ${{ runner.os }}-build-${{ env.cache-name }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}
@@ -284,20 +284,20 @@ jobs:
             ${{ runner.os }}-
       - name: Download pdftotext
         run: |
-          if(!(Test-Path -Path "xpdf-tools-win-4.03.zip")) {
-            Invoke-WebRequest -Uri "https://dl.xpdfreader.com/xpdf-tools-win-4.03.zip" -OutFile "xpdf-tools-win-4.03.zip"
+          if(!(Test-Path -Path "xpdf-tools-win-4.04.zip")) {
+            Invoke-WebRequest -Uri "https://dl.xpdfreader.com/xpdf-tools-win-4.04.zip" -OutFile "xpdf-tools-win-4.04.zip"
           }
-          Expand-Archive -Path .\xpdf-tools-win-4.03.zip
+          Expand-Archive -Path .\xpdf-tools-win-4.04.zip
       - name: Copy pdftotext
         if: ${{ matrix.arch == 'x64' }}
         run: |
           New-Item -path "lib\pdftotext\win" -type directory
-          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin64\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext64.exe"
+          Copy-Item "xpdf-tools-win-4.04\xpdf-tools-win-4.04\bin64\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext64.exe"
       - name: Copy pdftotext
         if: ${{ matrix.arch == 'x86' }}
         run: |
           New-Item -path "lib\pdftotext\win" -type directory
-          Copy-Item "xpdf-tools-win-4.03\xpdf-tools-win-4.03\bin32\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext32.exe"
+          Copy-Item "xpdf-tools-win-4.04\xpdf-tools-win-4.04\bin32\pdftotext.exe" -Destination "lib\pdftotext\win\pdftotext32.exe"
       - name: Write key file
         run: |
           $bytes = [Convert]::FromBase64String("${{ secrets.PFX_CERTIFICATE }}")
@@ -379,7 +379,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Publish to hecht.space
     if: ${{ contains(github.ref, 'main') }}
-    needs: ["publish","buildLinuxInstaller", "buildWinInstaller"]
+    needs: ['publish', 'buildLinuxInstaller', 'buildWinInstaller']
     steps:
       - name: Checkout
         uses: actions/checkout@v2
