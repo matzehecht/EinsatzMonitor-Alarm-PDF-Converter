@@ -15,7 +15,7 @@ Ort              Muster (bei Hausen) [00000]
 Ortsteil         Stadt
 Straße           Hausenweg
 
-Einsatzstatus    Zeit
+Einsatzstatus Zeit
 unerledigt       25.01.2021 00:00:00
 alarmiert        25.01.2021 00:00:00
 
