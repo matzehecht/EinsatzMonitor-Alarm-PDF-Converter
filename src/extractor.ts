@@ -11,12 +11,13 @@ export function extract(raw: string, inputConfig: Input, parentTransaction?: Tra
     const extracted = rawArray.reduce((extractedPrev, line, i) => {
       if (line.includes(inTextKey)) {
         indexes.push(i);
-        return [extractedPrev, line.trim()].join(' ');
+        const match = line.match(RegExp(`\\s\\s((\\S+\\s)*${inTextKey}(\\s\\S+)*)(\\s\\s)?`))?.[0];
+        rawArray[i] = line.replace(match || '', '');
+        return `${extractedPrev} ${match?.trim()}`;
       } else {
         return extractedPrev;
       }
     }, '');
-    indexes.forEach((i) => rawArray.splice(i, 1));
     prev[inTextKey] = extracted.trim();
     return prev;
   }, {} as ParsedKVSection);
@@ -25,52 +26,59 @@ export function extract(raw: string, inputConfig: Input, parentTransaction?: Tra
     inText: exInTextKeys
   };
 
-  const sections = inputConfig.sections;
+  const sectionKeyRegExp = RegExp(`(^|[^a-zA-Z0-9])(${Object.keys(inputConfig.sections).join('|')})([^a-zA-Z0-9]|$)`);
+  const indexes = rawArray.reduce<[number, string][]>((prev, line, i) => {
+    const matches = line.match(sectionKeyRegExp);
+    if (matches && rawArray[i - 1].trim().length === 0) {
+      prev.push([i, matches[2]]);
+    }
+    return prev;
+  }, []);
 
-  Object.entries(sections).forEach((section) => (extractedSection[section[0]] = extractSection(rawArray, section)));
+  const sectionSlices = indexes.reduce<Record<string, string[][]>>((prev, [index, key], i) => {
+    const prevSectionArray = prev[key] ?? [];
+
+    const nextIndex = indexes[i + 1]?.[0] ?? Infinity;
+    const sectionSlice = rawArray.slice(index, nextIndex);
+    prevSectionArray.push(sectionSlice);
+    prev[key] = prevSectionArray;
+
+    return prev;
+  }, {});
+
+  Object.entries(sectionSlices).forEach(([sectionKey, slices]) => (extractedSection[sectionKey] = extractSections(inputConfig.sections[sectionKey], slices)));
   return extractedSection;
 }
 
-function extractSection(rawArray: string[], [sectionKey, sectionType]: [string, SectionType]): ParsedSection {
-  // Find first line of section. If a section spans over two pages there can be two first lines.
-  const indexes = rawArray.reduce(
-    (prev, r, i) => (r.match(RegExp(`(^|[^a-zA-Z0-9])${sectionKey}([^a-zA-Z0-9]|$)`)) && rawArray[i - 1].trim().length === 0 ? prev.concat(i) : prev),
-    [] as number[]
-  );
-
-  const subSections = indexes.map((i) => extractSubSection(rawArray, sectionType, i));
+function extractSections(sectionType: SectionType, slices: string[][]): ParsedSection {
+  const subSections = slices.map((slice) => extractSubSections(slice, sectionType));
 
   return Array.isArray(subSections[0]) ? subSections.flat() : subSections.reduce((p, c) => ({ ...p, ...c }), {});
 }
 
-function extractSubSection(rawArray: string[], sectionType: SectionType, index: number): ParsedSection {
-  const trimmedLeft = rawArray.slice(index);
-
-  const endIndex = trimmedLeft.findIndex((line) => line.trim().length === 0);
-
-  const relevantLines = trimmedLeft.slice(0, endIndex);
-
+function extractSubSections(slice: string[], sectionType: SectionType): ParsedSection {
   switch (sectionType) {
     case 'keyValue':
-      return extractKeyVal(relevantLines);
+      return extractKeyVal(slice);
     case 'table':
-      return extractTable(relevantLines);
+      return extractTable(slice);
     case 'try':
-      const triedIsTable = rawArray[index].startsWith('     ');
+      const triedIsTable = slice[0].startsWith('     ');
       if (triedIsTable) {
-        return extractTable(relevantLines);
+        return extractTable(slice);
       } else {
-        return extractKeyVal(relevantLines);
+        return extractKeyVal(slice);
       }
   }
 }
 
 function extractTable(rawArray: string[]): ParsedTableSectionRow[] {
-  const columnIndexes = rawArray[0]
+  const trimmedRawArray = rawArray.slice(0, rawArray.indexOf(''));
+  const columnIndexes = trimmedRawArray[0]
     .match(/(\s\s|^)(\S)/g)
-    ?.reduce((prev, match) => prev.concat(rawArray[0].indexOf(match, prev[prev.length - 1]) + match.search(/\S/)), [] as number[]);
+    ?.reduce((prev, match) => prev.concat(trimmedRawArray[0].indexOf(match, prev[prev.length - 1]) + match.search(/\S/)), [] as number[]);
 
-  const columns = columnIndexes?.map((i) => rawArray[0].substring(i).split(/\s\s/)[0]);
+  const columns = columnIndexes?.map((i) => trimmedRawArray[0].substring(i).split(/\s\s/)[0]);
 
   if (columnIndexes && columns) {
     if (columnIndexes[0] !== 0) {
@@ -78,7 +86,7 @@ function extractTable(rawArray: string[]): ParsedTableSectionRow[] {
       columns.unshift('');
     }
 
-    const rows = rawArray.slice(1).map((line) => {
+    const rows = trimmedRawArray.slice(1).map((line) => {
       const row = {} as ParsedTableSectionRow;
 
       columnIndexes?.forEach((columnIndex, i) => {
@@ -114,10 +122,10 @@ function extractKeyVal(rawArray: string[]): ParsedKVSection {
         prev[trimmedKey] = '';
         return prev;
       }
-      
+
       const indexValue = lineWithoutKey.search(/\S/) + key.length;
       const value = line.slice(indexValue).split(/\s\s/)[0];
-      
+
       // if the value starts with a lot white spaces (empty value but date on the right)
       // skip to the stuff with rest string and well known keys.
       if (indexValue - key.length < 25) {
@@ -126,7 +134,7 @@ function extractKeyVal(rawArray: string[]): ParsedKVSection {
 
       // if the value starts with a lot white spaces (see if clause above)
       // start the rest string on kex.length
-      const endIndexValue = (indexValue - key.length < 25 ? indexValue + value.length : key.length);
+      const endIndexValue = indexValue - key.length < 25 ? indexValue + value.length : key.length;
       const restString = line.slice(endIndexValue).trim();
 
       const isWellKnown = WELL_KNOWN_KEYS.find((k) => restString.startsWith(k));
@@ -145,7 +153,7 @@ function extractKeyVal(rawArray: string[]): ParsedKVSection {
       }
 
       linesWithoutHeading.slice(indexLine + 1).every((lineBelow) => {
-        if (!lineBelow.startsWith('     ')) return false;
+        if (lineBelow.trim().length === 0 || !lineBelow.startsWith('     ')) return false;
         prev[trimmedKey] += ' ' + lineBelow.slice(indexValue).split(/\s\s/)[0].trim();
         return true;
       });

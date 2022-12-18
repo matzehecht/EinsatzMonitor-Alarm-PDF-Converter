@@ -2,7 +2,7 @@
 
                                                               Leitstelle
                                                               Musterstraße 12, 00000 Muster
-                                                              Tel: 00000/0000-0      Fax: 00000/0000-000
+                                                              Tel: 00000/0000-0 Fax: 00000/0000-000
                                                               E-Mail: leit@stelle.de
 
 Einsatzanlass
@@ -16,10 +16,9 @@ Ort
 Ortsteil         Hausen
 Straße           Musterstraße 1
 
-Einsatzstatus    Zeit
+Einsatzstatus Zeit
 unerledigt       25.01.2021 00:00:00
-LK               25.01.2021 00:00:00
-EMAnforderung
+LK EMAnforderung 25.01.2021 00:00:00
 unerledigt       25.01.2021 00:00:00
 alarmiert        25.01.2021 00:00:00
 
