@@ -40,7 +40,7 @@
     "chokidar": "^3.5.1",
     "rxjs": "^6.6.3",
     "trace-it": "^1.0.0",
-    "yaml": "^1.10.0"
+    "yaml": "^2.2.2"
   },
   "release": {
     "branches": [
